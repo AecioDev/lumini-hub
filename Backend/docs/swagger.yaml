@@ -1,0 +1,15 @@
+basePath: /api
+host: localhost:4000
+info:
+  contact: {}
+  description: API para o sistema Simple ERP Service
+  title: Simple ERP Service API
+  version: "1.0"
+paths: {}
+securityDefinitions:
+  ApiKeyAuth:
+    description: 'Descrição: Insira seu token JWT no formato "Bearer TOKEN"'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

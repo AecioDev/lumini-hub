@@ -1,0 +1,28 @@
+# IDEs
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# System Files
+Thumbs.db
+db.json
+
+# Go/Backend
+Backend/bin/
+Backend/tmp/
+Backend/main
+Backend/*.exe
+Backend/*.test
+Backend/.env
+
+# Node/Frontend
+Frontend/node_modules/
+Frontend/.next/
+Frontend/out/
+Frontend/build/
+Frontend/.env*.local
+Frontend/.env

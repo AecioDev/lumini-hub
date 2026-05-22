@@ -1,0 +1,142 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@layer base {
+  :root {
+    /* Cores gerais */
+    --background: 0 0% 100%; /* Branco puro */
+    --foreground: 240 10% 3.9%; /* Preto suave (quase preto) */
+
+    /* Cartões e Popovers */
+    --card: 0 0% 100%; /* Branco puro */
+    --card-foreground: 240 10% 3.9%; /* Texto escuro */
+    --popover: 0 0% 100%; /* Branco puro */
+    --popover-foreground: 240 10% 3.9%; /* Texto escuro */
+
+    /* Cores primárias (botões, links) */
+    --primary: 220 70% 50%; /* Azul um pouco mais escuro e saturado. */
+    --primary-foreground: 0 0% 98%; /* Cinza escuro para texto */
+
+    /* Cores secundárias (elementos de destaque suave) */
+    --secondary: 210 10% 95%; /* Cinza muito claro */
+    --secondary-foreground: 240 10% 20%; /* Cinza escuro para texto */
+
+    /* Cores de mutação (texto desativado, fundos sutis) */
+    --muted: 210 10% 90%; /* Cinza claro */
+    --muted-foreground: 240 5% 55%; /* Cinza médio */
+
+    /* Cores de acento (destaque secundário, hover) */
+    --accent: 210 10% 90%; /* Cinza claro */
+    --accent-foreground: 240 10% 20%; /* Cinza escuro */
+
+    /* Cores destrutivas (erros, avisos) */
+    --destructive: 0 80% 55%; /* Vermelho vibrante */
+    --destructive-foreground: 0 0% 98%; /* Branco quase puro para texto */
+
+    /* Variável de fundo de formulário */
+    --form: 210 10% 95%; /* Cinza muito claro para o fundo de formulários */
+    --form-background: 210 10% 90%; /* Fundo de formulários, igual ao primário */
+
+    /* Bordas e Inputs */
+    --border: 210 5% 80%; /* Cinza para bordas */
+    --input: 210 5% 85%; /* Cinza um pouco mais claro para inputs */
+    --ring: 220 90% 40%; /* Cor do anel de foco (igual ao primário) */
+
+    /* Charts (mantido como exemplo, pode ajustar conforme seu gráfico) */
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+
+    --radius: 0.5rem; /* Raio de borda padrão */
+
+    /* Sidebar - Light Theme */
+    --sidebar-background: 210 10% 98%; /* Cinza muito claro */
+    --sidebar-foreground: 240 5.3% 26.1%; /* Cinza escuro para texto */
+    --sidebar-primary: 220 90% 35%; /* Azul um pouco mais escuro para destaque */
+    --sidebar-primary-foreground: 0 0% 98%; /* Branco para texto */
+    --sidebar-accent: 210 10% 92%; /* Cinza claro para hover/seleção */
+    --sidebar-accent-foreground: 240 5.9% 10%; /* Cinza escuro */
+    --sidebar-border: 210 5% 85%; /* Cinza para borda */
+    --sidebar-ring: 220 91.2% 59.8%; /* Anel de foco da sidebar */
+  }
+
+  .dark {
+    /* Cores gerais */
+    --background: 240 5% 12%; /* Cinza escuro quase preto */
+    --foreground: 210 10% 90%; /* Branco suave */
+
+    /* Cartões e Popovers */
+    --card: 240 5% 14%; /* Um pouco mais escuro que o background */
+    --card-foreground: 210 10% 90%; /* Texto claro */
+    --popover: 240 5% 16%; /* Um pouco mais escuro ainda */
+    --popover-foreground: 210 10% 90%; /* Texto claro */
+
+    /* Cores primárias (botões, links) */
+    --primary: 220 70% 50%; /* Azul um pouco mais escuro e saturado. */
+    --primary-foreground: 0 0% 98%; /* Cinza escuro para texto */
+
+    /* Cores secundárias */
+    --secondary: 240 5% 20%; /* Cinza médio escuro */
+    --secondary-foreground: 210 10% 90%; /* Texto claro */
+
+    /* Cores de mutação */
+    --muted: 240 5% 24%; /* Cinza mais claro para elementos desativados */
+    --muted-foreground: 210 5% 70%; /* Cinza médio claro */
+
+    /* Cores de acento */
+    --accent: 240 5% 22%; /* Cinza um pouco mais claro */
+    --accent-foreground: 210 10% 90%; /* Texto claro */
+
+    /* Cores destrutivas */
+    --destructive: 0 70% 45%; /* Vermelho mais suave para o escuro */
+    --destructive-foreground: 0 0% 98%; /* Branco quase puro */
+
+    /* Variável de fundo de formulário (NOVA!) */
+    --form: 240 5% 18%; /* Cinza escuro para o fundo de formulários */
+    --form-background: 240 5% 20%; /* Fundo de formulários, igual ao primário */
+
+    /* Bordas e Inputs */
+    --border: 240 5% 26%; /* Cinza para bordas */
+    --input: 240 5% 22%; /* Cinza para inputs */
+    --ring: 220 80% 60%; /* Cor do anel de foco (igual ao primário) */
+
+    /* Charts (ajustado para melhor contraste no escuro) */
+    --chart-1: 20 85% 65%; /* Laranja vibrante */
+    --chart-2: 160 70% 55%; /* Verde-água */
+    --chart-3: 200 60% 70%; /* Azul claro */
+    --chart-4: 60 70% 70%; /* Amarelo esverdeado */
+    --chart-5: 300 65% 75%; /* Roxo claro */
+
+    /* Sidebar - Dark Theme */
+    --sidebar-background: 240 5% 14%; /* Um pouco mais escuro que o background principal */
+    --sidebar-foreground: 210 10% 92%; /* Texto claro */
+    --sidebar-primary: 220 80% 55%; /* Azul para destaque na sidebar */
+    --sidebar-primary-foreground: 0 0% 100%; /* Branco para texto */
+    --sidebar-accent: 240 5% 20%; /* Cinza para hover/seleção */
+    --sidebar-accent-foreground: 210 10% 92%; /* Texto claro */
+    --sidebar-border: 240 5% 22%; /* Cinza para borda */
+    --sidebar-ring: 220 80% 60%; /* Anel de foco da sidebar */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

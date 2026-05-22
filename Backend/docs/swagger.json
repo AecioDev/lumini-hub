@@ -1,0 +1,20 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "API para o sistema Simple ERP Service",
+        "title": "Simple ERP Service API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:4000",
+    "basePath": "/api",
+    "paths": {},
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "description": "Descrição: Insira seu token JWT no formato \"Bearer TOKEN\"",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}
