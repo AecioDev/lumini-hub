@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"lumini-hub/api.core/internal/repository"
 	"lumini-hub/api.core/internal/routes"
 	"lumini-hub/common/config"
 	"lumini-hub/common/database"
@@ -35,8 +36,11 @@ func main() {
 	// Grupo base da API
 	api := router.Group("/api")
 
+	// Inicializar o Unit of Work
+	uow := repository.NewUnitOfWork(db)
+
 	// Configurar rotas específicas de clientes/fornecedores
-	routes.SetupRoutes(api, db, cfg)
+	routes.SetupRoutes(api, uow, cfg)
 
 	// O microsserviço Core escuta na porta 4002
 	port := "4002"

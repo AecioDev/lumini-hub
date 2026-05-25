@@ -157,3 +157,19 @@ func ApiSupplierDetailFromModel(s Supplier) ApiSupplierDetail {
 
 	return dto
 }
+
+// SupplierFilterRequest define os parâmetros para busca filtrada e paginada de fornecedores via HTTP POST
+type SupplierFilterRequest struct {
+	ID             *uint   `json:"id"`
+	FirstName      string  `json:"first_name"`
+	LastName       string  `json:"last_name"`
+	PersonType     string  `json:"person_type"`
+	DocumentNumber string  `json:"document_number"`
+	CompanyName    string  `json:"company_name"`
+	IsActive       *bool   `json:"is_active"`
+
+	PageNo         *int    `json:"page_no"`
+	PageSize       *int    `json:"page_size"`
+	OrderByColumn  string  `json:"order_by_column"`
+	IsAsc          *bool   `json:"is_asc"`
+}

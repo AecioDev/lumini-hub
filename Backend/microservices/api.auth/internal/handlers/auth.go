@@ -34,6 +34,16 @@ type LoginRequest struct {
 }
 
 // Login autentica um usuário
+// @Summary      Realiza login de usuário
+// @Description  Autentica o usuário no ERP Lumini Hub, definindo cookies seguros HTTP-Only
+// @Tags         Autenticação
+// @Accept       json
+// @Produce      json
+// @Param        credentials  body      LoginRequest  true  "Credenciais de acesso"
+// @Success      200          {object}  utils.Response{data=domain.LoginSuccessResponse}
+// @Failure      400          {object}  utils.Response
+// @Failure      401          {object}  utils.Response
+// @Router       /auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -78,6 +88,14 @@ func (h *AuthHandler) Login(c *gin.Context) {
 }
 
 // RefreshToken renova o token de acesso
+// @Summary      Renova token de autenticação
+// @Description  Gera novos tokens de acesso e refresh a partir do cookie refresh_token existente
+// @Tags         Autenticação
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  utils.Response{data=domain.RefreshTokenSuccessResponse}
+// @Failure      401  {object}  utils.Response
+// @Router       /auth/refresh-token [post]
 func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	refreshToken, err := c.Cookie("refresh_token")
 	if err != nil {
@@ -120,6 +138,14 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 }
 
 // Logout realiza o logout do usuário
+// @Summary      Efetua logout do sistema
+// @Description  Limpa os cookies de sessão ativos no navegador
+// @Tags         Autenticação
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  utils.Response
+// @Router       /auth/logout [post]
+// @Security     ApiKeyAuth
 func (h *AuthHandler) Logout(c *gin.Context) {
 	c.SetCookie("access_token", "", -1, "/", "", h.cfg.App.Env == "production", true)
 	c.SetCookie("refresh_token", "", -1, "/", "", h.cfg.App.Env == "production", true)
@@ -128,6 +154,16 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 }
 
 // GetMe retorna informações do usuário logado
+// @Summary      Obtém dados do usuário atual
+// @Description  Retorna o perfil detalhado do usuário ativo na sessão
+// @Tags         Autenticação
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  utils.Response{data=domain.LoginSuccessResponse}
+// @Failure      401  {object}  utils.Response
+// @Failure      500  {object}  utils.Response
+// @Router       /auth/me [get]
+// @Security     ApiKeyAuth
 func (h *AuthHandler) GetMe(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {

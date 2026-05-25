@@ -12,12 +12,23 @@ import (
 	"syscall"
 	"time"
 
+	_ "lumini-hub/api.gateway/docs"
 	"lumini-hub/common/config"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+// @title           Lumini Hub ERP - API Gateway
+// @version         1.0
+// @description     Gateway unificado de entrada do ERP Lumini Hub, gerenciando roteamento de microsserviços.
+// @host            localhost:4000
+// @BasePath        /api
+// @securityDefinitions.apikey ApiKeyAuth
+// @in              header
+// @name            Authorization
 func main() {
 	// Carregar configurações do common
 	cfg, err := config.Load()
@@ -65,8 +76,11 @@ func main() {
 	adjustProxy(authProxy, authURL)
 	adjustProxy(coreProxy, coreURL)
 
-	// Middleware de proxy que decide para qual microsserviço enviar com base no path
-	router.Any("/*path", func(c *gin.Context) {
+	// Rota do Swagger UI
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	// Middleware de proxy usando NoRoute para tratar todas as requisições não mapeadas pelo roteador local
+	router.NoRoute(func(c *gin.Context) {
 		path := c.Request.URL.Path
 
 		// Roteamento baseado em prefixo

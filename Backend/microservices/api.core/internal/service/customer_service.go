@@ -8,28 +8,28 @@ import (
 	"strings"
 )
 
-// CustomerService gerencia operações relacionadas a clientes
+// CustomerService gerencia operações de negócios relacionadas a clientes
 type CustomerService struct {
-	customerRepo repository.CustomerRepository
-	validator    *validator.CustomerValidator
+	uow       repository.UnitOfWork
+	validator *validator.CustomerValidator
 }
 
-// NewCustomerService cria um novo serviço de clientes
-func NewCustomerService(customerRepo repository.CustomerRepository) *CustomerService {
+// NewCustomerService cria um novo serviço de clientes recebendo o Unit of Work
+func NewCustomerService(uow repository.UnitOfWork) *CustomerService {
 	return &CustomerService{
-		customerRepo: customerRepo,
-		validator:    validator.NewCustomerValidator(customerRepo),
+		uow:       uow,
+		validator: validator.NewCustomerValidator(uow.Customers()),
 	}
 }
 
-// GetCustomers retorna uma lista paginada de clientes
+// GetCustomers retorna uma lista paginada de clientes (legada via GET)
 func (s *CustomerService) GetCustomers(pagination *utils.Pagination) (*domain.ApiCustomerListPaginated, error) {
-	customers, err := s.customerRepo.FindAll(pagination)
+	// Utiliza o FindByFilter genérico sem filtros para obter todos paginados
+	customers, err := s.uow.Customers().FindByFilter(domain.CustomerFilterRequest{}, pagination)
 	if err != nil {
 		return nil, err
 	}
 
-	// Converter para DTOs
 	customerDTOs := make([]domain.ApiCustomer, 0, len(customers))
 	for _, customer := range customers {
 		customerDTOs = append(customerDTOs, domain.ApiCustomerFromModel(customer))
@@ -41,9 +41,57 @@ func (s *CustomerService) GetCustomers(pagination *utils.Pagination) (*domain.Ap
 	}, nil
 }
 
+// GetCustomersByFilter retorna clientes com filtros avançados e paginação (PostFilter)
+func (s *CustomerService) GetCustomersByFilter(filter domain.CustomerFilterRequest) (*domain.ApiCustomerListPaginated, error) {
+	// Normalizar dados de paginação do filtro
+	pageNo := 1
+	if filter.PageNo != nil && *filter.PageNo > 0 {
+		pageNo = *filter.PageNo
+	}
+	pageSize := 10
+	if filter.PageSize != nil && *filter.PageSize > 0 {
+		pageSize = *filter.PageSize
+	}
+
+	orderBy := "id desc"
+	if filter.OrderByColumn != "" {
+		orderBy = filter.OrderByColumn
+		isAsc := true
+		if filter.IsAsc != nil {
+			isAsc = *filter.IsAsc
+		}
+		if !isAsc {
+			orderBy += " desc"
+		} else {
+			orderBy += " asc"
+		}
+	}
+
+	pagination := utils.Pagination{
+		Page:  pageNo,
+		Limit: pageSize,
+		Sort:  orderBy,
+	}
+
+	customers, err := s.uow.Customers().FindByFilter(filter, &pagination)
+	if err != nil {
+		return nil, err
+	}
+
+	customerDTOs := make([]domain.ApiCustomer, 0, len(customers))
+	for _, customer := range customers {
+		customerDTOs = append(customerDTOs, domain.ApiCustomerFromModel(customer))
+	}
+
+	return &domain.ApiCustomerListPaginated{
+		Customer:   customerDTOs,
+		Pagination: *utils.ApiPaginationFromModel(&pagination),
+	}, nil
+}
+
 // GetCustomerByID busca um cliente pelo ID
 func (s *CustomerService) GetCustomerByID(id uint) (*domain.ApiCustomerDetail, error) {
-	customer, err := s.customerRepo.FindByID(id)
+	customer, err := s.uow.Customers().FindByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -51,22 +99,18 @@ func (s *CustomerService) GetCustomerByID(id uint) (*domain.ApiCustomerDetail, e
 		return nil, utils.ErrNotFound
 	}
 
-	// Converter para DTO
 	customerDetailDTO := domain.ApiCustomerDetailFromModel(*customer)
 	return &customerDetailDTO, nil
 }
 
-// CreateCustomer cria um novo cliente
+// CreateCustomer cria um novo cliente sob transação atômica do Unit of Work
 func (s *CustomerService) CreateCustomer(req domain.CreateCustomerRequest, userID uint) (*domain.ApiCustomer, error) {
-	// Validar dados
 	if err := s.validator.ValidateForCreation(req); err != nil {
 		return nil, err
 	}
 
-	// Limpar CPF/CNPJ
 	document := strings.NewReplacer(".", "", "-", "", "/", "").Replace(req.DocumentNumber)
 
-	// Criar cliente
 	customer := domain.Customer{
 		FirstName:      req.FirstName,
 		LastName:       req.LastName,
@@ -75,28 +119,27 @@ func (s *CustomerService) CreateCustomer(req domain.CreateCustomerRequest, userI
 		CompanyName:    req.CompanyName,
 		Notes:          req.Notes,
 		CreatedByID:    &userID,
-		IsActive:       true, // padrão
+		IsActive:       true,
 	}
 
-	// Persistir
-	if err := s.customerRepo.Create(&customer); err != nil {
+	err := s.uow.Execute(func(uow repository.UnitOfWork) error {
+		return uow.Customers().Create(&customer)
+	})
+	if err != nil {
 		return nil, err
 	}
 
-	// Retornar DTO
 	customerDTO := domain.ApiCustomerFromModel(customer)
 	return &customerDTO, nil
 }
 
-// UpdateCustomer atualiza um cliente existente
+// UpdateCustomer atualiza um cliente existente sob transação do Unit of Work
 func (s *CustomerService) UpdateCustomer(id uint, req domain.UpdateCustomerRequest) (*domain.ApiCustomer, error) {
-	// Validar dados
 	if err := s.validator.ValidateForUpdate(id, req); err != nil {
 		return nil, err
 	}
 
-	// Buscar cliente
-	customer, err := s.customerRepo.FindByID(id)
+	customer, err := s.uow.Customers().FindByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -104,31 +147,29 @@ func (s *CustomerService) UpdateCustomer(id uint, req domain.UpdateCustomerReque
 		return nil, utils.ErrNotFound
 	}
 
-	// Atualizar campos básicos
 	customer.FirstName = req.FirstName
 	customer.LastName = req.LastName
 	customer.CompanyName = req.CompanyName
 	customer.IsActive = req.IsActive
 	customer.Notes = req.Notes
 
-	// Atualizar e formatar o DocumentNumber (removendo caracteres especiais)
 	document := strings.NewReplacer(".", "", "-", "", "/", "").Replace(req.DocumentNumber)
 	customer.DocumentNumber = document
 
-	// Salvar alterações
-	if err := s.customerRepo.Update(customer); err != nil {
+	err = s.uow.Execute(func(uow repository.UnitOfWork) error {
+		return uow.Customers().Update(customer)
+	})
+	if err != nil {
 		return nil, err
 	}
 
-	// Converter para DTO
 	customerDTO := domain.ApiCustomerFromModel(*customer)
 	return &customerDTO, nil
 }
 
-// DeleteCustomer exclui um cliente (soft delete)
+// DeleteCustomer exclui um cliente sob transação do Unit of Work
 func (s *CustomerService) DeleteCustomer(id uint) error {
-	// Verificar se o cliente existe
-	customer, err := s.customerRepo.FindByID(id)
+	customer, err := s.uow.Customers().FindByID(id)
 	if err != nil {
 		return err
 	}
@@ -136,6 +177,7 @@ func (s *CustomerService) DeleteCustomer(id uint) error {
 		return utils.ErrNotFound
 	}
 
-	// Excluir cliente
-	return s.customerRepo.Delete(id)
+	return s.uow.Execute(func(uow repository.UnitOfWork) error {
+		return uow.Customers().Delete(id)
+	})
 }

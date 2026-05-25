@@ -1,0 +1,1481 @@
+basePath: /api
+definitions:
+  domain.Address:
+    properties:
+      city:
+        allOf:
+        - $ref: '#/definitions/domain.City'
+        description: Associação com a cidade
+      city_id:
+        description: Relacionamento com City
+        type: integer
+      createdAt:
+        type: string
+      customer_id:
+        type: integer
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: integer
+      neighborhood:
+        type: string
+      number:
+        type: string
+      street:
+        type: string
+      supplier_id:
+        type: integer
+      updatedAt:
+        type: string
+      zip_code:
+        description: CEP com 8 dígitos
+        type: string
+    type: object
+  domain.ApiCustomer:
+    properties:
+      addresses:
+        items:
+          $ref: '#/definitions/domain.Address'
+        type: array
+      company_name:
+        type: string
+      contacts:
+        items:
+          $ref: '#/definitions/domain.Contact'
+        type: array
+      created_at:
+        type: string
+      document_number:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      last_name:
+        type: string
+      person_type:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  domain.ApiCustomerDetail:
+    properties:
+      addresses:
+        items:
+          $ref: '#/definitions/domain.Address'
+        type: array
+      company_name:
+        type: string
+      contacts:
+        items:
+          $ref: '#/definitions/domain.Contact'
+        type: array
+      created_at:
+        type: string
+      created_by:
+        $ref: '#/definitions/lumini-hub_api_core_internal_domain.ApiUser'
+      document_number:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      last_name:
+        type: string
+      person_type:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        $ref: '#/definitions/lumini-hub_api_core_internal_domain.ApiUser'
+    type: object
+  domain.ApiCustomerListPaginated:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/domain.ApiCustomer'
+        type: array
+      pagination:
+        $ref: '#/definitions/utils.ApiPagination'
+    type: object
+  domain.ApiPermission:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      module:
+        type: string
+      permission:
+        type: string
+    type: object
+  domain.ApiRoleDetail:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      permissions:
+        items:
+          $ref: '#/definitions/domain.ApiPermission'
+        type: array
+      updated_at:
+        type: string
+    type: object
+  domain.ApiSupplier:
+    properties:
+      addresses:
+        items:
+          $ref: '#/definitions/domain.Address'
+        type: array
+      company_name:
+        type: string
+      contacts:
+        items:
+          $ref: '#/definitions/domain.Contact'
+        type: array
+      created_at:
+        type: string
+      document_number:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      last_name:
+        type: string
+      person_type:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  domain.ApiSupplierDetail:
+    properties:
+      addresses:
+        items:
+          $ref: '#/definitions/domain.Address'
+        type: array
+      company_name:
+        type: string
+      contacts:
+        items:
+          $ref: '#/definitions/domain.Contact'
+        type: array
+      created_at:
+        type: string
+      created_by:
+        $ref: '#/definitions/lumini-hub_api_core_internal_domain.ApiUser'
+      document_number:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      last_name:
+        type: string
+      person_type:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        $ref: '#/definitions/lumini-hub_api_core_internal_domain.ApiUser'
+    type: object
+  domain.ApiSupplierListPaginated:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/domain.ApiSupplier'
+        type: array
+      pagination:
+        $ref: '#/definitions/utils.ApiPagination'
+    type: object
+  domain.ApiUserDetail:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      last_login:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      role:
+        $ref: '#/definitions/domain.ApiRoleDetail'
+      role_id:
+        type: integer
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
+  domain.ApiUserListPaginated:
+    properties:
+      pagination:
+        $ref: '#/definitions/utils.ApiPagination'
+      users:
+        items:
+          $ref: '#/definitions/lumini-hub_api_auth_internal_domain.ApiUser'
+        type: array
+    type: object
+  domain.ChangePasswordRequest:
+    properties:
+      current_password:
+        type: string
+      new_password:
+        minLength: 6
+        type: string
+    required:
+    - current_password
+    - new_password
+    type: object
+  domain.City:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      ibge_code:
+        description: Código IBGE da cidade
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      state:
+        allOf:
+        - $ref: '#/definitions/domain.State'
+        description: Associação com o estado
+      state_id:
+        description: Relacionamento com State
+        type: integer
+      updatedAt:
+        type: string
+    type: object
+  domain.Contact:
+    properties:
+      contact:
+        description: Contato em si o email, o telefone etc
+        type: string
+      createdAt:
+        type: string
+      customer_id:
+        type: integer
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: integer
+      name:
+        description: Um Nome para contato se for o caso
+        type: string
+      supplier_id:
+        type: integer
+      type:
+        description: 'Tipo de Contato: email, Telefone, Celular'
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  domain.Country:
+    properties:
+      bacen_code:
+        description: Código Bacen do país
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: integer
+      name:
+        type: string
+      phone_code:
+        description: Código telefônico internacional
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  domain.CreateCustomerRequest:
+    properties:
+      company_name:
+        type: string
+      document_number:
+        type: string
+      first_name:
+        type: string
+      is_active:
+        type: boolean
+      last_name:
+        type: string
+      notes:
+        type: string
+      person_type:
+        type: string
+    required:
+    - document_number
+    - first_name
+    - person_type
+    type: object
+  domain.CreateSupplierRequest:
+    properties:
+      company_name:
+        type: string
+      created_by:
+        type: integer
+      document_number:
+        type: string
+      first_name:
+        type: string
+      is_active:
+        type: boolean
+      last_name:
+        type: string
+      notes:
+        type: string
+      person_type:
+        type: string
+    required:
+    - document_number
+    - first_name
+    - is_active
+    - person_type
+    type: object
+  domain.CreateUserRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        minLength: 6
+        type: string
+      phone:
+        type: string
+      role_id:
+        type: integer
+      username:
+        maxLength: 50
+        minLength: 3
+        type: string
+    required:
+    - email
+    - name
+    - password
+    - role_id
+    - username
+    type: object
+  domain.CustomerFilterRequest:
+    properties:
+      company_name:
+        type: string
+      document_number:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      is_asc:
+        type: boolean
+      last_name:
+        type: string
+      order_by_column:
+        type: string
+      page_no:
+        type: integer
+      page_size:
+        type: integer
+      person_type:
+        type: string
+    type: object
+  domain.LoginSuccessResponse:
+    properties:
+      user:
+        $ref: '#/definitions/domain.ApiUserDetail'
+    type: object
+  domain.RefreshTokenSuccessResponse:
+    properties:
+      user:
+        $ref: '#/definitions/domain.ApiUserDetail'
+    type: object
+  domain.State:
+    properties:
+      country:
+        allOf:
+        - $ref: '#/definitions/domain.Country'
+        description: Associação com o país
+      country_id:
+        description: Relacionamento com Country
+        type: integer
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      ibge_code:
+        description: Código IBGE da UF
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      uf:
+        description: 'Sigla do Estado (ex: SP, RJ)'
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  domain.SupplierFilterRequest:
+    properties:
+      company_name:
+        type: string
+      document_number:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      is_asc:
+        type: boolean
+      last_name:
+        type: string
+      order_by_column:
+        type: string
+      page_no:
+        type: integer
+      page_size:
+        type: integer
+      person_type:
+        type: string
+    type: object
+  domain.UpdateCustomerRequest:
+    properties:
+      company_name:
+        type: string
+      document_number:
+        type: string
+      first_name:
+        type: string
+      is_active:
+        type: boolean
+      last_name:
+        type: string
+      notes:
+        type: string
+    required:
+    - document_number
+    - first_name
+    - is_active
+    type: object
+  domain.UpdateSupplierRequest:
+    properties:
+      adresses_ids:
+        items:
+          type: integer
+        type: array
+      company_name:
+        type: string
+      contacts_ids:
+        items:
+          type: integer
+        type: array
+      document_number:
+        type: string
+      documents_ids:
+        description: Relacionamentos
+        items:
+          type: integer
+        type: array
+      first_name:
+        type: string
+      is_active:
+        type: boolean
+      last_name:
+        type: string
+      notes:
+        type: string
+    required:
+    - document_number
+    - first_name
+    - is_active
+    type: object
+  domain.UpdateUserRequest:
+    properties:
+      email:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      phone:
+        type: string
+      role_id:
+        type: integer
+    type: object
+  gorm.DeletedAt:
+    properties:
+      time:
+        type: string
+      valid:
+        description: Valid is true if Time is not NULL
+        type: boolean
+    type: object
+  handlers.LoginRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  lumini-hub_api_auth_internal_domain.ApiUser:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        type: string
+      role:
+        type: string
+      role_id:
+        type: integer
+      username:
+        type: string
+    type: object
+  lumini-hub_api_core_internal_domain.ApiUser:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      username:
+        type: string
+    type: object
+  lumini-hub_common_utils.Response:
+    properties:
+      data: {}
+      error:
+        type: string
+      message:
+        type: string
+      meta: {}
+      success:
+        type: boolean
+    type: object
+  utils.ApiPagination:
+    properties:
+      limit:
+        type: integer
+      order:
+        type: string
+      page:
+        type: integer
+      sort:
+        type: string
+      totalPages:
+        type: integer
+      totalRows:
+        type: integer
+    type: object
+  utils.Response:
+    properties:
+      data: {}
+      error:
+        type: string
+      message:
+        type: string
+      meta: {}
+      success:
+        type: boolean
+    type: object
+host: localhost:4000
+info:
+  contact: {}
+  description: Gateway unificado de entrada do ERP Lumini Hub, gerenciando roteamento
+    de microsserviços.
+  title: Lumini Hub ERP - API Gateway
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Autentica o usuário no ERP Lumini Hub, definindo cookies seguros
+        HTTP-Only
+      parameters:
+      - description: Credenciais de acesso
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/lumini-hub_common_utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.LoginSuccessResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: Realiza login de usuário
+      tags:
+      - Autenticação
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Limpa os cookies de sessão ativos no navegador
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Efetua logout do sistema
+      tags:
+      - Autenticação
+  /auth/me:
+    get:
+      consumes:
+      - application/json
+      description: Retorna o perfil detalhado do usuário ativo na sessão
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.LoginSuccessResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Obtém dados do usuário atual
+      tags:
+      - Autenticação
+  /auth/refresh-token:
+    post:
+      consumes:
+      - application/json
+      description: Gera novos tokens de acesso e refresh a partir do cookie refresh_token
+        existente
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.RefreshTokenSuccessResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: Renova token de autenticação
+      tags:
+      - Autenticação
+  /customers:
+    get:
+      consumes:
+      - application/json
+      description: Retorna uma lista de clientes paginada a partir de query strings
+      parameters:
+      - description: Página ativa
+        in: query
+        name: page
+        type: integer
+      - description: Limite por página
+        in: query
+        name: limit
+        type: integer
+      - description: 'Ordenação (ex: first_name asc)'
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiCustomerListPaginated'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Lista clientes com paginação (GET)
+      tags:
+      - Clientes
+    post:
+      consumes:
+      - application/json
+      description: Cadastra um cliente no sistema ERP
+      parameters:
+      - description: Dados do Cliente
+        in: body
+        name: customer
+        required: true
+        schema:
+          $ref: '#/definitions/domain.CreateCustomerRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiCustomer'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Cria novo cliente
+      tags:
+      - Clientes
+  /customers/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Realiza soft delete de um cliente
+      parameters:
+      - description: ID do Cliente
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Exclui cliente
+      tags:
+      - Clientes
+    get:
+      consumes:
+      - application/json
+      description: Retorna os detalhes de um único cliente cadastrado
+      parameters:
+      - description: ID do Cliente
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiCustomerDetail'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Busca cliente por ID
+      tags:
+      - Clientes
+    put:
+      consumes:
+      - application/json
+      description: Altera dados cadastrais de um cliente pelo ID
+      parameters:
+      - description: ID do Cliente
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Novos dados do cliente
+        in: body
+        name: customer
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UpdateCustomerRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiCustomer'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Atualiza cliente
+      tags:
+      - Clientes
+  /customers/filter:
+    post:
+      consumes:
+      - application/json
+      description: Busca e filtra clientes dinamicamente enviando as opções no JSON
+        do Body
+      parameters:
+      - description: Filtros e Dados de Paginação
+        in: body
+        name: filter
+        required: true
+        schema:
+          $ref: '#/definitions/domain.CustomerFilterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiCustomerListPaginated'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Filtra clientes com paginação (PostFilter)
+      tags:
+      - Clientes
+  /suppliers:
+    get:
+      consumes:
+      - application/json
+      description: Retorna uma lista de fornecedores paginada a partir de query strings
+      parameters:
+      - description: Página ativa
+        in: query
+        name: page
+        type: integer
+      - description: Limite por página
+        in: query
+        name: limit
+        type: integer
+      - description: 'Ordenação (ex: first_name asc)'
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiSupplierListPaginated'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Lista fornecedores com paginação (GET)
+      tags:
+      - Fornecedores
+    post:
+      consumes:
+      - application/json
+      description: Cadastra um fornecedor no sistema ERP
+      parameters:
+      - description: Dados do Fornecedor
+        in: body
+        name: supplier
+        required: true
+        schema:
+          $ref: '#/definitions/domain.CreateSupplierRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiSupplier'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Cria novo fornecedor
+      tags:
+      - Fornecedores
+  /suppliers/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Realiza soft delete de um fornecedor
+      parameters:
+      - description: ID do Fornecedor
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Exclui fornecedor
+      tags:
+      - Fornecedores
+    get:
+      consumes:
+      - application/json
+      description: Retorna os detalhes de um único fornecedor cadastrado
+      parameters:
+      - description: ID do Fornecedor
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiSupplierDetail'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Busca fornecedor por ID
+      tags:
+      - Fornecedores
+    put:
+      consumes:
+      - application/json
+      description: Altera dados cadastrais de um fornecedor pelo ID
+      parameters:
+      - description: ID do Fornecedor
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Novos dados do fornecedor
+        in: body
+        name: supplier
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UpdateSupplierRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiSupplier'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Atualiza fornecedor
+      tags:
+      - Fornecedores
+  /suppliers/filter:
+    post:
+      consumes:
+      - application/json
+      description: Busca e filtra fornecedores dinamicamente enviando as opções no
+        JSON do Body
+      parameters:
+      - description: Filtros e Dados de Paginação
+        in: body
+        name: filter
+        required: true
+        schema:
+          $ref: '#/definitions/domain.SupplierFilterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiSupplierListPaginated'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Filtra fornecedores com paginação (PostFilter)
+      tags:
+      - Fornecedores
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: Retorna uma lista paginada de usuários cadastrados no ERP
+      parameters:
+      - description: Página ativa
+        in: query
+        name: page
+        type: integer
+      - description: Limite por página
+        in: query
+        name: limit
+        type: integer
+      - description: 'Ordenação (ex: username asc)'
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiUserListPaginated'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Lista usuários com paginação
+      tags:
+      - Usuários
+    post:
+      consumes:
+      - application/json
+      description: Cadastra um usuário com perfil (Role) associado
+      parameters:
+      - description: Dados do Usuário
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/domain.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiUserDetail'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Cria novo usuário
+      tags:
+      - Usuários
+  /users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove logicamente um usuário do sistema (não é permitido excluir
+        a si mesmo)
+      parameters:
+      - description: ID do Usuário
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Exclui usuário
+      tags:
+      - Usuários
+    get:
+      consumes:
+      - application/json
+      description: Retorna os detalhes de um único usuário
+      parameters:
+      - description: ID do Usuário
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiUserDetail'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Busca usuário por ID
+      tags:
+      - Usuários
+    put:
+      consumes:
+      - application/json
+      description: Altera os dados cadastrais e o perfil de um usuário existente
+      parameters:
+      - description: ID do Usuário
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Novos dados do usuário
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiUserDetail'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Atualiza usuário
+      tags:
+      - Usuários
+  /users/{id}/password:
+    put:
+      consumes:
+      - application/json
+      description: Altera a credencial de senha de um usuário específico (requer validação
+        se não for Admin)
+      parameters:
+      - description: ID do Usuário
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Dados de alteração de senha
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/domain.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Altera senha do usuário
+      tags:
+      - Usuários
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

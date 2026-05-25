@@ -31,6 +31,19 @@ func NewUserHandler(db *gorm.DB) *UserHandler {
 }
 
 // GetUsers retorna uma lista paginada de usuários
+// @Summary      Lista usuários com paginação
+// @Description  Retorna uma lista paginada de usuários cadastrados no ERP
+// @Tags         Usuários
+// @Accept       json
+// @Produce      json
+// @Param        page   query      int     false  "Página ativa"
+// @Param        limit  query      int     false  "Limite por página"
+// @Param        sort   query      string  false  "Ordenação (ex: username asc)"
+// @Success      200    {object}  utils.Response{data=domain.ApiUserListPaginated}
+// @Failure      401    {object}  utils.Response
+// @Failure      500    {object}  utils.Response
+// @Router       /users [get]
+// @Security     ApiKeyAuth
 func (h *UserHandler) GetUsers(c *gin.Context) {
 	pagination := utils.GetPaginationParams(c)
 
@@ -44,6 +57,18 @@ func (h *UserHandler) GetUsers(c *gin.Context) {
 }
 
 // GetUser retorna um usuário específico
+// @Summary      Busca usuário por ID
+// @Description  Retorna os detalhes de um único usuário
+// @Tags         Usuários
+// @Accept       json
+// @Produce      json
+// @Param        id   path      int  true  "ID do Usuário"
+// @Success      200  {object}  utils.Response{data=domain.ApiUserDetail}
+// @Failure      401  {object}  utils.Response
+// @Failure      404  {object}  utils.Response
+// @Failure      500  {object}  utils.Response
+// @Router       /users/{id} [get]
+// @Security     ApiKeyAuth
 func (h *UserHandler) GetUser(c *gin.Context) {
 	id, err := path.IdFromPathParamOrSendError(c)
 	if err != nil {
@@ -64,6 +89,18 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 }
 
 // CreateUser cria um novo usuário
+// @Summary      Cria novo usuário
+// @Description  Cadastra um usuário com perfil (Role) associado
+// @Tags         Usuários
+// @Accept       json
+// @Produce      json
+// @Param        user  body      domain.CreateUserRequest  true  "Dados do Usuário"
+// @Success      201   {object}  utils.Response{data=domain.ApiUserDetail}
+// @Failure      400   {object}  utils.Response
+// @Failure      401   {object}  utils.Response
+// @Failure      500   {object}  utils.Response
+// @Router       /users [post]
+// @Security     ApiKeyAuth
 func (h *UserHandler) CreateUser(c *gin.Context) {
 	var req domain.CreateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -85,6 +122,20 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 }
 
 // UpdateUser atualiza um usuário existente
+// @Summary      Atualiza usuário
+// @Description  Altera os dados cadastrais e o perfil de um usuário existente
+// @Tags         Usuários
+// @Accept       json
+// @Produce      json
+// @Param        id    path      int                       true  "ID do Usuário"
+// @Param        user  body      domain.UpdateUserRequest  true  "Novos dados do usuário"
+// @Success      200   {object}  utils.Response{data=domain.ApiUserDetail}
+// @Failure      400   {object}  utils.Response
+// @Failure      401   {object}  utils.Response
+// @Failure      404   {object}  utils.Response
+// @Failure      500   {object}  utils.Response
+// @Router       /users/{id} [put]
+// @Security     ApiKeyAuth
 func (h *UserHandler) UpdateUser(c *gin.Context) {
 	id, err := path.IdFromPathParamOrSendError(c)
 	if err != nil {
@@ -113,6 +164,19 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 }
 
 // ChangePassword altera a senha de um usuário
+// @Summary      Altera senha do usuário
+// @Description  Altera a credencial de senha de um usuário específico (requer validação se não for Admin)
+// @Tags         Usuários
+// @Accept       json
+// @Produce      json
+// @Param        id    path      int                          true  "ID do Usuário"
+// @Param        data  body      domain.ChangePasswordRequest  true  "Dados de alteração de senha"
+// @Success      200   {object}  utils.Response
+// @Failure      400   {object}  utils.Response
+// @Failure      401   {object}  utils.Response
+// @Failure      403   {object}  utils.Response
+// @Router       /users/{id}/password [put]
+// @Security     ApiKeyAuth
 func (h *UserHandler) ChangePassword(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
@@ -126,23 +190,19 @@ func (h *UserHandler) ChangePassword(c *gin.Context) {
 		return
 	}
 
-	// Verificar se o usuário é admin ou está alterando a própria senha
 	userID, _ := c.Get("userID")
 	role, _ := c.Get("role")
 	isAdmin := role == "ADMIN"
 	isSelf := userID.(uint) == uint(id)
 
-	// Se não for admin e não for o próprio usuário, negar acesso
 	if !isAdmin && !isSelf {
 		utils.ErrorResponse(c, http.StatusForbidden, "Acesso negado", "Você não tem permissão para alterar a senha de outro usuário")
 		return
 	}
 
-	// Se for admin alterando a senha de outro usuário, não precisa da senha atual
 	if isAdmin && !isSelf {
 		err = h.userService.ChangePassword(uint(id), "", req.NewPassword, true)
 	} else {
-		// Se for o próprio usuário ou admin alterando a própria senha, precisa da senha atual
 		err = h.userService.ChangePassword(uint(id), req.CurrentPassword, req.NewPassword, false)
 	}
 
@@ -163,13 +223,24 @@ func (h *UserHandler) ChangePassword(c *gin.Context) {
 }
 
 // DeleteUser exclui um usuário
+// @Summary      Exclui usuário
+// @Description  Remove logicamente um usuário do sistema (não é permitido excluir a si mesmo)
+// @Tags         Usuários
+// @Accept       json
+// @Produce      json
+// @Param        id   path      int  true  "ID do Usuário"
+// @Success      200  {object}  utils.Response
+// @Failure      400  {object}  utils.Response
+// @Failure      401  {object}  utils.Response
+// @Failure      404  {object}  utils.Response
+// @Router       /users/{id} [delete]
+// @Security     ApiKeyAuth
 func (h *UserHandler) DeleteUser(c *gin.Context) {
 	id, err := path.IdFromPathParamOrSendError(c)
 	if err != nil {
 		return
 	}
 
-	// Impedir que um usuário exclua a si mesmo
 	userID, _ := c.Get("userID")
 	if userID.(uint) == uint(id) {
 		utils.ErrorResponse(c, http.StatusBadRequest, "Operação inválida", "Você não pode excluir seu próprio usuário")
