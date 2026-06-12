@@ -9,7 +9,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md space-y-8 rounded-lg border bg-card p-8 shadow-lg">
         <div className="flex flex-col items-center space-y-2 text-center">
           <Logo className="h-16 w-16" />
-          <h1 className="text-2xl font-bold">Sistema ERP</h1>
+          <h1 className="text-2xl font-bold">Lumini Hub</h1>
           <p className="text-sm text-muted-foreground">
             Entre com suas credenciais para acessar o sistema
           </p>

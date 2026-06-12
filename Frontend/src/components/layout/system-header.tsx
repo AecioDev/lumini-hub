@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Logo } from '@/components/ui/logo';
-import { DashboardSwitcher } from './dashboard-switcher';
 import { UserSection } from './user-section';
 import SystemSidebar from './system-sidebar';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -41,11 +40,6 @@ export function SystemHeader() {
         >
           <Logo className="h-8 w-8" />
         </Link>
-
-        {/* Switcher de Dashboard (reaproveitado do layout original) */}
-        <div className="hidden sm:block">
-          <DashboardSwitcher />
-        </div>
       </div>
 
       {/* Lado Direito: Theme Settings + Seção do Usuário */}

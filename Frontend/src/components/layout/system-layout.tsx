@@ -3,18 +3,12 @@
 import React from 'react';
 import SystemSidebar from './system-sidebar';
 import { SystemHeader } from './system-header';
-import { useColorPresets, useApplyColorPreset } from '@/hooks/use-theme-color';
 
 interface SystemLayoutProps {
   children: React.ReactNode;
 }
 
 export default function SystemLayout({ children }: SystemLayoutProps) {
-  const { colorPresets } = useColorPresets();
-  
-  // Inicializa e aplica dinamicamente a cor primária de destaque no DOM
-  useApplyColorPreset(colorPresets);
-
   return (
     <main className="flex min-h-screen flex-grow bg-background text-foreground">
       {/* Sidebar - Visível apenas de xl para cima */}

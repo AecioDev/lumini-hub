@@ -70,10 +70,6 @@ body {
     --primary-default: 17 17 17;
     --primary-dark: 0 0 0;
     --primary-foreground: 255 255 255;
-
-    /* HSL de compatibilidade para componentes antigos (shadcn) */
-    --primary: 220 70% 50%;
-    --primary-foreground: 0 0% 98%;
   }
 
   .dark, [data-theme='dark'] {
@@ -131,10 +127,6 @@ body {
     --primary-default: 241 241 241;
     --primary-dark: 255 255 255;
     --primary-foreground: 0 0 0;
-
-    /* HSL de compatibilidade para componentes antigos (shadcn) */
-    --primary: 220 70% 50%;
-    --primary-foreground: 0 0% 98%;
   }
 }
 

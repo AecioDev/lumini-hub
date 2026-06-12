@@ -1,19 +1,69 @@
 'use client';
 
 import Link from 'next/link';
-import { Fragment } from 'react';
+import { Fragment, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
 import { Title, Collapse } from 'rizzui';
 import { cn } from '@/lib/utils';
 import { PiCaretDownBold } from 'react-icons/pi';
 import { menuItems } from './system-menu-items';
+import { useAuth } from '@/hooks/use-auth';
+import { dashboardOptions } from '@/config/navigation';
 
 export function SystemSidebarMenu() {
   const pathname = usePathname();
+  const { user, isLoading: isLoadingUser } = useAuth();
+
+  // Filtra os dashboards que o usuário tem permissão para ver
+  const availableDashboards = useMemo(() => {
+    if (isLoadingUser || !user) {
+      return [];
+    }
+    let userPermissions: string[] = [];
+    if (user.role?.permissions && Array.isArray(user.role.permissions)) {
+      userPermissions = user.role.permissions.map((p: any) => p.permission);
+    }
+    if (Array.isArray(user.permissions)) {
+      user.permissions.forEach((p: any) => {
+        const permName = typeof p === "string" ? p : p.permission;
+        if (permName && !userPermissions.includes(permName)) {
+          userPermissions.push(permName);
+        }
+      });
+    }
+    return dashboardOptions.filter((option) =>
+      option.requiredPermission ? userPermissions.includes(option.requiredPermission) : true
+    );
+  }, [user, isLoadingUser]);
+
+  // Reconstrói dinamicamente os itens de menu baseando-se nos dashboards disponíveis
+  const dynamicMenuItems = useMemo(() => {
+    return menuItems.map((item) => {
+      if (item.name === 'Dashboard') {
+        if (availableDashboards.length > 1) {
+          return {
+            ...item,
+            href: undefined, // força a se comportar como menu de recolhimento/collapse
+            dropdownItems: availableDashboards.map((dash) => ({
+              name: dash.title,
+              href: dash.href,
+            })),
+          };
+        } else if (availableDashboards.length === 1) {
+          return {
+            ...item,
+            href: availableDashboards[0].href,
+            dropdownItems: undefined,
+          };
+        }
+      }
+      return item;
+    });
+  }, [availableDashboards]);
 
   return (
     <div className="mt-4 pb-3 3xl:mt-6">
-      {menuItems.map((item, index) => {
+      {dynamicMenuItems.map((item, index) => {
         const isActive = pathname === (item?.href as string);
         const pathnameExistInDropdowns = item?.dropdownItems?.some(
           (dropdownItem) => dropdownItem.href === pathname
@@ -22,7 +72,7 @@ export function SystemSidebarMenu() {
 
         return (
           <Fragment key={item.name + '-' + index}>
-            {item?.href ? (
+            {item?.href || item?.dropdownItems ? (
               <>
                 {item?.dropdownItems ? (
                   <Collapse
@@ -97,7 +147,7 @@ export function SystemSidebarMenu() {
                   </Collapse>
                 ) : (
                   <Link
-                    href={item?.href}
+                    href={item?.href || '#'}
                     className={cn(
                       'group relative mx-3 my-0.5 flex items-center justify-between rounded-md px-3 py-2.5 font-medium lg:my-1 2xl:mx-5 2xl:my-2 transition-all duration-200',
                       isActive

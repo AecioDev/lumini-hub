@@ -9,7 +9,7 @@ import { HydrationGate } from "@/components/common/hydration-gate";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "Sistema ERP - Gestão Empresarial",
+  title: "Lumini Hub - Gestão Empresarial",
   description: "Sistema integrado de gestão empresarial",
   generator: "Eu Mesmo",
 };

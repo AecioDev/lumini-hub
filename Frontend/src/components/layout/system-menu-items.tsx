@@ -9,9 +9,6 @@ import {
   PiUserGear,
   PiUser,
   PiBriefcase,
-  PiMapPinLine,
-  PiEnvelopeSimpleOpen,
-  PiFolder,
 } from 'react-icons/pi';
 
 export interface MenuItem {
@@ -100,10 +97,6 @@ export const menuItems: MenuItem[] = [
       {
         name: 'Usuários e Perfis',
         href: routes.settings.users.root,
-      },
-      {
-        name: 'Permissões',
-        href: routes.settings.permissions.root,
       },
     ],
   },

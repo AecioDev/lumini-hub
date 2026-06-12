@@ -20,7 +20,7 @@ export default function DashboardIndexPage() {
           router.replace("/dashboard/admin");
           break;
         case "FINANCEIRO":
-          router.replace("/dashboard/finance");
+          router.replace("/dashboard/financial");
           break;
         case "ESTOQUE":
           router.replace("/dashboard/inventory");
@@ -29,14 +29,14 @@ export default function DashboardIndexPage() {
           router.replace("/dashboard/manager");
           break;
         case "COMPRAS":
-          router.replace("/dashboard/purchases");
+          router.replace("/dashboard/purchase");
           break;
         case "VENDAS":
           router.replace("/dashboard/sales");
           break;
         default:
           // Caso a role não seja reconhecida ou não tenha um dashboard específico
-          router.replace("/dashboard/general"); // Ou uma página de erro/dashboard padrão
+          router.replace("/dashboard/em-construcao");
           break;
       }
     }

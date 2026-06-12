@@ -302,7 +302,7 @@ export default function UsersAndRolesPage() {
                 return (
                   <Card
                     key={role.id}
-                    className="group border border-border/60 hover:border-primary/30 hover:shadow-md transition-all duration-300 bg-card overflow-hidden flex flex-col justify-between"
+                    className="group border border-primary/20 hover:border-primary/40 hover:shadow-md transition-all duration-300 bg-card overflow-hidden flex flex-col justify-between"
                   >
                     <CardHeader className="pb-3 flex flex-row items-start justify-between space-y-0">
                       <div className="flex items-center gap-3">
@@ -395,7 +395,7 @@ export default function UsersAndRolesPage() {
         </div>
 
         {/* Tabela de Usuários */}
-        <Card className="border border-border/60 shadow-sm bg-card mt-8">
+        <Card className="border border-primary/20 shadow-sm bg-card mt-8">
           <CardHeader className="pb-4">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>

@@ -10,11 +10,11 @@ export default function SystemSidebar({ className }: { className?: string }) {
   return (
     <aside
       className={cn(
-        'fixed bottom-0 start-0 z-50 h-full w-[284px] xl:p-5 2xl:w-[308px] bg-transparent',
+        'fixed top-0 start-0 z-50 h-screen w-[284px] xl:p-5 2xl:w-[308px] bg-transparent',
         className
       )}
     >
-      <div className="h-full bg-card border border-border xl:rounded-2xl flex flex-col shadow-sm dark:shadow-none transition-colors duration-200">
+      <div className="h-full bg-card border border-primary/20 xl:rounded-2xl flex flex-col shadow-sm dark:shadow-none transition-colors duration-200">
         {/* Cabeçalho da Sidebar / Logo */}
         <div className="sticky top-0 z-40 flex items-center gap-3 px-6 pb-5 pt-5 2xl:px-8 2xl:pt-6 border-b border-border">
           <Link href={'/dashboard'} aria-label="Lumini Hub Home" className="flex items-center gap-3">
@@ -27,7 +27,7 @@ export default function SystemSidebar({ className }: { className?: string }) {
         </div>
 
         {/* Menu com Rolagem Customizada */}
-        <SimpleBar className="flex-1 h-[calc(100%-80px)] mt-4">
+        <SimpleBar className="flex-1 min-h-0 mt-4">
           <SystemSidebarMenu />
         </SimpleBar>
       </div>
