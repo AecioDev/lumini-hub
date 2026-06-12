@@ -65,6 +65,15 @@ type ApiUser struct {
 	IsActive bool   `json:"is_active"`
 }
 
+// ApiUserRole representa os dados básicos do papel do usuário, sem incluir as permissões aninhadas
+type ApiUserRole struct {
+	ID          uint   `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	CreatedAt   string `json:"created_at"`
+	UpdatedAt   string `json:"updated_at"`
+}
+
 // ApiUserDetail representa os dados detalhados de um usuário
 type ApiUserDetail struct {
 	ID          uint            `json:"id"`
@@ -73,7 +82,7 @@ type ApiUserDetail struct {
 	Email       string          `json:"email,omitempty"`
 	Phone       string          `json:"phone"`
 	RoleID      uint            `json:"role_id"`
-	Role        ApiRoleDetail   `json:"role"`
+	Role        ApiUserRole     `json:"role"`
 	IsActive    bool            `json:"is_active"`
 	LastLogin   string          `json:"last_login,omitempty"`
 	Permissions []ApiPermission `json:"permissions,omitempty"`
@@ -137,10 +146,16 @@ func ApiUserDetailFromModel(u User) ApiUserDetail {
 
 	// Adicionar o perfil se estiver carregado
 	if u.Role != nil && u.Role.ID != 0 {
-		dto.Role = ApiRoleDetailFromModel(*u.Role)
+		dto.Role = ApiUserRole{
+			ID:          u.Role.ID,
+			Name:        u.Role.Name,
+			Description: u.Role.Description,
+			CreatedAt:   u.Role.CreatedAt.Format("2006-01-02 15:04:05"),
+			UpdatedAt:   u.Role.UpdatedAt.Format("2006-01-02 15:04:05"),
+		}
 	}
 
-	// Adicionar permissões diretas se estiverem carregadas
+	// Adicionar permissões do usuário (lidas da relação direta user_permissions)
 	if len(u.Permissions) > 0 {
 		permissionDTOs := make([]ApiPermission, 0, len(u.Permissions))
 		for _, perm := range u.Permissions {

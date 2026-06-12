@@ -74,7 +74,7 @@ func (r *GormUserRepository) FindByID(id uint) (*domain.User, error) {
 // FindByIDWithRole busca um usuário pelo ID e carrega o relacionamento com Role e Permissions
 func (r *GormUserRepository) FindByIDWithRole(id uint) (*domain.User, error) {
 	var user domain.User
-	if err := r.GetDB().Preload("Role").Preload("Permissions").First(&user, id).Error; err != nil {
+	if err := r.GetDB().Preload("Role").Preload("Role.Permissions").Preload("Permissions").First(&user, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}

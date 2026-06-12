@@ -1670,32 +1670,6 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.ApiRoleDetail": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "permissions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/domain.ApiPermission"
-                    }
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
         "domain.ApiSupplier": {
             "type": "object",
             "properties": {
@@ -1835,7 +1809,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "role": {
-                    "$ref": "#/definitions/domain.ApiRoleDetail"
+                    "$ref": "#/definitions/domain.ApiUserRole"
                 },
                 "role_id": {
                     "type": "integer"
@@ -1859,6 +1833,26 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/lumini-hub_api_auth_internal_domain.ApiUser"
                     }
+                }
+            }
+        },
+        "domain.ApiUserRole": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },

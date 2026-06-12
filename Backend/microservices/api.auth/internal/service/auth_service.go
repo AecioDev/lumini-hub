@@ -38,7 +38,7 @@ func (s *AuthService) Login(username, password string) (*LoginResponse, error) {
 	var user domain.User
 
 	// Buscar usuário pelo username
-	result := s.db.Preload("Role").Preload("Permissions").Where("LOWER(username) = LOWER(?)", username).First(&user)
+	result := s.db.Preload("Role").Preload("Role.Permissions").Preload("Permissions").Where("LOWER(username) = LOWER(?)", username).First(&user)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, errors.New("usuário não encontrado")
@@ -56,7 +56,7 @@ func (s *AuthService) Login(username, password string) (*LoginResponse, error) {
 		return nil, errors.New("senha incorreta")
 	}
 
-	// Extrair permissões
+	// Extrair permissões do usuário para o token JWT (lidas da relação direta user_permissions)
 	var permissions []string
 	for _, perm := range user.Permissions {
 		permissions = append(permissions, perm.Permission)
@@ -96,7 +96,7 @@ func (s *AuthService) RefreshToken(refreshToken string) (*LoginResponse, error) 
 
 	// Buscar usuário pelo Subject (username)
 	var user domain.User
-	result := s.db.Preload("Role").Preload("Permissions").Where("LOWER(username) = LOWER(?)", claims.Subject).First(&user)
+	result := s.db.Preload("Role").Preload("Role.Permissions").Preload("Permissions").Where("LOWER(username) = LOWER(?)", claims.Subject).First(&user)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -106,7 +106,7 @@ func (s *AuthService) RefreshToken(refreshToken string) (*LoginResponse, error) 
 		return nil, errors.New("usuário inativo")
 	}
 
-	// Extrair permissões
+	// Extrair permissões do usuário para o token JWT (lidas da relação direta user_permissions)
 	var permissions []string
 	for _, perm := range user.Permissions {
 		permissions = append(permissions, perm.Permission)
@@ -133,11 +133,11 @@ func (s *AuthService) RefreshToken(refreshToken string) (*LoginResponse, error) 
 }
 
 // GetUserByID busca um usuário pelo ID
-func (s *AuthService) GetUserByID(userID uint) (*domain.User, error) {
-	var user domain.User
-	result := s.db.Preload("Role").Preload("Permissions").First(&user, userID)
-	if result.Error != nil {
-		return nil, result.Error
+	func (s *AuthService) GetUserByID(userID uint) (*domain.User, error) {
+		var user domain.User
+		result := s.db.Preload("Role").Preload("Role.Permissions").Preload("Permissions").First(&user, userID)
+		if result.Error != nil {
+			return nil, result.Error
+		}
+		return &user, nil
 	}
-	return &user, nil
-}

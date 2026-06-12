@@ -113,23 +113,6 @@ definitions:
       permission:
         type: string
     type: object
-  domain.ApiRoleDetail:
-    properties:
-      created_at:
-        type: string
-      description:
-        type: string
-      id:
-        type: integer
-      name:
-        type: string
-      permissions:
-        items:
-          $ref: '#/definitions/domain.ApiPermission'
-        type: array
-      updated_at:
-        type: string
-    type: object
   domain.ApiSupplier:
     properties:
       addresses:
@@ -222,7 +205,7 @@ definitions:
       phone:
         type: string
       role:
-        $ref: '#/definitions/domain.ApiRoleDetail'
+        $ref: '#/definitions/domain.ApiUserRole'
       role_id:
         type: integer
       updated_at:
@@ -238,6 +221,19 @@ definitions:
         items:
           $ref: '#/definitions/lumini-hub_api_auth_internal_domain.ApiUser'
         type: array
+    type: object
+  domain.ApiUserRole:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      updated_at:
+        type: string
     type: object
   domain.ChangePasswordRequest:
     properties:
