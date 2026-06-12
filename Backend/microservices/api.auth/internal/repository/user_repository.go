@@ -25,6 +25,8 @@ type UserRepository interface {
 	ExistsByUsernameExcept(username string, id uint) (bool, error)
 	ExistsByEmailExcept(email string, id uint) (bool, error)
 	CountByRoleID(roleID uint) (int64, error)
+	UpdatePermissions(user *domain.User, permissionIDs []uint) error
+	FindByIDWithPermissions(id uint) (*domain.User, error)
 }
 
 // GormUserRepository implementa UserRepository usando GORM
@@ -69,10 +71,10 @@ func (r *GormUserRepository) FindByID(id uint) (*domain.User, error) {
 	return &user, nil
 }
 
-// FindByIDWithRole busca um usuário pelo ID e carrega o relacionamento com Role
+// FindByIDWithRole busca um usuário pelo ID e carrega o relacionamento com Role e Permissions
 func (r *GormUserRepository) FindByIDWithRole(id uint) (*domain.User, error) {
 	var user domain.User
-	if err := r.GetDB().Preload("Role").First(&user, id).Error; err != nil {
+	if err := r.GetDB().Preload("Role").Preload("Permissions").First(&user, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
@@ -80,6 +82,29 @@ func (r *GormUserRepository) FindByIDWithRole(id uint) (*domain.User, error) {
 	}
 	return &user, nil
 }
+
+// FindByIDWithPermissions busca um usuário pelo ID e carrega o relacionamento com Permissions e Role
+func (r *GormUserRepository) FindByIDWithPermissions(id uint) (*domain.User, error) {
+	return r.FindByIDWithRole(id)
+}
+
+// UpdatePermissions atualiza as permissões diretas de um usuário
+func (r *GormUserRepository) UpdatePermissions(user *domain.User, permissionIDs []uint) error {
+	var permissions []domain.Permission
+	
+	if len(permissionIDs) > 0 {
+		if err := r.GetDB().Where("id IN ?", permissionIDs).Find(&permissions).Error; err != nil {
+			return err
+		}
+		if len(permissions) != len(permissionIDs) {
+			return errors.New("uma ou mais permissões não existem")
+		}
+	}
+
+	// Atualizar permissões do usuário na tabela associativa user_permissions
+	return r.GetDB().Model(user).Association("Permissions").Replace(&permissions)
+}
+
 
 // FindByUsername busca um usuário pelo nome de usuário
 func (r *GormUserRepository) FindByUsername(username string) (*domain.User, error) {

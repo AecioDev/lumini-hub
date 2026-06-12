@@ -5,17 +5,18 @@ import (
 	"lumini-hub/api.auth/internal/repository"
 )
 
-// UserValidator valida regras de negócio relacionadas a usuários
 type UserValidator struct {
 	userRepo repository.UserRepository
 	roleRepo repository.RoleRepository
+	permRepo repository.PermissionRepository
 }
 
 // NewUserValidator cria um novo validador de usuários
-func NewUserValidator(userRepo repository.UserRepository, roleRepo repository.RoleRepository) *UserValidator {
+func NewUserValidator(userRepo repository.UserRepository, roleRepo repository.RoleRepository, permRepo repository.PermissionRepository) *UserValidator {
 	return &UserValidator{
 		userRepo: userRepo,
 		roleRepo: roleRepo,
+		permRepo: permRepo,
 	}
 }
 
@@ -129,3 +130,35 @@ func (v *UserValidator) ValidatePasswordChange(id uint, req domain.ChangePasswor
 	}
 	return nil
 }
+
+// ValidatePermissionUpdate valida a atualização de permissões de um usuário
+func (v *UserValidator) ValidatePermissionUpdate(id uint, permissionIDs []uint) error {
+	var errors ValidationErrors
+
+	// Verificar se o usuário existe
+	user, err := v.userRepo.FindByID(id)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		errors.AddError("id", "usuário não encontrado")
+		return errors
+	}
+
+	// Verificar se todas as permissões existem
+	if len(permissionIDs) > 0 {
+		permissions, err := v.permRepo.FindByIDs(permissionIDs)
+		if err != nil {
+			return err
+		}
+		if len(permissions) != len(permissionIDs) {
+			errors.AddError("permission_ids", "uma ou mais permissões não existem")
+		}
+	}
+
+	if errors.HasErrors() {
+		return errors
+	}
+	return nil
+}
+

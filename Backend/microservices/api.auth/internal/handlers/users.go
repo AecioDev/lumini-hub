@@ -24,9 +24,10 @@ type UserHandler struct {
 func NewUserHandler(db *gorm.DB) *UserHandler {
 	userRepo := repository.NewUserRepository(db)
 	roleRepo := repository.NewRoleRepository(db)
+	permRepo := repository.NewPermissionRepository(db)
 
 	return &UserHandler{
-		userService: service.NewUserService(userRepo, roleRepo),
+		userService: service.NewUserService(userRepo, roleRepo, permRepo),
 	}
 }
 
@@ -258,3 +259,46 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 
 	utils.SuccessResponse(c, http.StatusOK, "Usuário excluído com sucesso", nil, nil)
 }
+
+// UpdateUserPermissions atualiza as permissões diretas de um usuário
+// @Summary      Atualiza permissões do usuário
+// @Description  Associa permissões diretas a um usuário específico (sobrescrevendo as anteriores)
+// @Tags         Usuários
+// @Accept       json
+// @Produce      json
+// @Param        id    path      int                                  true  "ID do Usuário"
+// @Param        data  body      domain.UpdateUserPermissionsRequest  true  "IDs das novas permissões"
+// @Success      200   {object}  utils.Response{data=domain.ApiUserDetail}
+// @Failure      400   {object}  utils.Response
+// @Failure      401   {object}  utils.Response
+// @Failure      404   {object}  utils.Response
+// @Failure      500   {object}  utils.Response
+// @Router       /users/{id}/permissions [put]
+// @Security     ApiKeyAuth
+func (h *UserHandler) UpdateUserPermissions(c *gin.Context) {
+	id, err := path.IdFromPathParamOrSendError(c)
+	if err != nil {
+		return
+	}
+
+	var req domain.UpdateUserPermissionsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+		return
+	}
+
+	user, err := h.userService.UpdateUserPermissions(id, req.PermissionIDs)
+	if err != nil {
+		if err == utils.ErrNotFound {
+			utils.ErrorResponse(c, http.StatusNotFound, "Usuário não encontrado", err.Error())
+		} else if validator.IsValidationError(err) {
+			utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+		} else {
+			utils.ErrorResponse(c, http.StatusBadRequest, "Erro ao atualizar permissões do usuário", err.Error())
+		}
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "Permissões do usuário atualizadas com sucesso", user, nil)
+}
+

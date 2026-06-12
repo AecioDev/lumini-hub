@@ -11,6 +11,7 @@ import (
 type UserService struct {
 	userRepo  repository.UserRepository
 	roleRepo  repository.RoleRepository
+	permRepo  repository.PermissionRepository
 	validator *validator.UserValidator
 }
 
@@ -18,11 +19,13 @@ type UserService struct {
 func NewUserService(
 	userRepo repository.UserRepository,
 	roleRepo repository.RoleRepository,
+	permRepo repository.PermissionRepository,
 ) *UserService {
 	return &UserService{
 		userRepo:  userRepo,
 		roleRepo:  roleRepo,
-		validator: validator.NewUserValidator(userRepo, roleRepo),
+		permRepo:  permRepo,
+		validator: validator.NewUserValidator(userRepo, roleRepo, permRepo),
 	}
 }
 
@@ -88,6 +91,16 @@ func (s *UserService) CreateUser(req domain.CreateUserRequest) (*domain.ApiUser,
 		return nil, err
 	}
 
+	// Copiar permissões do perfil (template) para o usuário
+	role, err := s.roleRepo.FindByIDWithPermissions(req.RoleID)
+	if err == nil && role != nil && len(role.Permissions) > 0 {
+		var permIDs []uint
+		for _, perm := range role.Permissions {
+			permIDs = append(permIDs, perm.ID)
+		}
+		_ = s.userRepo.UpdatePermissions(&user, permIDs)
+	}
+
 	// Buscar usuário completo com relacionamentos
 	completeUser, err := s.userRepo.FindByIDWithRole(user.ID)
 	if err != nil {
@@ -125,9 +138,13 @@ func (s *UserService) UpdateUser(id uint, req domain.UpdateUserRequest) (*domain
 	if req.Phone != "" {
 		user.Phone = req.Phone
 	}
-	if req.RoleID != 0 {
+	
+	roleChanged := false
+	if req.RoleID != 0 && req.RoleID != user.RoleID {
 		user.RoleID = req.RoleID
+		roleChanged = true
 	}
+	
 	if req.IsActive != nil {
 		user.IsActive = *req.IsActive
 	}
@@ -135,6 +152,18 @@ func (s *UserService) UpdateUser(id uint, req domain.UpdateUserRequest) (*domain
 	// Salvar alterações
 	if err := s.userRepo.Update(user); err != nil {
 		return nil, err
+	}
+
+	// Se o perfil mudou, resetar as permissões copiando as do novo perfil (template)
+	if roleChanged {
+		role, err := s.roleRepo.FindByIDWithPermissions(req.RoleID)
+		if err == nil && role != nil && len(role.Permissions) > 0 {
+			var permIDs []uint
+			for _, perm := range role.Permissions {
+				permIDs = append(permIDs, perm.ID)
+			}
+			_ = s.userRepo.UpdatePermissions(user, permIDs)
+		}
 	}
 
 	// Buscar usuário completo com relacionamentos
@@ -198,3 +227,35 @@ func (s *UserService) DeleteUser(id uint) error {
 	// Excluir usuário
 	return s.userRepo.Delete(id)
 }
+
+// UpdateUserPermissions atualiza as permissões diretas de um usuário
+func (s *UserService) UpdateUserPermissions(id uint, permissionIDs []uint) (*domain.ApiUserDetail, error) {
+	// Validar a operação
+	if err := s.validator.ValidatePermissionUpdate(id, permissionIDs); err != nil {
+		return nil, err
+	}
+
+	// Buscar usuário
+	user, err := s.userRepo.FindByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, utils.ErrNotFound
+	}
+
+	// Atualizar permissões
+	if err := s.userRepo.UpdatePermissions(user, permissionIDs); err != nil {
+		return nil, err
+	}
+
+	// Buscar usuário completo com as permissões atualizadas
+	completeUser, err := s.userRepo.FindByIDWithPermissions(id)
+	if err != nil {
+		return nil, err
+	}
+
+	userDetailDTO := domain.ApiUserDetailFromModel(*completeUser)
+	return &userDetailDTO, nil
+}
+

@@ -18,9 +18,10 @@ type User struct {
 	Email        string     `gorm:"size:100;unique" json:"email"`
 	Phone        string     `gorm:"size:20" json:"phone"`
 	IsActive     bool       `gorm:"default:true" json:"is_active"`
-	LastLogin    *time.Time `json:"last_login"`
-	RoleID       uint       `json:"role_id"`
-	Role         *Role      `gorm:"foreignKey:RoleID" json:"role,omitempty"`
+	LastLogin    *time.Time   `json:"last_login"`
+	RoleID       uint         `json:"role_id"`
+	Role         *Role        `gorm:"foreignKey:RoleID" json:"role,omitempty"`
+	Permissions  []Permission `gorm:"many2many:user_permissions;" json:"permissions,omitempty"`
 }
 
 // TableName especifica o nome da tabela
@@ -66,17 +67,18 @@ type ApiUser struct {
 
 // ApiUserDetail representa os dados detalhados de um usuário
 type ApiUserDetail struct {
-	ID        uint          `json:"id"`
-	Username  string        `json:"username"`
-	Name      string        `json:"name"`
-	Email     string        `json:"email,omitempty"`
-	Phone     string        `json:"phone"`
-	RoleID    uint          `json:"role_id"`
-	Role      ApiRoleDetail `json:"role"`
-	IsActive  bool          `json:"is_active"`
-	LastLogin string        `json:"last_login,omitempty"`
-	CreatedAt string        `json:"created_at"`
-	UpdatedAt string        `json:"updated_at"`
+	ID          uint            `json:"id"`
+	Username    string          `json:"username"`
+	Name        string          `json:"name"`
+	Email       string          `json:"email,omitempty"`
+	Phone       string          `json:"phone"`
+	RoleID      uint            `json:"role_id"`
+	Role        ApiRoleDetail   `json:"role"`
+	IsActive    bool            `json:"is_active"`
+	LastLogin   string          `json:"last_login,omitempty"`
+	Permissions []ApiPermission `json:"permissions,omitempty"`
+	CreatedAt   string          `json:"created_at"`
+	UpdatedAt   string          `json:"updated_at"`
 }
 
 // ApiUserListPaginated representa uma lista paginada de usuários
@@ -138,5 +140,20 @@ func ApiUserDetailFromModel(u User) ApiUserDetail {
 		dto.Role = ApiRoleDetailFromModel(*u.Role)
 	}
 
+	// Adicionar permissões diretas se estiverem carregadas
+	if len(u.Permissions) > 0 {
+		permissionDTOs := make([]ApiPermission, 0, len(u.Permissions))
+		for _, perm := range u.Permissions {
+			permissionDTOs = append(permissionDTOs, ApiPermissionFromModel(perm))
+		}
+		dto.Permissions = permissionDTOs
+	}
+
 	return dto
 }
+
+// UpdateUserPermissionsRequest representa os dados para atualizar permissões de um usuário
+type UpdateUserPermissionsRequest struct {
+	PermissionIDs []uint `json:"permission_ids" binding:"required"`
+}
+

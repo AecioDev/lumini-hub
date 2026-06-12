@@ -42,6 +42,7 @@ func SetupRoutes(router *gin.RouterGroup, db *gorm.DB, cfg *config.Config) {
 		users.PUT("/:id", middlewares.RequirePermission("users.edit"), userHandler.UpdateUser)
 		users.DELETE("/:id", middlewares.RequirePermission("users.delete"), userHandler.DeleteUser)
 		users.PUT("/:id/password", userHandler.ChangePassword) // A permissão é verificada internamente no handler
+		users.PUT("/:id/permissions", middlewares.RequirePermission("users.edit"), userHandler.UpdateUserPermissions)
 	}
 
 	// Rotas de Perfis/Roles (todas protegidas)

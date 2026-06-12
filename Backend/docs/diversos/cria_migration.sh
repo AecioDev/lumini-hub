@@ -53,6 +53,14 @@ CREATE TABLE users (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Tabela de Relacionamento entre Usuários e Permissões (Permissões Diretas)
+CREATE TABLE user_permissions (
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    permission_id INTEGER REFERENCES permissions(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, permission_id)
+);
+
 -- Tabela de Categorias de Produtos
 CREATE TABLE product_categories (
     id SERIAL PRIMARY KEY,

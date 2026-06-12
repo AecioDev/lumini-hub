@@ -215,6 +215,10 @@ definitions:
         type: string
       name:
         type: string
+      permissions:
+        items:
+          $ref: '#/definitions/domain.ApiPermission'
+        type: array
       phone:
         type: string
       role:
@@ -518,6 +522,15 @@ definitions:
     - first_name
     - is_active
     type: object
+  domain.UpdateUserPermissionsRequest:
+    properties:
+      permission_ids:
+        items:
+          type: integer
+        type: array
+    required:
+    - permission_ids
+    type: object
   domain.UpdateUserRequest:
     properties:
       email:
@@ -583,8 +596,14 @@ definitions:
       message:
         type: string
       meta: {}
+      statusCode:
+        type: integer
       success:
         type: boolean
+      validationErrors:
+        items:
+          type: string
+        type: array
     type: object
   utils.ApiPagination:
     properties:
@@ -609,8 +628,14 @@ definitions:
       message:
         type: string
       meta: {}
+      statusCode:
+        type: integer
       success:
         type: boolean
+      validationErrors:
+        items:
+          type: string
+        type: array
     type: object
 host: localhost:4000
 info:
@@ -1471,6 +1496,57 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Altera senha do usuário
+      tags:
+      - Usuários
+  /users/{id}/permissions:
+    put:
+      consumes:
+      - application/json
+      description: Associa permissões diretas a um usuário específico (sobrescrevendo
+        as anteriores)
+      parameters:
+      - description: ID do Usuário
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: IDs das novas permissões
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UpdateUserPermissionsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiUserDetail'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Atualiza permissões do usuário
       tags:
       - Usuários
 securityDefinitions:
