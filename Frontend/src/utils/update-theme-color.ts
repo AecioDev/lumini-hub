@@ -1,0 +1,32 @@
+import { hexToRGB } from './hex-to-rgb';
+
+export function updateThemeColor(
+  primaryLighter: string,
+  primaryLight: string,
+  primaryDefault: string,
+  primaryDark: string,
+  primaryForeground: string
+) {
+  if (typeof window === 'undefined') return;
+
+  document.documentElement.style.setProperty(
+    '--primary-dark',
+    hexToRGB(primaryDark)
+  );
+  document.documentElement.style.setProperty(
+    '--primary-light',
+    hexToRGB(primaryLight)
+  );
+  document.documentElement.style.setProperty(
+    '--primary-lighter',
+    hexToRGB(primaryLighter)
+  );
+  document.documentElement.style.setProperty(
+    '--primary-default',
+    hexToRGB(primaryDefault)
+  );
+  document.documentElement.style.setProperty(
+    '--primary-foreground',
+    hexToRGB(primaryForeground)
+  );
+}

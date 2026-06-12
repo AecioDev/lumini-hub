@@ -41,8 +41,19 @@ export function useRequirePermission(options: RequirePermissionOptions) {
     // Caso 2: Usuário está logado, verificar permissões/roles
     let hasRequiredPermissions = true;
     if (options.requiredPermissions && options.requiredPermissions.length > 0) {
-      const userPermissions =
-        user.role?.permissions?.map((p) => p.permission) || [];
+      let userPermissions: string[] = [];
+      if (user.role?.permissions && Array.isArray(user.role.permissions)) {
+        userPermissions = user.role.permissions.map((p: any) => p.permission);
+      }
+      if (Array.isArray(user.permissions)) {
+        user.permissions.forEach((p: any) => {
+          const permName = typeof p === "string" ? p : p.permission;
+          if (permName && !userPermissions.includes(permName)) {
+            userPermissions.push(permName);
+          }
+        });
+      }
+
       hasRequiredPermissions = options.requiredPermissions.some((perm) =>
         userPermissions.includes(perm)
       );

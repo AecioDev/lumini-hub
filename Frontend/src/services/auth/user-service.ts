@@ -16,17 +16,17 @@ const UserService = {
 
   async getUserById(id: number): Promise<User> {
     const response = await api.get(`/users/${id}`);
-    return response.data;
+    return response.data.data;
   },
 
   async createUser(user: CreateUserDto): Promise<User> {
     const response = await api.post("/users", user);
-    return response.data;
+    return response.data.data;
   },
 
   async updateUser(id: number, user: UpdateUserDto): Promise<User> {
     const response = await api.put(`/users/${id}`, user);
-    return response.data;
+    return response.data.data;
   },
 
   async deleteUser(id: number): Promise<void> {
@@ -35,6 +35,13 @@ const UserService = {
 
   async changePassword(id: number, data: ChangePasswordDto): Promise<void> {
     await api.put(`/users/${id}/password`, data);
+  },
+
+  async updateUserPermissions(id: number, permissionIds: number[]): Promise<User> {
+    const response = await api.put(`/users/${id}/permissions`, {
+      permission_ids: permissionIds,
+    });
+    return response.data.data;
   },
 };
 

@@ -32,14 +32,23 @@ export function Sidebar() {
   }, []);
 
   const filteredNavItems = useMemo(() => {
-    if (!user || !user.role || !user.role.name || !user.role.permissions) {
+    if (!user) {
       return [];
     }
 
-    const userRoleName = user.role.name;
-    const userPermissions = user.role.permissions.map(
-      (p: Permission) => p.permission
-    );
+    const userRoleName = user.role?.name || "";
+    let userPermissions: string[] = [];
+    if (user.role?.permissions && Array.isArray(user.role.permissions)) {
+      userPermissions = user.role.permissions.map((p: any) => p.permission);
+    }
+    if (Array.isArray(user.permissions)) {
+      user.permissions.forEach((p: any) => {
+        const permName = typeof p === "string" ? p : p.permission;
+        if (permName && !userPermissions.includes(permName)) {
+          userPermissions.push(permName);
+        }
+      });
+    }
 
     const hasPermission = (permissionName: string): boolean => {
       return userPermissions.includes(permissionName);

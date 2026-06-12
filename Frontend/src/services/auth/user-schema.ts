@@ -1,5 +1,6 @@
 import { Pagination } from "../common/pagination-service";
 import { Role } from "./role-schema";
+import { Permission } from "./permission-schema";
 
 export interface User {
   id: number;
@@ -10,6 +11,7 @@ export interface User {
   role_id: number;
   role: Role;
   is_active: boolean;
+  permissions?: Permission[];
   created_at: string;
   updated_at: string;
 }

@@ -85,7 +85,17 @@ const PermissionService = {
           "Erro ao obter permissões por módulo."
       );
     }
-    return response.data.data;
+
+    const apiData = response.data.data;
+    const result: Record<string, Permission[]> = {};
+    if (Array.isArray(apiData)) {
+      apiData.forEach((item: any) => {
+        if (item && item.module && Array.isArray(item.permissions)) {
+          result[item.module] = item.permissions;
+        }
+      });
+    }
+    return result;
   },
 
   // Obtem uma lista de modulos

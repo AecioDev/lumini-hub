@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Permission } from "@/services/auth/role-service"; // Sua tipagem de Permission
+import { Permission } from "@/services/auth/permission-schema";
 
 export function DashboardSwitcher() {
   const { user, isLoading: isLoadingUser } = useAuth();
@@ -20,14 +20,23 @@ export function DashboardSwitcher() {
 
   // Filtra os dashboards que o usuário tem permissão para ver
   const availableUserDashboards = useMemo(() => {
-    if (isLoadingUser || !user || !user.role || !user.role.permissions) {
+    if (isLoadingUser || !user) {
       return [];
     }
-    const userPermissions = user.role.permissions.map(
-      (p: Permission) => p.name
-    );
+    let userPermissions: string[] = [];
+    if (user.role?.permissions && Array.isArray(user.role.permissions)) {
+      userPermissions = user.role.permissions.map((p: any) => p.permission);
+    }
+    if (Array.isArray(user.permissions)) {
+      user.permissions.forEach((p: any) => {
+        const permName = typeof p === "string" ? p : p.permission;
+        if (permName && !userPermissions.includes(permName)) {
+          userPermissions.push(permName);
+        }
+      });
+    }
     return dashboardOptions.filter((option) =>
-      userPermissions.includes(option.requiredPermission)
+      option.requiredPermission ? userPermissions.includes(option.requiredPermission) : true
     );
   }, [user, isLoadingUser]);
 

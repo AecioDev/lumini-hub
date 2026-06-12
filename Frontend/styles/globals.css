@@ -15,120 +15,126 @@ body {
 @layer base {
   :root {
     /* Cores gerais */
-    --background: 0 0% 100%; /* Branco puro */
-    --foreground: 240 10% 3.9%; /* Preto suave (quase preto) */
+    --background: 0 0% 100%; /* HSL para shadcn */
+    --foreground: 240 10% 3.9%;
 
     /* Cartões e Popovers */
-    --card: 0 0% 100%; /* Branco puro */
-    --card-foreground: 240 10% 3.9%; /* Texto escuro */
-    --popover: 0 0% 100%; /* Branco puro */
-    --popover-foreground: 240 10% 3.9%; /* Texto escuro */
-
-    /* Cores primárias (botões, links) */
-    --primary: 220 70% 50%; /* Azul um pouco mais escuro e saturado. */
-    --primary-foreground: 0 0% 98%; /* Cinza escuro para texto */
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
 
     /* Cores secundárias (elementos de destaque suave) */
-    --secondary: 210 10% 95%; /* Cinza muito claro */
-    --secondary-foreground: 240 10% 20%; /* Cinza escuro para texto */
+    --secondary: 210 10% 95%;
+    --secondary-foreground: 240 10% 20%;
 
     /* Cores de mutação (texto desativado, fundos sutis) */
-    --muted: 210 10% 90%; /* Cinza claro */
-    --muted-foreground: 240 5% 55%; /* Cinza médio */
+    --muted: 210 10% 90%;
+    --muted-foreground: 240 5% 55%;
 
     /* Cores de acento (destaque secundário, hover) */
-    --accent: 210 10% 90%; /* Cinza claro */
-    --accent-foreground: 240 10% 20%; /* Cinza escuro */
+    --accent: 210 10% 90%;
+    --accent-foreground: 240 10% 20%;
 
     /* Cores destrutivas (erros, avisos) */
-    --destructive: 0 80% 55%; /* Vermelho vibrante */
-    --destructive-foreground: 0 0% 98%; /* Branco quase puro para texto */
+    --destructive: 0 80% 55%;
+    --destructive-foreground: 0 0% 98%;
 
     /* Variável de fundo de formulário */
-    --form: 210 10% 95%; /* Cinza muito claro para o fundo de formulários */
-    --form-background: 210 10% 90%; /* Fundo de formulários, igual ao primário */
+    --form: 210 10% 95%;
+    --form-background: 210 10% 90%;
 
     /* Bordas e Inputs */
-    --border: 210 5% 80%; /* Cinza para bordas */
-    --input: 210 5% 85%; /* Cinza um pouco mais claro para inputs */
-    --ring: 220 90% 40%; /* Cor do anel de foco (igual ao primário) */
+    --border: 210 5% 80%;
+    --input: 210 5% 85%;
+    --ring: 220 90% 40%;
 
-    /* Charts (mantido como exemplo, pode ajustar conforme seu gráfico) */
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
 
-    --radius: 0.5rem; /* Raio de borda padrão */
+    /* Variáveis RGB dinâmicas para o layout/componentes do template */
+    --gray-0: 255 255 255;
+    --gray-50: 250 250 250;
+    --gray-100: 241 241 241;
+    --gray-200: 227 227 227;
+    --gray-300: 223 223 223;
+    --gray-400: 146 146 146;
+    --gray-500: 102 102 102;
+    --gray-600: 72 72 72;
+    --gray-700: 51 51 51;
+    --gray-800: 34 34 34;
+    --gray-900: 17 17 17;
+    --gray-1000: 0 0 0;
 
-    /* Sidebar - Light Theme */
-    --sidebar-background: 210 10% 98%; /* Cinza muito claro */
-    --sidebar-foreground: 240 5.3% 26.1%; /* Cinza escuro para texto */
-    --sidebar-primary: 220 90% 35%; /* Azul um pouco mais escuro para destaque */
-    --sidebar-primary-foreground: 0 0% 98%; /* Branco para texto */
-    --sidebar-accent: 210 10% 92%; /* Cinza claro para hover/seleção */
-    --sidebar-accent-foreground: 240 5.9% 10%; /* Cinza escuro */
-    --sidebar-border: 210 5% 85%; /* Cinza para borda */
-    --sidebar-ring: 220 91.2% 59.8%; /* Anel de foco da sidebar */
+    /* Primárias RGB */
+    --primary-lighter: 227 227 227;
+    --primary-default: 17 17 17;
+    --primary-dark: 0 0 0;
+    --primary-foreground: 255 255 255;
+
+    /* HSL de compatibilidade para componentes antigos (shadcn) */
+    --primary: 220 70% 50%;
+    --primary-foreground: 0 0% 98%;
   }
 
-  .dark {
+  .dark, [data-theme='dark'] {
     /* Cores gerais */
-    --background: 240 5% 12%; /* Cinza escuro quase preto */
-    --foreground: 210 10% 90%; /* Branco suave */
+    --background: 240 5% 12%;
+    --foreground: 210 10% 90%;
 
     /* Cartões e Popovers */
-    --card: 240 5% 14%; /* Um pouco mais escuro que o background */
-    --card-foreground: 210 10% 90%; /* Texto claro */
-    --popover: 240 5% 16%; /* Um pouco mais escuro ainda */
-    --popover-foreground: 210 10% 90%; /* Texto claro */
-
-    /* Cores primárias (botões, links) */
-    --primary: 220 70% 50%; /* Azul um pouco mais escuro e saturado. */
-    --primary-foreground: 0 0% 98%; /* Cinza escuro para texto */
+    --card: 240 5% 14%;
+    --card-foreground: 210 10% 90%;
+    --popover: 240 5% 16%;
+    --popover-foreground: 210 10% 90%;
 
     /* Cores secundárias */
-    --secondary: 240 5% 20%; /* Cinza médio escuro */
-    --secondary-foreground: 210 10% 90%; /* Texto claro */
+    --secondary: 240 5% 20%;
+    --secondary-foreground: 210 10% 90%;
 
     /* Cores de mutação */
-    --muted: 240 5% 24%; /* Cinza mais claro para elementos desativados */
-    --muted-foreground: 210 5% 70%; /* Cinza médio claro */
+    --muted: 240 5% 24%;
+    --muted-foreground: 210 5% 70%;
 
     /* Cores de acento */
-    --accent: 240 5% 22%; /* Cinza um pouco mais claro */
-    --accent-foreground: 210 10% 90%; /* Texto claro */
+    --accent: 240 5% 22%;
+    --accent-foreground: 210 10% 90%;
 
     /* Cores destrutivas */
-    --destructive: 0 70% 45%; /* Vermelho mais suave para o escuro */
-    --destructive-foreground: 0 0% 98%; /* Branco quase puro */
+    --destructive: 0 70% 45%;
+    --destructive-foreground: 0 0% 98%;
 
-    /* Variável de fundo de formulário (NOVA!) */
-    --form: 240 5% 18%; /* Cinza escuro para o fundo de formulários */
-    --form-background: 240 5% 20%; /* Fundo de formulários, igual ao primário */
+    /* Variável de fundo de formulário */
+    --form: 240 5% 18%;
+    --form-background: 240 5% 20%;
 
     /* Bordas e Inputs */
-    --border: 240 5% 26%; /* Cinza para bordas */
-    --input: 240 5% 22%; /* Cinza para inputs */
-    --ring: 220 80% 60%; /* Cor do anel de foco (igual ao primário) */
+    --border: 240 5% 26%;
+    --input: 240 5% 22%;
+    --ring: 220 80% 60%;
 
-    /* Charts (ajustado para melhor contraste no escuro) */
-    --chart-1: 20 85% 65%; /* Laranja vibrante */
-    --chart-2: 160 70% 55%; /* Verde-água */
-    --chart-3: 200 60% 70%; /* Azul claro */
-    --chart-4: 60 70% 70%; /* Amarelo esverdeado */
-    --chart-5: 300 65% 75%; /* Roxo claro */
+    /* Variáveis RGB dinâmicas para o layout/componentes do template no escuro */
+    --gray-0: 0 0 0;
+    --gray-50: 17 17 17;
+    --gray-100: 31 31 31;
+    --gray-200: 51 51 51;
+    --gray-300: 72 72 72;
+    --gray-400: 102 102 102;
+    --gray-500: 146 146 146;
+    --gray-600: 162 162 162;
+    --gray-700: 223 223 223;
+    --gray-800: 226 226 226;
+    --gray-900: 241 241 241;
+    --gray-1000: 255 255 255;
 
-    /* Sidebar - Dark Theme */
-    --sidebar-background: 240 5% 14%; /* Um pouco mais escuro que o background principal */
-    --sidebar-foreground: 210 10% 92%; /* Texto claro */
-    --sidebar-primary: 220 80% 55%; /* Azul para destaque na sidebar */
-    --sidebar-primary-foreground: 0 0% 100%; /* Branco para texto */
-    --sidebar-accent: 240 5% 20%; /* Cinza para hover/seleção */
-    --sidebar-accent-foreground: 210 10% 92%; /* Texto claro */
-    --sidebar-border: 240 5% 22%; /* Cinza para borda */
-    --sidebar-ring: 220 80% 60%; /* Anel de foco da sidebar */
+    /* Primárias RGB no escuro */
+    --primary-lighter: 34 34 34;
+    --primary-default: 241 241 241;
+    --primary-dark: 255 255 255;
+    --primary-foreground: 0 0 0;
+
+    /* HSL de compatibilidade para componentes antigos (shadcn) */
+    --primary: 220 70% 50%;
+    --primary-foreground: 0 0% 98%;
   }
 }
 
@@ -139,4 +145,33 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Scrollbar do Simplebar e utilitários de scroll */
+.simplebar-scrollbar:before {
+  @apply !bg-gray-400 dark:!bg-gray-300;
+}
+
+.simplebar-track.simplebar-horizontal {
+  @apply !h-2.5;
+}
+
+.simplebar-track.simplebar-vertical {
+  @apply !w-2.5;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  @apply w-1.5 bg-transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  @apply bg-transparent shadow-none;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply rounded-sm bg-transparent;
+}
+
+.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 dark:bg-gray-300;
 }

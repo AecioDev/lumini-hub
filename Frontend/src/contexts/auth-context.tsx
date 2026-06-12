@@ -8,6 +8,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useToast } from "@/components/ui/use-toast";
 import { User } from "@/services/auth/user-schema";
 import { Role } from "@/services/auth/role-schema";
+import { Permission } from "@/services/auth/permission-schema";
 
 // Tipos para o contexto de autenticação
 export interface UserContext {
@@ -16,6 +17,7 @@ export interface UserContext {
   username: string;
   role: Role; // <--- Usar a interface Role importada
   email?: string;
+  permissions?: Permission[];
 }
 
 interface AuthContextType {
@@ -51,6 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       username: user.username,
       role: user.role,
       email: user.email,
+      permissions: user.permissions,
     };
   }, []);
 
