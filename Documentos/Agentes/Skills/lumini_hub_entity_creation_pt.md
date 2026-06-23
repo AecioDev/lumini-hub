@@ -68,6 +68,7 @@ Todos os caminhos descritos abaixo são relativos à pasta do microsserviço no 
 
 ### 11. Registrar Novas Permissões (RBAC)
 *   Criar ou registrar no script de migração/seeds as novas chaves de permissão do sistema para a nova entidade (ex: `view_brands`, `create_brands`, `edit_brands`, `delete_brands`) e associá-las aos perfis apropriados (ex: Administrador).
+*   **A IA deve gerar automaticamente a lógica de semente (seed)** no arquivo do banco ou no script SQL correspondente para que essas chaves de acesso sejam inseridas no banco e vinculadas diretamente ao template do perfil de `ADMIN`.
 
 ### 12. Escrever Testes Unitários
 *   **Caminho:** `internal/service/<nome_da_entidade>_service_test.go`
@@ -83,3 +84,4 @@ Todos os caminhos descritos abaixo são relativos à pasta do microsserviço no 
     cd Backend/microservices/api.gateway
     swag init -g main.go -d ./,../../common,../api.auth,../api.core --parseDependency
     ```
+4.  **Esquecer do Seed de Permissões**: Deixar de criar os registros iniciais na tabela de permissões do sistema e o seu vínculo de acesso para o administrador (`ADMIN`). A IA deve sempre propor o seed de permissões junto com o restante dos arquivos da entidade.

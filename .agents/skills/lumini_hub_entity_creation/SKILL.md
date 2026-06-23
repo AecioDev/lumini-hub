@@ -68,6 +68,7 @@ Add default seed data or system configurations (like system status) in `internal
 
 ### Step 11: Security & RBAC Permissions
 Register the new entity permissions (e.g., `view_<entities>`, `create_<entities>`, `edit_<entities>`, `delete_<entities>`) in the permissions table via seeders or initial SQL scripts. Map them to default user roles (Admin, Manager).
+Whenever you add standard permissions, make sure to also write seed logic to insert these permissions and link them directly to the `ADMIN` role.
 
 ### Step 12: Unit Tests (Recommended)
 Create unit/integration tests in `internal/service/<entity>_service_test.go` or `internal/validator/<entity>_validator_test.go` to test logic isolation.
@@ -82,3 +83,4 @@ Create unit/integration tests in `internal/service/<entity>_service_test.go` or 
     ```powershell
     swag init -g main.go -d ./,../../common,../api.auth,../api.core --parseDependency
     ```
+5.  **Automatic Permission Seeding**: When generating files for a new entity, you **MUST** automatically write/propose the GORM seeder logic (e.g. in `seeder.go`) or the equivalent database migration scripts to seed the new permissions (`view_<entity>`, `create_<entity>`, `edit_<entity>`, `delete_<entity>`) and map them to the `ADMIN` role template immediately.
