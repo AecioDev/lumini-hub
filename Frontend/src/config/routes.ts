@@ -127,5 +127,6 @@ export const routes = {
       view: (id: string | number) => `/settings/users/${id}`,
       edit: (id: string | number) => `/settings/users/${id}/edit`,
     },
+    integrations: "/settings/integrations",
   },
 };

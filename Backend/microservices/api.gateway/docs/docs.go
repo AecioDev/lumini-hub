@@ -602,6 +602,371 @@ const docTemplate = `{
                 }
             }
         },
+        "/integrations/legacy/companies": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Usado para alimentar o select de codemp na tela de configuração",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Integrações - Legado"
+                ],
+                "summary": "Lista as empresas do ERP legado",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/integrations/legacy/locations": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Usado para alimentar os selects de codlocarm_oficial/codlocarm_reserva na tela de configuração",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Integrações - Legado"
+                ],
+                "summary": "Lista os locais de armazenamento do ERP legado",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/integrations/settings": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retorna as chaves da Loja Integrada e os códigos do ERP legado configurados",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Integrações - Configurações"
+                ],
+                "summary": "Obtém as configurações do api.integrations",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ApiIntegrationSettings"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Faz o upsert em lote das chaves informadas (campos omitidos não são alterados)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Integrações - Configurações"
+                ],
+                "summary": "Atualiza as configurações do api.integrations",
+                "parameters": [
+                    {
+                        "description": "Configurações a atualizar",
+                        "name": "settings",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.UpdateIntegrationSettingsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ApiIntegrationSettings"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/integrations/sync-logs/filter": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Busca e filtra os logs de sincronização entre a Loja Integrada e o SQL Server legado",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Integrações - Sync Logs"
+                ],
+                "summary": "Filtra logs de sincronização com paginação",
+                "parameters": [
+                    {
+                        "description": "Filtros e Dados de Paginação",
+                        "name": "filter",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.SyncLogFilterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ApiSyncLogListPaginated"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/integrations/webhook-events/filter": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Busca e filtra os eventos de webhook recebidos (ex.: da Loja Integrada)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Integrações - Webhook Events"
+                ],
+                "summary": "Filtra eventos de webhook com paginação",
+                "parameters": [
+                    {
+                        "description": "Filtros e Dados de Paginação",
+                        "name": "filter",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.WebhookEventFilterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ApiWebhookEventListPaginated"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/integrations/webhooks/loja-integrada": {
+            "post": {
+                "description": "Endpoint público (sem AuthMiddleware), validado por um segredo compartilhado no header X-Webhook-Secret (configurado em /integrations/settings). Persiste o payload cru; o processamento em pedido de venda no SQL Server fica para a Fase 2.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Integrações - Webhooks"
+                ],
+                "summary": "Recebe webhook da Loja Integrada",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Segredo compartilhado configurado em /integrations/settings",
+                        "name": "X-Webhook-Secret",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/suppliers": {
             "get": {
                 "security": [
@@ -1497,6 +1862,10 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "database.JSONB": {
+            "type": "object",
+            "additionalProperties": true
+        },
         "domain.Address": {
             "type": "object",
             "properties": {
@@ -1653,6 +2022,32 @@ const docTemplate = `{
                 }
             }
         },
+        "domain.ApiIntegrationSettings": {
+            "type": "object",
+            "properties": {
+                "codemp": {
+                    "type": "string"
+                },
+                "codlocarm_oficial": {
+                    "type": "string"
+                },
+                "codlocarm_reserva": {
+                    "type": "string"
+                },
+                "codtipnot": {
+                    "type": "string"
+                },
+                "li_api_key": {
+                    "type": "string"
+                },
+                "li_app_key": {
+                    "type": "string"
+                },
+                "li_webhook_secret": {
+                    "type": "string"
+                }
+            }
+        },
         "domain.ApiPermission": {
             "type": "object",
             "properties": {
@@ -1778,6 +2173,49 @@ const docTemplate = `{
                 }
             }
         },
+        "domain.ApiSyncLog": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "details": {
+                    "$ref": "#/definitions/lumini-hub_common_database.JSONB"
+                },
+                "direction": {
+                    "type": "string"
+                },
+                "entity_type": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "reference_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.ApiSyncLogListPaginated": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.ApiSyncLog"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/utils.ApiPagination"
+                }
+            }
+        },
         "domain.ApiUserDetail": {
             "type": "object",
             "properties": {
@@ -1853,6 +2291,49 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "domain.ApiWebhookEvent": {
+            "type": "object",
+            "properties": {
+                "error_message": {
+                    "type": "string"
+                },
+                "event_type": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "payload": {
+                    "$ref": "#/definitions/database.JSONB"
+                },
+                "processed_at": {
+                    "type": "string"
+                },
+                "received_at": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.ApiWebhookEventListPaginated": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.ApiWebhookEvent"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/utils.ApiPagination"
                 }
             }
         },
@@ -2202,6 +2683,32 @@ const docTemplate = `{
                 }
             }
         },
+        "domain.SyncLogFilterRequest": {
+            "type": "object",
+            "properties": {
+                "direction": {
+                    "type": "string"
+                },
+                "entity_type": {
+                    "type": "string"
+                },
+                "is_asc": {
+                    "type": "boolean"
+                },
+                "order_by_column": {
+                    "type": "string"
+                },
+                "page_no": {
+                    "type": "integer"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
         "domain.UpdateCustomerRequest": {
             "type": "object",
             "required": [
@@ -2226,6 +2733,32 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "notes": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.UpdateIntegrationSettingsRequest": {
+            "type": "object",
+            "properties": {
+                "codemp": {
+                    "type": "string"
+                },
+                "codlocarm_oficial": {
+                    "type": "string"
+                },
+                "codlocarm_reserva": {
+                    "type": "string"
+                },
+                "codtipnot": {
+                    "type": "string"
+                },
+                "li_api_key": {
+                    "type": "string"
+                },
+                "li_app_key": {
+                    "type": "string"
+                },
+                "li_webhook_secret": {
                     "type": "string"
                 }
             }
@@ -2311,6 +2844,32 @@ const docTemplate = `{
                 }
             }
         },
+        "domain.WebhookEventFilterRequest": {
+            "type": "object",
+            "properties": {
+                "event_type": {
+                    "type": "string"
+                },
+                "is_asc": {
+                    "type": "boolean"
+                },
+                "order_by_column": {
+                    "type": "string"
+                },
+                "page_no": {
+                    "type": "integer"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
         "gorm.DeletedAt": {
             "type": "object",
             "properties": {
@@ -2377,6 +2936,10 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "lumini-hub_common_database.JSONB": {
+            "type": "object",
+            "additionalProperties": true
         },
         "lumini-hub_common_utils.Response": {
             "type": "object",

@@ -60,9 +60,15 @@ func main() {
 		log.Fatalf("URL do serviço core inválida: %v", err)
 	}
 
+	integrationsURL, err := url.Parse("http://localhost:4007")
+	if err != nil {
+		log.Fatalf("URL do serviço de integrações inválida: %v", err)
+	}
+
 	// Criar proxies
 	authProxy := httputil.NewSingleHostReverseProxy(authURL)
 	coreProxy := httputil.NewSingleHostReverseProxy(coreURL)
+	integrationsProxy := httputil.NewSingleHostReverseProxy(integrationsURL)
 
 	// Customizar o comportamento dos proxies para garantir compatibilidade
 	adjustProxy := func(proxy *httputil.ReverseProxy, target *url.URL) {
@@ -75,6 +81,7 @@ func main() {
 	}
 	adjustProxy(authProxy, authURL)
 	adjustProxy(coreProxy, coreURL)
+	adjustProxy(integrationsProxy, integrationsURL)
 
 	// Rota do Swagger UI
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -97,6 +104,12 @@ func main() {
 			strings.HasPrefix(path, "/api/suppliers") {
 			log.Printf("[Gateway] Proxying %s -> api.core (%s)", path, coreURL.String())
 			coreProxy.ServeHTTP(c.Writer, c.Request)
+			return
+		}
+
+		if strings.HasPrefix(path, "/api/integrations") {
+			log.Printf("[Gateway] Proxying %s -> api.integrations (%s)", path, integrationsURL.String())
+			integrationsProxy.ServeHTTP(c.Writer, c.Request)
 			return
 		}
 

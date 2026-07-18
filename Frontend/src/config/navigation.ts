@@ -186,6 +186,12 @@ export const systemNavItems: NavItem[] = [
         icon: "mdi:shield-account", // MDI para perfil de segurança
         requiredPermission: "roles.view",
       },
+      {
+        title: "Integrações",
+        href: routes.settings.integrations,
+        icon: "mdi:sync",
+        requiredPermission: "integrations.view",
+      },
     ],
   },
 ];
