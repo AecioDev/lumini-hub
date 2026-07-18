@@ -18,10 +18,6 @@ Thumbs.db           # Windows
 *.dylib
 *.test
 
-# Arquivos de cache de dependências
-go.sum
-go.mod
-
 # Arquivos de log
 *.log
 
