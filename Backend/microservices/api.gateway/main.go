@@ -94,7 +94,8 @@ func main() {
 		if strings.HasPrefix(path, "/api/auth") ||
 			strings.HasPrefix(path, "/api/users") ||
 			strings.HasPrefix(path, "/api/roles") ||
-			strings.HasPrefix(path, "/api/permissions") {
+			strings.HasPrefix(path, "/api/permissions") ||
+			strings.HasPrefix(path, "/api/menu-items") {
 			log.Printf("[Gateway] Proxying %s -> api.auth (%s)", path, authURL.String())
 			authProxy.ServeHTTP(c.Writer, c.Request)
 			return

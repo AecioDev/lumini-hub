@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"lumini-hub/api.auth/internal/domain"
+	"lumini-hub/api.auth/internal/repository"
 	"lumini-hub/common/config"
 	"lumini-hub/common/utils"
 
@@ -31,6 +32,25 @@ type LoginResponse struct {
 	AccessToken  string               `json:"access_token"`
 	RefreshToken string               `json:"refresh_token"`
 	ExpiresIn    int                  `json:"expires_in"`
+}
+
+// GetMenuItemsForUser monta a árvore de menu já filtrada pelas permissões do usuário
+// (ADMIN vê a árvore completa, sem filtro).
+func (s *AuthService) GetMenuItemsForUser(user domain.User) ([]domain.ApiUserMenuItem, error) {
+	menuItemRepo := repository.NewMenuItemRepository(s.db)
+	flat, err := menuItemRepo.FindAllFlat()
+	if err != nil {
+		return nil, err
+	}
+	tree := domain.BuildMenuTree(flat)
+
+	userPermissionCodes := make(map[string]bool, len(user.Permissions))
+	for _, perm := range user.Permissions {
+		userPermissionCodes[perm.Permission] = true
+	}
+
+	isAdmin := user.Role != nil && user.Role.Name == "ADMIN"
+	return domain.FilterMenuTreeForUser(tree, userPermissionCodes, isAdmin), nil
 }
 
 // Login autentica um usuário e retorna tokens JWT
@@ -78,8 +98,13 @@ func (s *AuthService) Login(username, password string) (*LoginResponse, error) {
 	user.LastLogin = &now
 	s.db.Save(&user)
 
+	userDetail := domain.ApiUserDetailFromModel(user)
+	if menuItems, err := s.GetMenuItemsForUser(user); err == nil {
+		userDetail.MenuItems = menuItems
+	}
+
 	return &LoginResponse{
-		User:         domain.ApiUserDetailFromModel(user),
+		User:         userDetail,
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		ExpiresIn:    int(s.cfg.JWT.AccessTokenExp.Minutes()),
@@ -124,8 +149,13 @@ func (s *AuthService) RefreshToken(refreshToken string) (*LoginResponse, error) 
 		return nil, err
 	}
 
+	userDetail := domain.ApiUserDetailFromModel(user)
+	if menuItems, err := s.GetMenuItemsForUser(user); err == nil {
+		userDetail.MenuItems = menuItems
+	}
+
 	return &LoginResponse{
-		User:         domain.ApiUserDetailFromModel(user),
+		User:         userDetail,
 		AccessToken:  newAccessToken,
 		RefreshToken: newRefreshToken,
 		ExpiresIn:    int(s.cfg.JWT.AccessTokenExp.Minutes()),

@@ -177,8 +177,13 @@ func (h *AuthHandler) GetMe(c *gin.Context) {
 		return
 	}
 
+	userDetail := domain.ApiUserDetailFromModel(*user)
+	if menuItems, err := h.authService.GetMenuItemsForUser(*user); err == nil {
+		userDetail.MenuItems = menuItems
+	}
+
 	userResponse := domain.LoginSuccessResponse{
-		User: domain.ApiUserDetailFromModel(*user),
+		User: userDetail,
 	}
 
 	utils.SuccessResponse(c, http.StatusOK, "Usuário encontrado", userResponse, nil)

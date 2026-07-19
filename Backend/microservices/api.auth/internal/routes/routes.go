@@ -16,6 +16,7 @@ func SetupRoutes(router *gin.RouterGroup, db *gorm.DB, cfg *config.Config) {
 	userHandler := handlers.NewUserHandler(db)
 	roleHandler := handlers.NewRoleHandler(db)
 	permHandler := handlers.NewPermissionHandler(db)
+	menuItemHandler := handlers.NewMenuItemHandler(db)
 
 	// Rotas de Autenticação
 	auth := router.Group("/auth")
@@ -68,5 +69,16 @@ func SetupRoutes(router *gin.RouterGroup, db *gorm.DB, cfg *config.Config) {
 		permissions.POST("", middlewares.RequirePermission("permissions.create"), permHandler.CreatePermission)
 		permissions.PUT("/:id", middlewares.RequirePermission("permissions.edit"), permHandler.UpdatePermission)
 		permissions.DELETE("/:id", middlewares.RequirePermission("permissions.delete"), permHandler.DeletePermission)
+	}
+
+	// Rotas de Itens de Menu (todas protegidas, dev-only)
+	menuItems := router.Group("/menu-items")
+	menuItems.Use(middlewares.AuthMiddleware(cfg))
+	{
+		menuItems.GET("", middlewares.RequirePermission("admin.create_permissions"), menuItemHandler.GetMenuTree)
+		menuItems.GET("/:id", middlewares.RequirePermission("admin.create_permissions"), menuItemHandler.GetMenuItem)
+		menuItems.POST("", middlewares.RequirePermission("admin.create_permissions"), menuItemHandler.CreateMenuItem)
+		menuItems.PUT("/:id", middlewares.RequirePermission("admin.create_permissions"), menuItemHandler.UpdateMenuItem)
+		menuItems.DELETE("/:id", middlewares.RequirePermission("admin.create_permissions"), menuItemHandler.DeleteMenuItem)
 	}
 }

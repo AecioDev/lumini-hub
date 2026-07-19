@@ -85,9 +85,10 @@ type ApiUserDetail struct {
 	Role        ApiUserRole     `json:"role"`
 	IsActive    bool            `json:"is_active"`
 	LastLogin   string          `json:"last_login,omitempty"`
-	Permissions []ApiPermission `json:"permissions,omitempty"`
-	CreatedAt   string          `json:"created_at"`
-	UpdatedAt   string          `json:"updated_at"`
+	Permissions []ApiPermission   `json:"permissions,omitempty"`
+	MenuItems   []ApiUserMenuItem `json:"menu_items,omitempty"`
+	CreatedAt   string            `json:"created_at"`
+	UpdatedAt   string            `json:"updated_at"`
 }
 
 // ApiUserListPaginated representa uma lista paginada de usuários

@@ -6,7 +6,7 @@ import { createContext, useState, useEffect, useCallback } from "react";
 import AuthService from "@/services/auth/auth-service";
 import { useRouter, usePathname } from "next/navigation";
 import { useToast } from "@/components/ui/use-toast";
-import { User } from "@/services/auth/user-schema";
+import { User, MenuItem } from "@/services/auth/user-schema";
 import { Role } from "@/services/auth/role-schema";
 import { Permission } from "@/services/auth/permission-schema";
 
@@ -18,6 +18,7 @@ export interface UserContext {
   role: Role; // <--- Usar a interface Role importada
   email?: string;
   permissions?: Permission[];
+  menuItems?: MenuItem[];
 }
 
 interface AuthContextType {
@@ -54,6 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       role: user.role,
       email: user.email,
       permissions: user.permissions,
+      menuItems: user.menu_items,
     };
   }, []);
 

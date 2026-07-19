@@ -37,7 +37,7 @@ Local login: `admin` / `987321`.
 Go Workspace (`Backend/go.work`) with four modules:
 - **`common/`** — shared package: `config` (env loading), `database` (GORM/Postgres pool), `middlewares` (`AuthMiddleware` JWT-from-cookie, `RequirePermission` RBAC), `utils` (JWT, bcrypt, `response.go`, pagination), `repository` (generic `Repository[T]` / `GormRepository[T]`).
 - **`microservices/api.gateway`** (port 4000) — sole entrypoint. Reverse-proxies by path prefix to the other services and is the **only** place CORS is configured.
-- **`microservices/api.auth`** (port 4001) — users, roles, permissions, login/refresh (HTTP-only cookies).
+- **`microservices/api.auth`** (port 4001) — users, roles, permissions, menu items (dynamic sidebar tree), login/refresh (HTTP-only cookies).
 - **`microservices/api.core`** (port 4002) — customers, suppliers, addresses, contacts, documents.
 
 Both services share one physical Postgres database during this migration phase but never join across each other's tables — cross-service data (e.g. `User` inside a Customer DTO) is passed as plain IDs and re-hydrated into a local simplified struct (e.g. `ApiUser`), not a GORM relation.
@@ -96,9 +96,13 @@ Next.js 15 App Router, TypeScript, Tailwind, `rizzui`/Radix UI components, path 
 - **`src/services/`** — one file per domain (`customer-service.ts`, `auth/user-service.ts`, ...), each wrapping the shared `axios` instance in `src/services/common/api.ts`. Zod schemas for form validation live alongside the service (e.g. `customerFormSchema`), and TS interfaces mirror the backend DTOs (`Customer`, `CustomerDetail`, `CustomerList` + `Pagination`).
 - **`src/services/common/api.ts`** — the single axios client (`withCredentials: true`, base URL from `NEXT_PUBLIC_API_URL`). Its response interceptor auto-retries once via `/auth/refresh-token` on 401 (skipping the login call itself), then hard-redirects to `/login` on refresh failure.
 - **`src/contexts/`** / **`src/atoms/`** — `auth-context.tsx` for session/user state, `jotai` atoms (`userAtom.ts`) for cross-component state.
-- **`src/config/`** — `navigation.ts` / `routes.ts` (sidebar + route maps), `site.config.tsx`, `color-presets.ts` (layout theming).
+- **`src/config/`** — `routes.ts` (route map), `site.config.tsx`, `color-presets.ts` (layout theming).
 - **`src/components/`** — organized by domain (`customers/`, `settings/roles/`, `user/`, `inventory/`, `finance/`), plus `common/` (shared table, etc.), `ui/` (design-system primitives), `layout/`.
 - All API calls go through the gateway (`http://localhost:4000/api/...`), never directly to `api.auth`/`api.core` ports.
+
+### Sidebar menu is data-driven, not hardcoded
+
+The sidebar (`src/components/layout/sidebar-menu.tsx`, recursive, arbitrary depth) renders from `user.menuItems` (`AuthContext`/`UserContext`), which comes from the login/refresh/me response body — **not** from a static config file. Source of truth is the `menu_items` table in `api.auth` (self-referencing `MenuItem` domain, `internal/domain/menu_item.go`), managed via `/menu-items` (dev-only, gated by `admin.create_permissions`, no admin UI yet — CRUD only). `AuthService.GetMenuItemsForUser` builds the tree and filters it per user (ADMIN sees everything; a node with an `href` needs its own linked permission or an ADMIN bypass; a pure group node with no `href` is visible only if it has a visible descendant — never grant it access on its own, since it has no permission of its own to check). Icons are Iconify strings (`ph:` prefix = Phosphor, matches the current visual set) resolved via `@iconify/react`, not JSX. To change the menu tree, edit rows in `menu_items` (or, for the seed defaults, `internal/seeder/menu_item_seeder.go`) — do not reintroduce a static `navigation.ts`-style config.
 
 ### Mandatory frontend CRUD pattern
 

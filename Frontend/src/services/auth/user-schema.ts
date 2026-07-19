@@ -3,6 +3,14 @@ import { Pagination } from "../common/pagination-service";
 import { Role } from "./role-schema";
 import { Permission } from "./permission-schema";
 
+export interface MenuItem {
+  id: number;
+  name: string;
+  icon: string;
+  href: string;
+  children?: MenuItem[];
+}
+
 export interface User {
   id: number;
   name: string;
@@ -13,6 +21,7 @@ export interface User {
   role: Role;
   is_active: boolean;
   permissions?: Permission[];
+  menu_items?: MenuItem[];
   created_at: string;
   updated_at: string;
 }

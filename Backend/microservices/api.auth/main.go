@@ -9,7 +9,9 @@ import (
 	"syscall"
 	"time"
 
+	"lumini-hub/api.auth/internal/domain"
 	"lumini-hub/api.auth/internal/routes"
+	"lumini-hub/api.auth/internal/seeder"
 	"lumini-hub/common/config"
 	"lumini-hub/common/database"
 
@@ -27,6 +29,15 @@ func main() {
 	db, err := database.InitDB(cfg)
 	if err != nil {
 		log.Fatalf("Erro ao conectar ao banco de dados: %v", err)
+	}
+
+	// Migração pontual da tabela de itens de menu (demais tabelas do api.auth
+	// não usam AutoMigrate hoje; escopo restrito só a esta struct nova)
+	if err := db.AutoMigrate(&domain.MenuItem{}); err != nil {
+		log.Fatalf("Erro ao migrar tabela de itens de menu: %v", err)
+	}
+	if err := seeder.SeedMenuItems(db); err != nil {
+		log.Fatalf("Erro ao semear itens de menu: %v", err)
 	}
 
 	// Configurar engine do Gin

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import SimpleBar from '@/components/ui/simplebar';
-import { SystemSidebarMenu } from './system-sidebar-menu';
+import { SidebarMenu } from './sidebar-menu';
 import { Logo } from '@/components/ui/logo';
 
 export default function SystemSidebar({ className }: { className?: string }) {
@@ -28,7 +28,7 @@ export default function SystemSidebar({ className }: { className?: string }) {
 
         {/* Menu com Rolagem Customizada */}
         <SimpleBar className="flex-1 min-h-0 mt-4">
-          <SystemSidebarMenu />
+          <SidebarMenu />
         </SimpleBar>
       </div>
     </aside>
