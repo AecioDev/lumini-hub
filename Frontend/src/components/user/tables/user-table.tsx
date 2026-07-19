@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -16,11 +17,11 @@ import { User } from "@/services/auth/user-schema";
 import { Role } from "@/services/auth/role-schema";
 import UserService from "@/services/auth/user-service";
 import { ConfirmDeleteDialog } from "@/components/common/confirm-delete-dialog";
+import { routes } from "@/config/routes";
 
 interface UserTableProps {
   users: User[];
   roles: Role[];
-  onEditUser: (user: User) => void;
   onUserUpdated: (updatedUser: User) => void;
   onUserDeleted: (id: number) => void;
   currentPage: number;
@@ -31,7 +32,6 @@ interface UserTableProps {
 export function UserTable({
   users,
   roles,
-  onEditUser,
   onUserUpdated,
   onUserDeleted,
   currentPage,
@@ -210,9 +210,11 @@ export function UserTable({
                           <DropdownMenuContent align="end" className="w-40">
                             <DropdownMenuLabel>Opções</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => onEditUser(user)}>
-                              <Edit2 className="mr-2 h-3.5 w-3.5" />
-                              Editar Info
+                            <DropdownMenuItem asChild>
+                              <Link href={routes.settings.users.edit(user.id)}>
+                                <Edit2 className="mr-2 h-3.5 w-3.5" />
+                                Editar Info
+                              </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => toggleUserStatus(user.id)}>
                               {user.is_active ? (

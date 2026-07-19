@@ -1,4 +1,4 @@
-// c:\Projetos\lumini-hub\Frontend\app\(system)\settings\users\[id]\edit\page.tsx
+// c:\Projetos\lumini-hub\Frontend\app\(system)\settings\roles\[id]\edit\page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -12,44 +12,38 @@ import {
 } from "@/components/ui/card";
 import { PagePermissionGuard } from "@/components/layout/PagePermissionGuard";
 import { PageHeader } from "@/components/layout/page-header";
-import { EditUserForm } from "@/components/user/forms/edit-user-form";
+import { EditRoleForm } from "@/components/settings/roles/forms/edit-role-form";
 import { Role } from "@/services/auth/role-schema";
-import { User } from "@/services/auth/user-schema";
 import RoleService from "@/services/auth/role-service";
-import UserService from "@/services/auth/user-service";
 import { Loader2 } from "lucide-react";
 
-export default function EditUserPage() {
+export default function EditRolePage() {
   const params = useParams<{ id: string }>();
-  const userId = Number(params.id);
+  const roleId = Number(params.id);
 
-  const [user, setUser] = useState<User | null>(null);
-  const [roles, setRoles] = useState<Role[]>([]);
+  const [role, setRole] = useState<Role | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([UserService.getUserById(userId), RoleService.getRoles()])
-      .then(([userData, rolesData]) => {
-        setUser(userData);
-        setRoles(rolesData);
-      })
+    RoleService.getRoleById(roleId)
+      .then(setRole)
       .finally(() => setIsLoading(false));
-  }, [userId]);
+  }, [roleId]);
 
   return (
     <PagePermissionGuard
-      requiredPermissions={["users.edit"]}
-      accessDeniedMessage="Você não tem permissão para editar usuários."
+      requiredPermissions={["admin.create_permissions"]}
+      accessDeniedMessage="Esta tela é restrita à equipe de desenvolvimento."
     >
       <div className="space-y-6">
         <PageHeader
-          title={`Editar Usuário${user ? `: ${user.name}` : ""}`}
-          description="Atualize os dados e personalize as permissões de acesso do usuário."
+          title={`Editar Perfil${role ? `: ${role.name}` : ""}`}
+          description="Atualize o nome e a descrição deste perfil."
         />
 
         <Card>
           <CardHeader>
-            <CardTitle>Dados do Usuário</CardTitle>
+            <CardTitle>Dados do Perfil</CardTitle>
             <CardDescription>
               Campos marcados com * são obrigatórios.
             </CardDescription>
@@ -58,14 +52,14 @@ export default function EditUserPage() {
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-16">
                 <Loader2 className="h-8 w-8 animate-spin text-primary mb-3" />
-                <p className="text-sm text-muted-foreground">Carregando usuário...</p>
+                <p className="text-sm text-muted-foreground">Carregando perfil...</p>
               </div>
-            ) : !user ? (
+            ) : !role ? (
               <div className="flex flex-col items-center justify-center py-16">
-                <p className="text-sm text-muted-foreground">Usuário não encontrado.</p>
+                <p className="text-sm text-muted-foreground">Perfil não encontrado.</p>
               </div>
             ) : (
-              <EditUserForm user={user} roles={roles} />
+              <EditRoleForm role={role} />
             )}
           </CardContent>
         </Card>

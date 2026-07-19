@@ -114,13 +114,11 @@ export const routes = {
   },
   settings: {
     root: "/settings", // Uma página de configurações geral, se tiver
-    permissions: {
-      root: "/settings/permissions",
-      create: "/settings/permissions/create",
-      view: (id: string | number) => `/settings/permissions/${id}`,
-      edit: (id: string | number) => `/settings/permissions/${id}/edit`,
+    roles: {
+      root: "/settings/roles", // Perfis e Permissões (dev-only)
+      create: "/settings/roles/create",
+      edit: (id: string | number) => `/settings/roles/${id}/edit`,
     },
-    roles: "/settings/roles", // Para a atribuição de permissões a roles (admin)
     users: {
       root: "/settings/users",
       create: "/settings/users/create",

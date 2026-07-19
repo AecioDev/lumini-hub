@@ -25,13 +25,7 @@ const RoleService = {
       permission_ids: data.permissionIds, // Backend espera snake_case
     };
     const response = await api.post("/roles", payload);
-    return {
-      id: response.data.id,
-      name: response.data.name,
-      description: response.data.description,
-      createdAt: response.data.created_at,
-      updatedAt: response.data.updated_at,
-    };
+    return response.data.data;
   },
 
   // 4. Atualizar um perfil existente
@@ -42,54 +36,12 @@ const RoleService = {
       permission_ids: data.permissionIds, // Backend espera snake_case
     };
     const response = await api.put(`/roles/${id}`, payload);
-    return {
-      id: response.data.id,
-      name: response.data.name,
-      description: response.data.description,
-      createdAt: response.data.created_at,
-      updatedAt: response.data.updated_at,
-    };
+    return response.data.data;
   },
 
   // 5. Deletar um perfil
   async deleteRole(id: number): Promise<void> {
     await api.delete(`/roles/${id}`);
-  },
-
-  // NOVO: Função para vincular (linkar) múltiplas permissões a um perfil
-  async linkPermissionsToRole(
-    roleId: string,
-    permissionIds: string[]
-  ): Promise<void> {
-    console.log(`Linking permissions ${permissionIds} to role ${roleId}`);
-    const response = await api.post(`/roles/${roleId}/permissions/link`, {
-      permission_ids: permissionIds, // Backend espera snake_case para o array de IDs
-    });
-    if (!response.data.success) {
-      throw new Error(
-        response.data.error ||
-          response.data.message ||
-          "Erro ao vincular permissões ao perfil."
-      );
-    }
-  },
-
-  // NOVO: Função para desvincular (unlinkar) uma única permissão de um perfil
-  async unlinkPermissionFromRole(
-    roleId: string,
-    permissionId: string
-  ): Promise<void> {
-    console.log(`Unlinking permission ${permissionId} from role ${roleId}`);
-    const response = await api.delete(
-      `/roles/${roleId}/permissions/unlink/${permissionId}`
-    );
-    if (!response.data.success) {
-      throw new Error(
-        response.data.error ||
-          response.data.message ||
-          "Erro ao desvincular permissão do perfil."
-      );
-    }
   },
 };
 

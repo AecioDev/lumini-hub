@@ -1,47 +1,21 @@
-import { cn } from "@/lib/utils";
-import { Title } from "rizzui";
-import Breadcrumb from "./breadcrumb";
+import { ReactNode } from "react";
 
-export type PageHeaderTypes = {
+interface PageHeaderProps {
   title: string;
-  breadcrumb: { name: string; href?: string }[];
-  className?: string;
-};
+  description?: string;
+  actions?: ReactNode;
+}
 
-export default function PageHeader({
-  title,
-  breadcrumb,
-  children,
-  className,
-}: React.PropsWithChildren<PageHeaderTypes>) {
+export function PageHeader({ title, description, actions }: PageHeaderProps) {
   return (
-    <header className={cn("mb-6 @container xs:-mt-2 lg:mb-7", className)}>
-      <div className="flex flex-col @lg:flex-row @lg:items-center @lg:justify-between">
-        <div>
-          <Title
-            as="h2"
-            className="mb-2 text-[22px] lg:text-2xl 4xl:text-[26px]"
-          >
-            {title}
-          </Title>
-
-          <Breadcrumb
-            separator=""
-            separatorVariant="circle"
-            className="flex-wrap"
-          >
-            {breadcrumb.map((item) => (
-              <Breadcrumb.Item
-                key={item.name}
-                {...(item?.href && { href: item?.href })}
-              >
-                {item.name}
-              </Breadcrumb.Item>
-            ))}
-          </Breadcrumb>
-        </div>
-        {children}
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <h1 className="text-3xl font-bold">{title}</h1>
+        {description && (
+          <p className="text-muted-foreground mt-1">{description}</p>
+        )}
       </div>
-    </header>
+      {actions && <div className="flex gap-2">{actions}</div>}
+    </div>
   );
 }

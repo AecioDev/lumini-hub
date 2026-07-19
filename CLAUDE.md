@@ -48,7 +48,7 @@ Both services share one physical Postgres database during this migration phase b
 - **Unit of Work**: services never touch a repository or `*gorm.DB` directly — they call `s.uow.Execute(func(uow repository.UnitOfWork) error { ... })` so writes are atomic. Each microservice defines its own `UnitOfWork` interface (see `api.core/internal/repository/repository.go`) exposing one method per aggregate (`Customers()`, `Suppliers()`, ...).
 - **Search**: complex/paginated queries are POST endpoints ending in `/filter` (a `<Entity>FilterRequest` DTO with `page_no`, `page_size`, `order_by_column`, `is_asc`), not query-string GETs. Results go through `utils.Paginate`.
 - **CORS**: only ever configured in `api.gateway/main.go`. Adding it to `api.auth` or `api.core` causes duplicate-header `AxiosError: Network Error` in the browser.
-- **RBAC**: roles act as strict permission templates (`RequirePermission` middleware; `ADMIN` role bypasses all checks) — there is no per-user permission override, only per-role.
+- **RBAC (hybrid)**: a `Role` is only a template/default — creating or editing a user picks a Role, which pre-fills a default set of permissions, but what `RequirePermission` middleware actually checks is the permission list embedded in the JWT, which comes from the user's own direct `user_permissions` link (`api.auth/internal/domain/user.go`), not from the Role. Operators can freely add/revoke individual permissions on a user beyond their Role's defaults (`PUT /users/:id/permissions`). `ADMIN` role still bypasses all permission checks. The Role/permission catalog itself (`/settings/roles`, "Perfis e Permissões") is a developer-only screen gated by the `admin.create_permissions` permission — creating a permission there has no effect unless a matching `RequirePermission("...")` already exists in code.
 - **Routing**: new route prefixes must be registered both in the microservice's own routes file and proxied from `api.gateway/main.go` (via `router.NoRoute`, careful not to collide with `/swagger/*any`).
 
 ### Adding a new entity (Core or Auth microservice)
@@ -99,6 +99,16 @@ Next.js 15 App Router, TypeScript, Tailwind, `rizzui`/Radix UI components, path 
 - **`src/config/`** — `navigation.ts` / `routes.ts` (sidebar + route maps), `site.config.tsx`, `color-presets.ts` (layout theming).
 - **`src/components/`** — organized by domain (`customers/`, `settings/roles/`, `user/`, `inventory/`, `finance/`), plus `common/` (shared table, etc.), `ui/` (design-system primitives), `layout/`.
 - All API calls go through the gateway (`http://localhost:4000/api/...`), never directly to `api.auth`/`api.core` ports.
+
+### Mandatory frontend CRUD pattern
+
+Entity Cadastro (create) and Edição (edit) are **full pages**, not modals — `app/(system)/<domain>/create/page.tsx` and `app/(system)/<domain>/[id]/edit/page.tsx`, each rendering a form component from `src/components/<domain>/forms/`. Validation is `react-hook-form` + `zodResolver`, against a Zod schema colocated with the entity's types (`<entity>-schema.ts` or the service file — see `src/services/auth/role-schema.ts` / `src/services/auth/user-schema.ts`), reusing the shared `FormField` wrapper (`src/components/common/form-field.tsx`) for label+error display. On submit, `router.push` back to the list route; `useToast` for success/error feedback.
+
+Modals are reserved for **confirming destructive/user actions** (`ConfirmDeleteDialog`, `src/components/common/confirm-delete-dialog.tsx`) — never for data entry forms.
+
+Non-Zod-managed sub-sections (e.g. a permission picker tied to a record but not itself a form field) live as sibling state in the page/form component, not inside the RHF schema — see `PermissionsPicker` usage in `create-user-form.tsx`/`edit-user-form.tsx` for the pattern.
+
+As of 2026-07-18 this pattern is fully implemented only for Usuários (`settings/users`) and Perfis (`settings/roles`) — most other domains still have `em-construcao` stub routes with no real CRUD yet (some without even a service layer). Apply this pattern when building each of those out; do not assume an existing modal needs converting without checking first.
 
 ## Development Workflow / Planning
 

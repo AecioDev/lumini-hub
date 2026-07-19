@@ -49,12 +49,12 @@ func SetupRoutes(router *gin.RouterGroup, db *gorm.DB, cfg *config.Config) {
 	roles := router.Group("/roles")
 	roles.Use(middlewares.AuthMiddleware(cfg))
 	{
-		roles.GET("", middlewares.RequirePermission("users.view"), roleHandler.GetRoles)
-		roles.GET("/:id", middlewares.RequirePermission("users.view"), roleHandler.GetRole)
-		roles.POST("", middlewares.RequirePermission("users.create"), roleHandler.CreateRole)
-		roles.PUT("/:id", middlewares.RequirePermission("users.edit"), roleHandler.UpdateRole)
-		roles.PUT("/:id/permissions", middlewares.RequirePermission("users.edit"), roleHandler.UpdateRolePermissions)
-		roles.DELETE("/:id", middlewares.RequirePermission("users.delete"), roleHandler.DeleteRole)
+		roles.GET("", middlewares.RequirePermission("roles.view"), roleHandler.GetRoles)
+		roles.GET("/:id", middlewares.RequirePermission("roles.view"), roleHandler.GetRole)
+		roles.POST("", middlewares.RequirePermission("roles.create"), roleHandler.CreateRole)
+		roles.PUT("/:id", middlewares.RequirePermission("roles.edit"), roleHandler.UpdateRole)
+		roles.PUT("/:id/permissions", middlewares.RequirePermission("roles.edit"), roleHandler.UpdateRolePermissions)
+		roles.DELETE("/:id", middlewares.RequirePermission("roles.delete"), roleHandler.DeleteRole)
 	}
 
 	// Rotas de Permissões (todas protegidas)

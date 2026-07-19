@@ -175,16 +175,10 @@ export const systemNavItems: NavItem[] = [
         requiredPermission: "users.view",
       },
       {
-        title: "Permissões",
-        href: routes.settings.permissions.root,
-        icon: "mdi:lock", // MDI para cadeado
-        requiredPermission: "admin.create_permissions",
-      },
-      {
-        title: "Perfis de Acesso",
-        href: routes.settings.roles,
+        title: "Perfis e Permissões",
+        href: routes.settings.roles.root,
         icon: "mdi:shield-account", // MDI para perfil de segurança
-        requiredPermission: "roles.view",
+        requiredPermission: "admin.create_permissions",
       },
       {
         title: "Integrações",
