@@ -35,7 +35,8 @@ type LoginResponse struct {
 }
 
 // GetMenuItemsForUser monta a árvore de menu já filtrada pelas permissões do usuário
-// (ADMIN vê a árvore completa, sem filtro).
+// (ADMIN vê a árvore completa, exceto o catálogo de Perfis e Permissões — ver
+// domain.FilterMenuTreeForUser / utils.IsDeveloperOnlyPermission).
 func (s *AuthService) GetMenuItemsForUser(user domain.User) ([]domain.ApiUserMenuItem, error) {
 	menuItemRepo := repository.NewMenuItemRepository(s.db)
 	flat, err := menuItemRepo.FindAllFlat()
@@ -49,8 +50,11 @@ func (s *AuthService) GetMenuItemsForUser(user domain.User) ([]domain.ApiUserMen
 		userPermissionCodes[perm.Permission] = true
 	}
 
-	isAdmin := user.Role != nil && user.Role.Name == "ADMIN"
-	return domain.FilterMenuTreeForUser(tree, userPermissionCodes, isAdmin), nil
+	role := ""
+	if user.Role != nil {
+		role = user.Role.Name
+	}
+	return domain.FilterMenuTreeForUser(tree, userPermissionCodes, role), nil
 }
 
 // Login autentica um usuário e retorna tokens JWT

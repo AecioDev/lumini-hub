@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Lumini Hub is an ERP system with a Go microservices backend (`Backend/`) and a Next.js frontend (`Frontend/`). It is being migrated feature-by-feature from a legacy monolith, organized around ERP modules (CRM, Estoque/Produtos, Compras, Vendas/Caixas, Financeiro, Fiscal, Contabilidade) tracked in `Documentos/Planejamento/`.
+Lumini Hub is an ERP system with a Go microservices backend (`Backend/`) and a Vite + React + Ant Design frontend (`Frontend/`). It is being migrated feature-by-feature from a legacy monolith, organized around ERP modules (CRM, Estoque/Produtos, Compras, Vendas/Caixas, Financeiro, Fiscal, Contabilidade) tracked in `Documentos/Planejamento/`.
 
 ## Commands
 
@@ -21,14 +21,14 @@ Regenerate Swagger docs after adding/changing handlers (run from `Backend/micros
 swag init -g main.go -d ./,../../common,../api.auth,../api.core --parseDependency
 ```
 
-### Frontend (Next.js, from `Frontend/`)
+### Frontend (Vite + React, from `Frontend/`)
 ```powershell
 pnpm install
-pnpm dev      # dev server at http://localhost:3000
-pnpm build
-pnpm lint     # next lint / eslint
+pnpm dev      # Vite dev server at http://localhost:3000 (port pinned in vite.config.ts to match gateway CORS)
+pnpm build    # tsc -b && vite build
+pnpm lint     # eslint .
 ```
-No frontend test runner is currently configured. Requires `Frontend/.env.local` with `NEXT_PUBLIC_API_URL` (defaults to `http://localhost:4000/api`, i.e. the gateway).
+No frontend test runner is currently configured. Requires `Frontend/.env.local` with `VITE_API_URL` (defaults to `http://localhost:4000/api`, i.e. the gateway).
 
 Local login: `admin` / `987321`.
 
@@ -48,7 +48,8 @@ Both services share one physical Postgres database during this migration phase b
 - **Unit of Work**: services never touch a repository or `*gorm.DB` directly — they call `s.uow.Execute(func(uow repository.UnitOfWork) error { ... })` so writes are atomic. Each microservice defines its own `UnitOfWork` interface (see `api.core/internal/repository/repository.go`) exposing one method per aggregate (`Customers()`, `Suppliers()`, ...).
 - **Search**: complex/paginated queries are POST endpoints ending in `/filter` (a `<Entity>FilterRequest` DTO with `page_no`, `page_size`, `order_by_column`, `is_asc`), not query-string GETs. Results go through `utils.Paginate`.
 - **CORS**: only ever configured in `api.gateway/main.go`. Adding it to `api.auth` or `api.core` causes duplicate-header `AxiosError: Network Error` in the browser.
-- **RBAC (hybrid)**: a `Role` is only a template/default — creating or editing a user picks a Role, which pre-fills a default set of permissions, but what `RequirePermission` middleware actually checks is the permission list embedded in the JWT, which comes from the user's own direct `user_permissions` link (`api.auth/internal/domain/user.go`), not from the Role. Operators can freely add/revoke individual permissions on a user beyond their Role's defaults (`PUT /users/:id/permissions`). `ADMIN` role still bypasses all permission checks. The Role/permission catalog itself (`/settings/roles`, "Perfis e Permissões") is a developer-only screen gated by the `admin.create_permissions` permission — creating a permission there has no effect unless a matching `RequirePermission("...")` already exists in code.
+- **RBAC (hybrid)**: a `Role` is only a template/default — creating or editing a user picks a Role, which pre-fills a default set of permissions, but what `RequirePermission` middleware actually checks is the permission list embedded in the JWT, which comes from the user's own direct `user_permissions` link (`api.auth/internal/domain/user.go`), not from the Role. Operators can freely add/revoke individual permissions on a user beyond their Role's defaults (`PUT /users/:id/permissions`). The Role/permission catalog itself (`/settings/roles`, "Perfis e Permissões") is a developer-only screen gated by the `admin.create_permissions` permission — creating a permission there has no effect unless a matching `RequirePermission("...")` already exists in code.
+- **RBAC bypass is two-tiered** (`common/utils/rbac.go`, 2026-07-19): `DEVELOP` bypasses every `RequirePermission` check and sees the full menu, no exceptions. `ADMIN` bypasses everything **except** the Perfis/Permissões catalog itself (`utils.IsDeveloperOnlyPermission`: `admin.create_permissions` + any `roles.*`/`permissions.*` code) — creating/editing/deleting Roles or Permissions, and the "Perfis e Permissões" menu entry, are DEVELOP-only. Reasoning: creating a permission with no matching `RequirePermission("...")` in code does nothing, so this is a developer tool, not a business-admin one. Both the backend (`middlewares.RequirePermission`, `domain.FilterMenuTreeForUser`) and the frontend (`AuthContext.tsx`'s `hasPermission`) implement this same tiering — keep them in sync if it changes. There is no seeder for the `DEVELOP` role or its permission grants; it's created and populated manually in the DB (`user_permissions`) per-environment, not via code.
 - **Routing**: new route prefixes must be registered both in the microservice's own routes file and proxied from `api.gateway/main.go` (via `router.NoRoute`, careful not to collide with `/swagger/*any`).
 
 ### Adding a new entity (Core or Auth microservice)
@@ -88,31 +89,32 @@ Open items still pending before full implementation: Loja Integrada API/App keys
 
 ## Frontend Architecture
 
-Next.js 15 App Router, TypeScript, Tailwind, `rizzui`/Radix UI components, path alias `@/*` → `Frontend/src/*`.
+Vite + React 18 + TypeScript + React Router v6 + Ant Design v5 (`antd`). The frontend was rebuilt from scratch on 2026-07-19 — the previous Next.js App Router + Tailwind + `rizzui`/Radix stack was fully deleted and replaced, not extended. Path alias `@/*` → `Frontend/src/*`. The dev server is pinned to port 3000 in `vite.config.ts` — required because the gateway's CORS only allows `http://localhost:3000`/`:3001`.
 
-> For the upcoming CRM module (`Documentos/Planejamento/Modulo_1_CRM_Integracoes/`), the agreed approach is **hybrid UI**: Ant Design for complex tables/forms (e.g. Kanban pipelines, filterable grids), Tailwind/rizzui for layout — this is not a full migration off the current stack, just an addition scoped to that module.
+There is no more "hybrid UI" split for the CRM module — `antd` is the sole UI library for the whole app now (no Tailwind, no rizzui/Radix).
 
-- **`app/`** — route groups `(auth)` (login/signin) and `(system)` (everything behind auth: dashboards, customers, suppliers, products, inventory, financial, sales, purchases, settings, ...). Each domain generally has list/`create`/`[id]`/`[id]/edit` routes.
-- **`src/services/`** — one file per domain (`customer-service.ts`, `auth/user-service.ts`, ...), each wrapping the shared `axios` instance in `src/services/common/api.ts`. Zod schemas for form validation live alongside the service (e.g. `customerFormSchema`), and TS interfaces mirror the backend DTOs (`Customer`, `CustomerDetail`, `CustomerList` + `Pagination`).
-- **`src/services/common/api.ts`** — the single axios client (`withCredentials: true`, base URL from `NEXT_PUBLIC_API_URL`). Its response interceptor auto-retries once via `/auth/refresh-token` on 401 (skipping the login call itself), then hard-redirects to `/login` on refresh failure.
-- **`src/contexts/`** / **`src/atoms/`** — `auth-context.tsx` for session/user state, `jotai` atoms (`userAtom.ts`) for cross-component state.
-- **`src/config/`** — `routes.ts` (route map), `site.config.tsx`, `color-presets.ts` (layout theming).
-- **`src/components/`** — organized by domain (`customers/`, `settings/roles/`, `user/`, `inventory/`, `finance/`), plus `common/` (shared table, etc.), `ui/` (design-system primitives), `layout/`.
+- **`src/types/`** — one file per entity, TS interfaces mirroring the backend Go DTOs (`auth.ts`, `user.ts`, `role.ts`, `permission.ts`, `menu.ts`, `customer.ts`, `supplier.ts`), plus `common.ts` for the shared `ApiResponse<T>`/`ApiPagination` envelope. `crm.ts` is explicitly mock-only (see below).
+- **`src/services/`** — one file per entity (`auth/auth-service.ts`, `users/user-service.ts`, `roles/role-service.ts`, `permissions/permission-service.ts`, `customers/customer-service.ts`, `suppliers/supplier-service.ts`), each wrapping the shared axios instance. No page/component calls axios directly.
+- **`src/services/common/api.ts`** — the single axios client (`withCredentials: true`, base URL from `VITE_API_URL`). Response interceptor auto-retries once via `/auth/refresh-token` on 401 (skipping the login/refresh calls themselves); on refresh failure it hard-redirects to `/login`, **except** for the initial `/auth/me` session-bootstrap call, which is left to fail gracefully through `AuthContext` + `ProtectedRoute`'s own SPA redirect instead of forcing a full page reload.
+- **`src/schemas/`** — one Zod schema per form (`login-schema.ts`, `forgot-password-schema.ts`, `create-user-schema.ts`, `update-user-schema.ts`), validation aligned to the backend's `binding` tags.
+- **`src/contexts/`** — `AuthContext.tsx` (bootstraps session via `GET /auth/me` on load, exposes `user`, `menuItems`, `login()`, `logout()`, `hasPermission()`) and `ThemeContext.tsx` (dark/light, persisted in `localStorage`, feeds `ConfigProvider`'s `theme.darkAlgorithm`/`defaultAlgorithm` via `src/theme/antd-theme.ts`).
+- **`src/routes/`** — `router.tsx` (route tree), `ProtectedRoute.tsx` (session gate), `RequirePermission.tsx` (per-route permission gate — UI convenience only, the backend `RequirePermission` middleware is the real enforcement), `AuthLayout.tsx` (centered card shell for Login/Recuperar senha), `AppLayout.tsx` (`Layout.Sider` 240/76px collapsible + `Layout.Header` + `Layout.Content`).
+- **`src/pages/`** / **`src/components/`** — organized by domain (`pages/auth/`, `pages/dashboard/`, `pages/users/`; `components/layout/`, `components/dashboard/`, `components/users/forms/`, `components/common/`). `pages/PlaceholderPage.tsx` is the catch-all fallback for any DB-seeded menu `href` that doesn't have a real screen yet.
 - All API calls go through the gateway (`http://localhost:4000/api/...`), never directly to `api.auth`/`api.core` ports.
 
 ### Sidebar menu is data-driven, not hardcoded
 
-The sidebar (`src/components/layout/sidebar-menu.tsx`, recursive, arbitrary depth) renders from `user.menuItems` (`AuthContext`/`UserContext`), which comes from the login/refresh/me response body — **not** from a static config file. Source of truth is the `menu_items` table in `api.auth` (self-referencing `MenuItem` domain, `internal/domain/menu_item.go`), managed via `/menu-items` (dev-only, gated by `admin.create_permissions`, no admin UI yet — CRUD only). `AuthService.GetMenuItemsForUser` builds the tree and filters it per user (ADMIN sees everything; a node with an `href` needs its own linked permission or an ADMIN bypass; a pure group node with no `href` is visible only if it has a visible descendant — never grant it access on its own, since it has no permission of its own to check). Icons are Iconify strings (`ph:` prefix = Phosphor, matches the current visual set) resolved via `@iconify/react`, not JSX. To change the menu tree, edit rows in `menu_items` (or, for the seed defaults, `internal/seeder/menu_item_seeder.go`) — do not reintroduce a static `navigation.ts`-style config.
+The sidebar (`src/components/layout/SidebarMenu.tsx`, recursive antd `Menu`, arbitrary depth) renders from `user.menuItems`, which comes from the login/refresh/me response body — **not** from a static config file. Source of truth is the `menu_items` table in `api.auth` (self-referencing `MenuItem` domain, `internal/domain/menu_item.go`), managed via `/menu-items` (dev-only, gated by `admin.create_permissions`, no admin UI yet — CRUD only). `AuthService.GetMenuItemsForUser` builds the tree and filters it per user (ADMIN sees everything; a node with an `href` needs its own linked permission or an ADMIN bypass; a pure group node with no `href` is visible only if it has a visible descendant — never grant it access on its own, since it has no permission of its own to check). Icons are Iconify strings (`ph:` prefix = Phosphor) resolved via `@iconify/react`'s `<Icon>` component, not JSX. **antd `Menu` item `key`s must be built from the item's `id`, not its `href`** — the real seeded tree has duplicate hrefs at different tree positions (e.g. "Clientes" appears both under Vendas > Cadastros and under Financeiro > Contas a Receber, both pointing at `/customers`), which collides if `href` is used as the key. Seeded hrefs are nested paths like `/settings/users`, not flat ones — always check the actual login response's `menu_items` before wiring a new frontend route, don't assume the path. To change the menu tree, edit rows in `menu_items` (or, for the seed defaults, `internal/seeder/menu_item_seeder.go`).
 
 ### Mandatory frontend CRUD pattern
 
-Entity Cadastro (create) and Edição (edit) are **full pages**, not modals — `app/(system)/<domain>/create/page.tsx` and `app/(system)/<domain>/[id]/edit/page.tsx`, each rendering a form component from `src/components/<domain>/forms/`. Validation is `react-hook-form` + `zodResolver`, against a Zod schema colocated with the entity's types (`<entity>-schema.ts` or the service file — see `src/services/auth/role-schema.ts` / `src/services/auth/user-schema.ts`), reusing the shared `FormField` wrapper (`src/components/common/form-field.tsx`) for label+error display. On submit, `router.push` back to the list route; `useToast` for success/error feedback.
+Entity Cadastro (create) and Edição (edit) are **full pages**, not modals — e.g. `src/pages/users/CreateUserPage.tsx` / `EditUserPage.tsx`, registered in `src/routes/router.tsx`, each rendering a form component from `src/components/<domain>/forms/` (e.g. `CreateUserForm.tsx`/`EditUserForm.tsx`). Validation is `react-hook-form` + `zodResolver` against a schema in `src/schemas/`, reusing the shared `FormField` wrapper (`src/components/common/FormField.tsx`, thin layer over antd `Form.Item`) for label+error display. Complex forms are split into `antd Tabs` (e.g. "Dados do Usuário" vs "Permissões") rather than one long scroll. On submit, `navigate()` back to the list route; `App.useApp()`'s `message`/`notification` for feedback.
 
-Modals are reserved for **confirming destructive/user actions** (`ConfirmDeleteDialog`, `src/components/common/confirm-delete-dialog.tsx`) — never for data entry forms.
+Modals are reserved for **confirming destructive/user actions** — never for data entry forms.
 
-Non-Zod-managed sub-sections (e.g. a permission picker tied to a record but not itself a form field) live as sibling state in the page/form component, not inside the RHF schema — see `PermissionsPicker` usage in `create-user-form.tsx`/`edit-user-form.tsx` for the pattern.
+Non-Zod-managed sub-sections (e.g. the Perfil/permissions picker tied to a user but not itself a form field) live as sibling `useState` in the form component, not inside the RHF schema — see `CreateUserForm.tsx`/`EditUserForm.tsx`: the Perfil preset buttons (`RolePresetPicker.tsx`, roles fetched live from `GET /roles`) drive `ModulePermissionsPanel.tsx`, which shows only the permissions of the module whose name matches the selected Perfil, falling back to the first module with a selected permission when the names don't match (the Role/module naming in the seeded catalog isn't fully consistent yet — e.g. "Gerente"/"ADMIN" roles have no same-named module).
 
-As of 2026-07-18 this pattern is fully implemented only for Usuários (`settings/users`) and Perfis (`settings/roles`) — most other domains still have `em-construcao` stub routes with no real CRUD yet (some without even a service layer). Apply this pattern when building each of those out; do not assume an existing modal needs converting without checking first.
+As of 2026-07-19 this pattern is fully implemented only for **Usuários** (`/settings/users`) — the frontend was rebuilt from scratch on that date and only Login, Recuperar senha (UI-only, no backend endpoint yet), Dashboard CRM (mocked, no `api.crm` backend yet) and the Usuários module are real; every other sidebar destination falls through to `PlaceholderPage`. Apply this pattern when building each of those out.
 
 ## Development Workflow / Planning
 

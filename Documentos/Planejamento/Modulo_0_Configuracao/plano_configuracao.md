@@ -1,5 +1,7 @@
 # Módulo 0 - Setup do Ant Design no Frontend
 
+> **2026-07-19**: o frontend foi reconstruído do zero como **Vite + React (SPA)**, substituindo o Next.js — ver `Documentos/Planejamento/Historico/log_2026-07-19.md`. As seções abaixo sobre SSR/App Router/`@ant-design/nextjs-registry` descrevem a abordagem original (Next.js) e não se aplicam mais; ver `tasks_configuracao.md` pro que foi de fato implementado no stack atual.
+
 Este módulo é responsável por preparar o ambiente frontend do Next.js para utilizar os componentes e estilos do **Ant Design (antd)**, garantindo a renderização correta no lado do servidor (SSR/App Router), internacionalização para pt-BR e definição dos tokens globais de design.
 
 ## 🛠️ Especificações Técnicas

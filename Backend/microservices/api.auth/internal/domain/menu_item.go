@@ -3,6 +3,8 @@ package domain
 import (
 	"sort"
 
+	"lumini-hub/common/utils"
+
 	"gorm.io/gorm"
 )
 
@@ -124,16 +126,27 @@ func BuildMenuTree(flat []MenuItem) []ApiMenuItem {
 // FilterMenuTreeForUser filtra a árvore de menu para as permissões de um usuário.
 // Nós que só agrupam filhos (sem Href, ex. "Cadastros") nunca ganham acesso por conta
 // própria — eles só aparecem se sobrar algum descendente visível. Nós que são destino de
-// navegação (com Href) ficam visíveis se: o usuário é ADMIN, o nó não exige permissão
-// própria, o usuário tem a permissão exigida, ou algum descendente dele ficou visível.
-func FilterMenuTreeForUser(tree []ApiMenuItem, userPermissionCodes map[string]bool, isAdmin bool) []ApiUserMenuItem {
+// navegação (com Href) ficam visíveis se: o papel do usuário dá bypass pra permissão
+// exigida por aquele nó (ver utils.IsDeveloperOnlyPermission — o catálogo de Perfis e
+// Permissões só faz bypass pra "DEVELOP", não pra "ADMIN"), o nó não exige
+// permissão própria, o usuário tem a permissão exigida, ou algum descendente ficou visível.
+func FilterMenuTreeForUser(tree []ApiMenuItem, userPermissionCodes map[string]bool, role string) []ApiUserMenuItem {
 	var visible []ApiUserMenuItem
 	for _, node := range tree {
-		children := FilterMenuTreeForUser(node.Children, userPermissionCodes, isAdmin)
+		children := FilterMenuTreeForUser(node.Children, userPermissionCodes, role)
 
 		isDestination := node.Href != ""
+		requiredPermission := ""
+		if node.Permission != nil {
+			requiredPermission = node.Permission.Permission
+		}
+
+		bypasses := role == utils.RoleDeveloper ||
+			(role == utils.RoleAdmin &&
+				(requiredPermission == "" || !utils.IsDeveloperOnlyPermission(requiredPermission)))
+
 		hasOwnAccess := node.IsActive && isDestination &&
-			(isAdmin || node.Permission == nil || userPermissionCodes[node.Permission.Permission])
+			(bypasses || requiredPermission == "" || userPermissionCodes[requiredPermission])
 
 		if hasOwnAccess || len(children) > 0 {
 			visible = append(visible, ApiUserMenuItem{

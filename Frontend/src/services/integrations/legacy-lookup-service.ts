@@ -1,30 +1,22 @@
-import api from "@/services/common/api";
-import { LegacyCompany, LegacyLocation } from "./legacy-lookup-schema";
+import { api } from "../common/api";
+import type { ApiResponse } from "@/types/common";
+import type { LegacyCompany, LegacyLocation } from "@/types/integration";
 
-const LegacyLookupService = {
+// Endpoints retornam 503 quando a conexão com o SQL Server legado não está
+// configurada — quem chama deve tratar essa falha separadamente do restante
+// da tela (ver IntegrationsPage.tsx).
+export const legacyLookupService = {
   async getLocations(): Promise<LegacyLocation[]> {
-    const response = await api.get("/integrations/legacy/locations");
-    if (!response.data.success) {
-      throw new Error(
-        response.data.error ||
-          response.data.message ||
-          "Erro ao obter locais de armazenamento do ERP legado."
-      );
-    }
-    return response.data.data;
+    const { data } = await api.get<ApiResponse<LegacyLocation[]>>(
+      "/integrations/legacy/locations"
+    );
+    return data.data ?? [];
   },
 
   async getCompanies(): Promise<LegacyCompany[]> {
-    const response = await api.get("/integrations/legacy/companies");
-    if (!response.data.success) {
-      throw new Error(
-        response.data.error ||
-          response.data.message ||
-          "Erro ao obter empresas do ERP legado."
-      );
-    }
-    return response.data.data;
+    const { data } = await api.get<ApiResponse<LegacyCompany[]>>(
+      "/integrations/legacy/companies"
+    );
+    return data.data ?? [];
   },
 };
-
-export default LegacyLookupService;

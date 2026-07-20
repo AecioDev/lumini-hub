@@ -1,30 +1,13 @@
-import api from "@/services/common/api";
-import { SyncLogList } from "./sync-log-schema";
+import { api } from "../common/api";
+import type { ApiResponse } from "@/types/common";
+import type { ApiSyncLogListPaginated, SyncLogFilterRequest } from "@/types/integration";
 
-const SyncLogService = {
-  async list(
-    page = 1,
-    limit = 10,
-    filters?: { direction?: string; entity_type?: string; status?: string }
-  ): Promise<SyncLogList> {
-    const response = await api.post("/integrations/sync-logs/filter", {
-      page_no: page,
-      page_size: limit,
-      direction: filters?.direction,
-      entity_type: filters?.entity_type,
-      status: filters?.status,
-    });
-
-    if (!response.data.success) {
-      throw new Error(
-        response.data.error ||
-          response.data.message ||
-          "Erro ao obter logs de sincronização."
-      );
-    }
-
-    return response.data.data;
+export const syncLogService = {
+  async filter(payload: SyncLogFilterRequest = {}): Promise<ApiSyncLogListPaginated> {
+    const { data } = await api.post<ApiResponse<ApiSyncLogListPaginated>>(
+      "/integrations/sync-logs/filter",
+      payload
+    );
+    return data.data!;
   },
 };
-
-export default SyncLogService;

@@ -1,35 +1,25 @@
-import api from "@/services/common/api";
-import {
-  IntegrationSettings,
-  UpdateIntegrationSettingsData,
-} from "./integration-config-schema";
+import { api } from "../common/api";
+import type { ApiResponse } from "@/types/common";
+import type {
+  ApiIntegrationSettings,
+  UpdateIntegrationSettingsRequest,
+} from "@/types/integration";
 
-const IntegrationConfigService = {
-  async getSettings(): Promise<IntegrationSettings> {
-    const response = await api.get("/integrations/settings");
-    if (!response.data.success) {
-      throw new Error(
-        response.data.error ||
-          response.data.message ||
-          "Erro ao obter configurações."
-      );
-    }
-    return response.data.data;
+export const integrationConfigService = {
+  async getSettings(): Promise<ApiIntegrationSettings> {
+    const { data } = await api.get<ApiResponse<ApiIntegrationSettings>>(
+      "/integrations/settings"
+    );
+    return data.data!;
   },
 
   async updateSettings(
-    data: UpdateIntegrationSettingsData
-  ): Promise<IntegrationSettings> {
-    const response = await api.put("/integrations/settings", data);
-    if (!response.data.success) {
-      throw new Error(
-        response.data.error ||
-          response.data.message ||
-          "Erro ao atualizar configurações."
-      );
-    }
-    return response.data.data;
+    payload: UpdateIntegrationSettingsRequest
+  ): Promise<ApiIntegrationSettings> {
+    const { data } = await api.put<ApiResponse<ApiIntegrationSettings>>(
+      "/integrations/settings",
+      payload
+    );
+    return data.data!;
   },
 };
-
-export default IntegrationConfigService;

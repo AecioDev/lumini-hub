@@ -1,75 +1,67 @@
-import axios from "axios";
-// Se você tiver acesso ao router do Next.js aqui (pode ser complexo,
-// geralmente o router é um hook), seria ideal. Caso contrário, usaremos window.location.pathname.
-// import router from 'next/router'; // Exemplo, não funcionará diretamente aqui
+import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 
-// Configuração base do axios
-const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api",
-  headers: {
-    "Content-Type": "application/json",
-  },
+// Instância única do axios. baseURL aponta sempre para o api.gateway — nenhuma
+// tela/serviço deve falar direto com api.auth/api.core (ver CLAUDE.md do projeto).
+export const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL,
   withCredentials: true,
+  headers: { "Content-Type": "application/json" },
 });
 
-// Interceptor para tratar erros de resposta
+interface RetryableRequestConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
+
+// login/refresh-token nunca devem tentar se auto-renovar (evita loop).
+function isLoginOrRefreshCall(url?: string): boolean {
+  if (!url) return false;
+  return url.includes("/auth/login") || url.includes("/auth/refresh-token");
+}
+
+// A checagem de sessão do AuthContext (bootstrap) já trata o 401 de forma
+// gracil (usuário fica null, ProtectedRoute redireciona via SPA) — não faz
+// sentido essa chamada específica forçar um reload duro da página.
+function isMeCall(url?: string): boolean {
+  return !!url && url.includes("/auth/me");
+}
+
+// Evita disparar N refreshes em paralelo quando várias requisições tomam 401 juntas.
+let refreshInFlight: Promise<void> | null = null;
+
+function redirectToLogin() {
+  if (typeof window !== "undefined" && window.location.pathname !== "/login") {
+    window.location.href = "/login";
+  }
+}
+
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-    const loginUrlPath = "/auth/login"; // Caminho da sua API de login
-    // Ajuste se o AuthService.login usa um caminho diferente
+  async (error: AxiosError) => {
+    const original = error.config as RetryableRequestConfig | undefined;
 
-    // Verifica se a URL original é a de login.
-    // originalRequest.url pode ser o caminho relativo à baseURL.
-    const isLoginAttempt = originalRequest.url?.split("?")[0] === loginUrlPath;
-
-    // Se o erro for 401, não for uma tentativa de retry, E NÃO FOR UMA TENTATIVA DE LOGIN ORIGINAL
-    if (
+    const shouldTryRefresh =
       error.response?.status === 401 &&
-      !originalRequest._retry &&
-      !isLoginAttempt
-    ) {
-      originalRequest._retry = true;
+      original &&
+      !original._retry &&
+      !isLoginOrRefreshCall(original.url);
 
-      try {
-        console.log(
-          "[Interceptor] Tentando refresh token para:",
-          originalRequest.url
-        );
-        await axios.post(
-          `${api.defaults.baseURL}/auth/refresh-token`,
-          {},
-          {
-            withCredentials: true,
-          }
-        );
-        // Reenviar a requisição original
-        return api(originalRequest);
-      } catch (refreshError) {
-        console.error(
-          "[Interceptor] Falha ao tentar refresh token. Efetuando logout e redirecionando se necessário.",
-          refreshError
-        );
-        // Limpar dados do usuário
-        localStorage.removeItem("user_data");
-        // Aqui, o ideal seria chamar uma função centralizada de logout que usa o router do Next.js.
-        // Como alternativa, podemos usar window.location.href condicionalmente.
-        // Verifique se a página atual JÁ NÃO É /login para evitar reload desnecessário.
-        if (
-          typeof window !== "undefined" &&
-          window.location.pathname !== "/login"
-        ) {
-          window.location.href = "/login";
-        }
-        // Se já estiver em /login, não faz nada, o toast do AuthContext já foi exibido.
-        return Promise.reject(refreshError); // Importante rejeitar para que a chamada original saiba da falha.
-      }
+    if (!shouldTryRefresh) {
+      return Promise.reject(error);
     }
 
-    // Se for uma tentativa de login que falhou, ou outro erro, apenas rejeita.
-    return Promise.reject(error);
+    original._retry = true;
+
+    try {
+      refreshInFlight ??= api.post("/auth/refresh-token").then(() => undefined);
+      await refreshInFlight;
+      refreshInFlight = null;
+      return api(original);
+    } catch (refreshError) {
+      refreshInFlight = null;
+      if (!isMeCall(original.url)) {
+        redirectToLogin();
+      }
+      return Promise.reject(refreshError);
+    }
   }
 );
-
-export default api;

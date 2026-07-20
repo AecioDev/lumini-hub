@@ -8,7 +8,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// RequirePermission verifica se o usuário tem a permissão necessária
+// RequirePermission verifica se o usuário tem a permissão necessária.
+//
+// Bypass hierárquico: "DEVELOP" (utils.RoleDeveloper) passa em qualquer
+// checagem. "ADMIN" passa em quase tudo, EXCETO nas permissões do catálogo
+// de Perfis e Permissões (utils.IsDeveloperOnlyPermission) — esse cadastro
+// fica reservado ao DEVELOP.
 func RequirePermission(permission string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Verificar se o usuário está autenticado
@@ -27,11 +32,16 @@ func RequirePermission(permission string) gin.HandlerFunc {
 			return
 		}
 
-		// Verificar se o usuário é admin (tem todas as permissões)
-		role, exists := c.Get("role")
-		if exists && role.(string) == "ADMIN" {
-			c.Next()
-			return
+		if roleValue, exists := c.Get("role"); exists {
+			role, _ := roleValue.(string)
+			if role == utils.RoleDeveloper {
+				c.Next()
+				return
+			}
+			if role == utils.RoleAdmin && !utils.IsDeveloperOnlyPermission(permission) {
+				c.Next()
+				return
+			}
 		}
 
 		// Verificar se o usuário tem a permissão específica
