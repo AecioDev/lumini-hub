@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm, type FieldErrors } from "react-hook-form";
-import { App as AntdApp, Button, Card, Col, Input, Row, Skeleton, Tabs, Typography } from "antd";
+import { Button, Card, Col, Input, Row, Skeleton, Tabs, Typography } from "antd";
 import { useNavigate } from "react-router-dom";
 import { FormField } from "@/components/common/FormField";
+import { AccessDeniedResult } from "@/components/common/AccessDeniedResult";
 import { ModulePermissionsPanel, pickModuleForRole } from "./ModulePermissionsPanel";
 import { RolePresetPicker } from "./RolePresetPicker";
 import { createUserSchema, type CreateUserFormValues } from "@/schemas/create-user-schema";
 import { roleService } from "@/services/roles/role-service";
 import { permissionService } from "@/services/permissions/permission-service";
 import { userService } from "@/services/users/user-service";
+import { useFeedback } from "@/hooks/useFeedback";
+import { isForbiddenError } from "@/utils/api-error";
 import type { ApiRole } from "@/types/role";
 import type { ApiPermissionsByModule } from "@/types/permission";
 
@@ -25,13 +28,14 @@ const DADOS_FIELDS: (keyof CreateUserFormValues)[] = [
 
 export function CreateUserForm() {
   const navigate = useNavigate();
-  const { message } = AntdApp.useApp();
+  const feedback = useFeedback();
 
   const [roles, setRoles] = useState<ApiRole[]>([]);
   const [permissionsByModule, setPermissionsByModule] = useState<
     ApiPermissionsByModule[]
   >([]);
   const [loadingPresets, setLoadingPresets] = useState(true);
+  const [forbidden, setForbidden] = useState(false);
 
   const [selectedRoleId, setSelectedRoleId] = useState<number | null>(null);
   const [selectedPermissionIds, setSelectedPermissionIds] = useState<Set<number>>(
@@ -80,7 +84,14 @@ export function CreateUserForm() {
           }
         }
       })
-      .catch(() => message.error("Erro ao carregar perfis/permissões."))
+      .catch((error) => {
+        if (cancelled) return;
+        if (isForbiddenError(error)) {
+          setForbidden(true);
+        } else {
+          feedback.error("Erro ao carregar perfis/permissões.");
+        }
+      })
       .finally(() => {
         if (!cancelled) setLoadingPresets(false);
       });
@@ -88,7 +99,7 @@ export function CreateUserForm() {
     return () => {
       cancelled = true;
     };
-  }, [setValue, message]);
+  }, [setValue, feedback]);
 
   const handleSelectRole = async (roleId: number) => {
     setSelectedRoleId(roleId);
@@ -100,7 +111,7 @@ export function CreateUserForm() {
       setActiveModule(pickModuleForRole(detail.name, permissionsByModule, ids));
       setIsCustom(false);
     } catch {
-      message.error("Erro ao carregar as permissões do perfil selecionado.");
+      feedback.error("Erro ao carregar as permissões do perfil selecionado.");
     }
   };
 
@@ -121,10 +132,10 @@ export function CreateUserForm() {
           permission_ids: [...selectedPermissionIds],
         });
       }
-      message.success("Usuário criado com sucesso.");
+      feedback.success("Usuário criado com sucesso.");
       navigate("/settings/users");
     } catch {
-      message.error("Erro ao criar usuário. Confira os dados e tente novamente.");
+      feedback.error("Erro ao criar usuário. Confira os dados e tente novamente.");
     } finally {
       setSubmitting(false);
     }
@@ -139,6 +150,12 @@ export function CreateUserForm() {
       setActiveTab("permissoes");
     }
   };
+
+  if (forbidden) {
+    return (
+      <AccessDeniedResult subTitle="Você não tem permissão para visualizar perfis/permissões, necessários para cadastrar um usuário." />
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit, onInvalid)} noValidate>

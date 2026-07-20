@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { App as AntdApp, Descriptions, Drawer, Skeleton, Space, Tag } from "antd";
+import { Descriptions, Drawer, Skeleton, Space, Tag } from "antd";
 import { userService } from "@/services/users/user-service";
+import { useFeedback } from "@/hooks/useFeedback";
 import type { ApiUserDetail } from "@/types/auth";
 import { getTagColor } from "@/utils/avatar";
 
@@ -12,7 +13,7 @@ interface UserDetailDrawerProps {
 export function UserDetailDrawer({ userId, onClose }: UserDetailDrawerProps) {
   const [user, setUser] = useState<ApiUserDetail | null>(null);
   const [loading, setLoading] = useState(false);
-  const { message } = AntdApp.useApp();
+  const feedback = useFeedback();
 
   useEffect(() => {
     if (userId === null) {
@@ -23,9 +24,9 @@ export function UserDetailDrawer({ userId, onClose }: UserDetailDrawerProps) {
     userService
       .getById(userId)
       .then(setUser)
-      .catch(() => message.error("Erro ao carregar detalhes do usuário."))
+      .catch(() => feedback.error("Erro ao carregar detalhes do usuário."))
       .finally(() => setLoading(false));
-  }, [userId, message]);
+  }, [userId, feedback]);
 
   const permissionsByModule = (user?.permissions ?? []).reduce<Record<string, string[]>>(
     (acc, perm) => {

@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
-import { App as AntdApp, Button, Card, Input, Popconfirm, Space, Table, Tag } from "antd";
+import { Button, Card, Input, Popconfirm, Space, Table, Tag } from "antd";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { roleService } from "@/services/roles/role-service";
 import { getApiErrorMessage } from "@/utils/api-error";
+import { useFeedback } from "@/hooks/useFeedback";
 import type { ApiRole } from "@/types/role";
 
 export function RolesTable() {
   const { hasPermission } = useAuth();
-  const { message } = AntdApp.useApp();
+  const feedback = useFeedback();
 
   const [roles, setRoles] = useState<ApiRole[]>([]);
   const [loading, setLoading] = useState(true);
@@ -21,11 +22,11 @@ export function RolesTable() {
     roleService
       .list()
       .then(setRoles)
-      .catch(() => message.error("Erro ao carregar perfis."))
+      .catch(() => feedback.error("Erro ao carregar perfis."))
       .finally(() => setLoading(false));
   };
 
-  useEffect(load, [message]);
+  useEffect(load, [feedback]);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -37,10 +38,10 @@ export function RolesTable() {
     setDeletingId(role.id);
     try {
       await roleService.remove(role.id);
-      message.success("Perfil excluído com sucesso.");
+      feedback.success("Perfil excluído com sucesso.");
       load();
     } catch (error) {
-      message.error(getApiErrorMessage(error, "Erro ao excluir perfil."));
+      feedback.error(getApiErrorMessage(error, "Erro ao excluir perfil."));
     } finally {
       setDeletingId(null);
     }

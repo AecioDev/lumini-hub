@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { App as AntdApp, Card, Select, Table, Tag } from "antd";
+import { Card, Select, Table, Tag } from "antd";
 import { syncLogService } from "@/services/integrations/sync-log-service";
+import { useFeedback } from "@/hooks/useFeedback";
 import type { ApiSyncLog, SyncStatus } from "@/types/integration";
 
 const STATUS_COLOR: Record<SyncStatus, string> = {
@@ -17,7 +18,7 @@ const DIRECTION_LABEL: Record<string, string> = {
 const PAGE_SIZE = 10;
 
 export function SyncLogsTable() {
-  const { message } = AntdApp.useApp();
+  const feedback = useFeedback();
   const [logs, setLogs] = useState<ApiSyncLog[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -38,9 +39,9 @@ export function SyncLogsTable() {
         setLogs(result.data);
         setTotal(result.pagination.totalRows);
       })
-      .catch(() => message.error("Erro ao carregar logs de sincronização."))
+      .catch(() => feedback.error("Erro ao carregar logs de sincronização."))
       .finally(() => setLoading(false));
-  }, [page, status, message]);
+  }, [page, status, feedback]);
 
   return (
     <Card

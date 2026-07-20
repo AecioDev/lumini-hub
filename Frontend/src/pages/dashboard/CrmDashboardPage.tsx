@@ -1,18 +1,19 @@
 import { useEffect, useState } from "react";
-import { App as AntdApp, Button, Col, Row, Skeleton, Typography } from "antd";
+import { Button, Col, Row, Skeleton, Typography } from "antd";
 import { crmDashboardService } from "@/services/crm/crm-dashboard-service";
 import type { CrmDashboardData } from "@/types/crm";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { PipelineBoard } from "@/components/dashboard/PipelineBoard";
 import { TasksList } from "@/components/dashboard/TasksList";
 import { RecentClientsTable } from "@/components/dashboard/RecentClientsTable";
+import { useFeedback } from "@/hooks/useFeedback";
 
 const { Title, Paragraph } = Typography;
 
 export function CrmDashboardPage() {
   const [data, setData] = useState<CrmDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
-  const { message } = AntdApp.useApp();
+  const feedback = useFeedback();
 
   useEffect(() => {
     let cancelled = false;
@@ -57,7 +58,7 @@ export function CrmDashboardPage() {
           <Button>Mensal</Button>
           <Button
             type="primary"
-            onClick={() => message.info("Exportação ainda não implementada.")}
+            onClick={() => feedback.info("Exportação ainda não implementada.")}
           >
             Exportar
           </Button>

@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
-import { Alert, App as AntdApp, Button, Card, Col, Input, Row, Select } from "antd";
+import { Alert, Button, Card, Col, Input, Row, Select } from "antd";
 import { FormField } from "@/components/common/FormField";
 import { integrationConfigService } from "@/services/integrations/integration-config-service";
+import { useFeedback } from "@/hooks/useFeedback";
 import {
   integrationSettingsSchema,
   type IntegrationSettingsFormValues,
@@ -27,7 +28,7 @@ export function IntegrationSettingsForm({
   canEdit,
   onSaved,
 }: IntegrationSettingsFormProps) {
-  const { message } = AntdApp.useApp();
+  const feedback = useFeedback();
   const [submitting, setSubmitting] = useState(false);
 
   const { control, handleSubmit } = useForm<IntegrationSettingsFormValues>({
@@ -48,9 +49,9 @@ export function IntegrationSettingsForm({
     try {
       const updated = await integrationConfigService.updateSettings(values);
       onSaved(updated);
-      message.success("Configurações salvas com sucesso.");
+      feedback.success("Configurações salvas com sucesso.");
     } catch {
-      message.error("Erro ao salvar configurações.");
+      feedback.error("Erro ao salvar configurações.");
     } finally {
       setSubmitting(false);
     }

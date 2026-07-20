@@ -1,26 +1,27 @@
 import { useState } from "react";
-import { App as AntdApp, Typography } from "antd";
+import { Typography } from "antd";
 import { useNavigate } from "react-router-dom";
 import { PermissionForm } from "@/components/permissions/forms/PermissionForm";
 import { permissionService } from "@/services/permissions/permission-service";
 import { getApiErrorMessage } from "@/utils/api-error";
+import { useFeedback } from "@/hooks/useFeedback";
 import type { PermissionFormValues } from "@/schemas/permission-schema";
 
 const { Title, Paragraph } = Typography;
 
 export function CreatePermissionPage() {
   const navigate = useNavigate();
-  const { message } = AntdApp.useApp();
+  const feedback = useFeedback();
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (values: PermissionFormValues) => {
     setSubmitting(true);
     try {
       await permissionService.create(values);
-      message.success("Permissão criada com sucesso.");
+      feedback.success("Permissão criada com sucesso.");
       navigate("/settings/roles?tab=permissoes");
     } catch (error) {
-      message.error(getApiErrorMessage(error, "Erro ao criar permissão."));
+      feedback.error(getApiErrorMessage(error, "Erro ao criar permissão."));
     } finally {
       setSubmitting(false);
     }

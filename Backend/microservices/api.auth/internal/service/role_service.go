@@ -29,8 +29,9 @@ func NewRoleService(
 	}
 }
 
-// GetRoles retorna uma lista de papeis
-func (s *RoleService) GetRoles() ([]domain.ApiRole, error) {
+// GetRoles retorna uma lista de papeis. O perfil DEVELOP (oculto no sistema)
+// só aparece pra quem já está logado como DEVELOP.
+func (s *RoleService) GetRoles(requesterRole string) ([]domain.ApiRole, error) {
 	roles, err := s.roleRepo.FindAll()
 	if err != nil {
 		return nil, err
@@ -39,19 +40,26 @@ func (s *RoleService) GetRoles() ([]domain.ApiRole, error) {
 	// Converter para DTOs
 	roleDTOs := make([]domain.ApiRole, 0, len(roles))
 	for _, role := range roles {
+		if role.Name == utils.RoleDeveloper && requesterRole != utils.RoleDeveloper {
+			continue
+		}
 		roleDTOs = append(roleDTOs, domain.ApiRoleFromModel(role))
 	}
 
 	return roleDTOs, nil
 }
 
-// GetRoleByID busca um papel pelo ID
-func (s *RoleService) GetRoleByID(id uint) (*domain.ApiRoleDetail, error) {
+// GetRoleByID busca um papel pelo ID. Se for o perfil DEVELOP e quem pediu
+// não for DEVELOP, trata como não encontrado.
+func (s *RoleService) GetRoleByID(id uint, requesterRole string) (*domain.ApiRoleDetail, error) {
 	role, err := s.roleRepo.FindByIDWithPermissions(id)
 	if err != nil {
 		return nil, err
 	}
 	if role == nil {
+		return nil, utils.ErrNotFound
+	}
+	if role.Name == utils.RoleDeveloper && requesterRole != utils.RoleDeveloper {
 		return nil, utils.ErrNotFound
 	}
 
@@ -83,7 +91,7 @@ func (s *RoleService) CreateRole(req domain.CreateRoleRequest) (*domain.ApiRole,
 }
 
 // UpdateRole atualiza um papel existente
-func (s *RoleService) UpdateRole(id uint, req domain.UpdateRoleRequest) (*domain.ApiRole, error) {
+func (s *RoleService) UpdateRole(id uint, req domain.UpdateRoleRequest, requesterRole string) (*domain.ApiRole, error) {
 	// Validar dados
 	if err := s.validator.ValidateForUpdate(id, req); err != nil {
 		return nil, err
@@ -95,6 +103,9 @@ func (s *RoleService) UpdateRole(id uint, req domain.UpdateRoleRequest) (*domain
 		return nil, err
 	}
 	if role == nil {
+		return nil, utils.ErrNotFound
+	}
+	if role.Name == utils.RoleDeveloper && requesterRole != utils.RoleDeveloper {
 		return nil, utils.ErrNotFound
 	}
 
@@ -117,7 +128,19 @@ func (s *RoleService) UpdateRole(id uint, req domain.UpdateRoleRequest) (*domain
 }
 
 // DeleteRole exclui um papel
-func (s *RoleService) DeleteRole(id uint) error {
+func (s *RoleService) DeleteRole(id uint, requesterRole string) error {
+	// Buscar papel (pra checar visibilidade antes de validar exclusão)
+	role, err := s.roleRepo.FindByID(id)
+	if err != nil {
+		return err
+	}
+	if role == nil {
+		return utils.ErrNotFound
+	}
+	if role.Name == utils.RoleDeveloper && requesterRole != utils.RoleDeveloper {
+		return utils.ErrNotFound
+	}
+
 	// Validar se o papel pode ser excluído
 	if err := s.validator.ValidateForDeletion(id); err != nil {
 		return err
@@ -128,7 +151,7 @@ func (s *RoleService) DeleteRole(id uint) error {
 }
 
 // UpdateRolePermissions atualiza as permissões de um papel
-func (s *RoleService) UpdateRolePermissions(id uint, permissionIDs []uint) (*domain.ApiRoleDetail, error) {
+func (s *RoleService) UpdateRolePermissions(id uint, permissionIDs []uint, requesterRole string) (*domain.ApiRoleDetail, error) {
 	// Validar dados
 	if err := s.validator.ValidatePermissionUpdate(id, permissionIDs); err != nil {
 		return nil, err
@@ -140,6 +163,9 @@ func (s *RoleService) UpdateRolePermissions(id uint, permissionIDs []uint) (*dom
 		return nil, err
 	}
 	if role == nil {
+		return nil, utils.ErrNotFound
+	}
+	if role.Name == utils.RoleDeveloper && requesterRole != utils.RoleDeveloper {
 		return nil, utils.ErrNotFound
 	}
 

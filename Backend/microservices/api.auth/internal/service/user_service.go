@@ -29,9 +29,16 @@ func NewUserService(
 	}
 }
 
-// GetUsers retorna uma lista paginada de usuários
-func (s *UserService) GetUsers(pagination *utils.Pagination) (*domain.ApiUserListPaginated, error) {
-	users, err := s.userRepo.FindAll(pagination)
+// GetUsers retorna uma lista paginada de usuários. Usuários do perfil DEVELOP
+// ficam escondidos de qualquer requisitante que não seja ele mesmo DEVELOP
+// (perfil "oculto no sistema" — ver utils.RoleDeveloper).
+func (s *UserService) GetUsers(pagination *utils.Pagination, requesterRole string) (*domain.ApiUserListPaginated, error) {
+	hideRoleName := ""
+	if requesterRole != utils.RoleDeveloper {
+		hideRoleName = utils.RoleDeveloper
+	}
+
+	users, err := s.userRepo.FindAll(pagination, hideRoleName)
 	if err != nil {
 		return nil, err
 	}
@@ -48,13 +55,20 @@ func (s *UserService) GetUsers(pagination *utils.Pagination) (*domain.ApiUserLis
 	}, nil
 }
 
-// GetUserByID busca um usuário pelo ID
-func (s *UserService) GetUserByID(id uint) (*domain.ApiUserDetail, error) {
+// GetUserByID busca um usuário pelo ID. Se o usuário encontrado for do
+// perfil DEVELOP e quem está pedindo não for DEVELOP, trata como não
+// encontrado (não revela nem a existência do usuário).
+func (s *UserService) GetUserByID(id uint, requesterRole string) (*domain.ApiUserDetail, error) {
 	user, err := s.userRepo.FindByIDWithRole(id)
 	if err != nil {
 		return nil, err
 	}
 	if user == nil {
+		return nil, utils.ErrNotFound
+	}
+	if hidden, err := s.isHiddenFromRequester(user, requesterRole); err != nil {
+		return nil, err
+	} else if hidden {
 		return nil, utils.ErrNotFound
 	}
 
@@ -63,10 +77,51 @@ func (s *UserService) GetUserByID(id uint) (*domain.ApiUserDetail, error) {
 	return &userDetailDTO, nil
 }
 
+// guardDeveloperRoleAssignment impede que alguém que não seja DEVELOP
+// atribua o perfil DEVELOP (oculto) a um usuário, seja na criação ou ao
+// trocar o perfil de um usuário existente. Mensagem de erro genérica de
+// propósito — não revela nem o nome do perfil escondido.
+func (s *UserService) guardDeveloperRoleAssignment(roleID uint, requesterRole string) error {
+	if requesterRole == utils.RoleDeveloper || roleID == 0 {
+		return nil
+	}
+	developerRole, err := s.roleRepo.FindByName(utils.RoleDeveloper)
+	if err != nil {
+		return err
+	}
+	if developerRole != nil && roleID == developerRole.ID {
+		var errs validator.ValidationErrors
+		errs.AddError("role_id", "perfil inválido")
+		return errs
+	}
+	return nil
+}
+
+// isHiddenFromRequester indica se `user` deve ficar invisível pra quem tem o
+// papel `requesterRole` — hoje só o caso do perfil DEVELOP, oculto de
+// qualquer requisitante que não seja ele mesmo DEVELOP. Funciona mesmo se
+// `user.Role` não estiver pré-carregado (compara por RoleID).
+func (s *UserService) isHiddenFromRequester(user *domain.User, requesterRole string) (bool, error) {
+	if requesterRole == utils.RoleDeveloper {
+		return false, nil
+	}
+	developerRole, err := s.roleRepo.FindByName(utils.RoleDeveloper)
+	if err != nil {
+		return false, err
+	}
+	if developerRole == nil {
+		return false, nil
+	}
+	return user.RoleID == developerRole.ID, nil
+}
+
 // CreateUser cria um novo usuário
-func (s *UserService) CreateUser(req domain.CreateUserRequest) (*domain.ApiUser, error) {
+func (s *UserService) CreateUser(req domain.CreateUserRequest, requesterRole string) (*domain.ApiUser, error) {
 	// Validar dados
 	if err := s.validator.ValidateForCreation(req); err != nil {
+		return nil, err
+	}
+	if err := s.guardDeveloperRoleAssignment(req.RoleID, requesterRole); err != nil {
 		return nil, err
 	}
 
@@ -113,7 +168,7 @@ func (s *UserService) CreateUser(req domain.CreateUserRequest) (*domain.ApiUser,
 }
 
 // UpdateUser atualiza um usuário existente
-func (s *UserService) UpdateUser(id uint, req domain.UpdateUserRequest) (*domain.ApiUser, error) {
+func (s *UserService) UpdateUser(id uint, req domain.UpdateUserRequest, requesterRole string) (*domain.ApiUser, error) {
 	// Validar dados
 	if err := s.validator.ValidateForUpdate(id, req); err != nil {
 		return nil, err
@@ -126,6 +181,16 @@ func (s *UserService) UpdateUser(id uint, req domain.UpdateUserRequest) (*domain
 	}
 	if user == nil {
 		return nil, utils.ErrNotFound
+	}
+	if hidden, err := s.isHiddenFromRequester(user, requesterRole); err != nil {
+		return nil, err
+	} else if hidden {
+		return nil, utils.ErrNotFound
+	}
+	if req.RoleID != 0 {
+		if err := s.guardDeveloperRoleAssignment(req.RoleID, requesterRole); err != nil {
+			return nil, err
+		}
 	}
 
 	// Atualizar campos
@@ -214,7 +279,7 @@ func (s *UserService) ChangePassword(id uint, currentPassword, newPassword strin
 }
 
 // DeleteUser exclui um usuário (soft delete)
-func (s *UserService) DeleteUser(id uint) error {
+func (s *UserService) DeleteUser(id uint, requesterRole string) error {
 	// Verificar se o usuário existe
 	user, err := s.userRepo.FindByID(id)
 	if err != nil {
@@ -223,13 +288,18 @@ func (s *UserService) DeleteUser(id uint) error {
 	if user == nil {
 		return utils.ErrNotFound
 	}
+	if hidden, err := s.isHiddenFromRequester(user, requesterRole); err != nil {
+		return err
+	} else if hidden {
+		return utils.ErrNotFound
+	}
 
 	// Excluir usuário
 	return s.userRepo.Delete(id)
 }
 
 // UpdateUserPermissions atualiza as permissões diretas de um usuário
-func (s *UserService) UpdateUserPermissions(id uint, permissionIDs []uint) (*domain.ApiUserDetail, error) {
+func (s *UserService) UpdateUserPermissions(id uint, permissionIDs []uint, requesterRole string) (*domain.ApiUserDetail, error) {
 	// Validar a operação
 	if err := s.validator.ValidatePermissionUpdate(id, permissionIDs); err != nil {
 		return nil, err
@@ -241,6 +311,11 @@ func (s *UserService) UpdateUserPermissions(id uint, permissionIDs []uint) (*dom
 		return nil, err
 	}
 	if user == nil {
+		return nil, utils.ErrNotFound
+	}
+	if hidden, err := s.isHiddenFromRequester(user, requesterRole); err != nil {
+		return nil, err
+	} else if hidden {
 		return nil, utils.ErrNotFound
 	}
 

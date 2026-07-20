@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { App as AntdApp, Card, Select, Table, Tag } from "antd";
+import { Card, Select, Table, Tag } from "antd";
 import { webhookEventService } from "@/services/integrations/webhook-event-service";
+import { useFeedback } from "@/hooks/useFeedback";
 import type { ApiWebhookEvent, WebhookStatus } from "@/types/integration";
 
 const STATUS_COLOR: Record<WebhookStatus, string> = {
@@ -12,7 +13,7 @@ const STATUS_COLOR: Record<WebhookStatus, string> = {
 const PAGE_SIZE = 10;
 
 export function WebhookEventsTable() {
-  const { message } = AntdApp.useApp();
+  const feedback = useFeedback();
   const [events, setEvents] = useState<ApiWebhookEvent[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -33,9 +34,9 @@ export function WebhookEventsTable() {
         setEvents(result.data);
         setTotal(result.pagination.totalRows);
       })
-      .catch(() => message.error("Erro ao carregar eventos de webhook."))
+      .catch(() => feedback.error("Erro ao carregar eventos de webhook."))
       .finally(() => setLoading(false));
-  }, [page, status, message]);
+  }, [page, status, feedback]);
 
   return (
     <Card

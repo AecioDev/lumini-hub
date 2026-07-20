@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
-import { App as AntdApp, Button, Input, Typography } from "antd";
+import { Button, Input, Typography } from "antd";
 import { Link } from "react-router-dom";
 import { FormField } from "@/components/common/FormField";
+import { useFeedback } from "@/hooks/useFeedback";
 import {
   forgotPasswordSchema,
   type ForgotPasswordFormValues,
@@ -12,7 +13,7 @@ import {
 const { Title, Paragraph } = Typography;
 
 export function ForgotPasswordPage() {
-  const { message } = AntdApp.useApp();
+  const feedback = useFeedback();
   const [submitting, setSubmitting] = useState(false);
 
   const {
@@ -31,7 +32,7 @@ export function ForgotPasswordPage() {
       // (só /auth/login|refresh-token|logout|me). A tela fica pronta para
       // plugar em POST /auth/forgot-password (ou equivalente) assim que existir.
       await new Promise((resolve) => setTimeout(resolve, 500));
-      message.info(
+      feedback.info(
         "Recuperação de senha ainda não está disponível: falta o endpoint de envio de e-mail no backend."
       );
     } finally {

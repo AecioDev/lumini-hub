@@ -32,7 +32,7 @@ func NewRoleHandler(db *gorm.DB) *RoleHandler {
 
 // GetRoles retorna todos os perfis
 func (h *RoleHandler) GetRoles(c *gin.Context) {
-	roles, err := h.roleService.GetRoles()
+	roles, err := h.roleService.GetRoles(utils.RoleFromGinContext(c))
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Erro ao buscar perfis", err.Error())
 		return
@@ -48,7 +48,7 @@ func (h *RoleHandler) GetRole(c *gin.Context) {
 		return
 	}
 
-	role, err := h.roleService.GetRoleByID(id)
+	role, err := h.roleService.GetRoleByID(id, utils.RoleFromGinContext(c))
 	if err != nil {
 		if err == utils.ErrNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Perfil não encontrado", err.Error())
@@ -95,7 +95,7 @@ func (h *RoleHandler) UpdateRole(c *gin.Context) {
 		return
 	}
 
-	role, err := h.roleService.UpdateRole(id, req)
+	role, err := h.roleService.UpdateRole(id, req, utils.RoleFromGinContext(c))
 	if err != nil {
 		if err == utils.ErrNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Perfil não encontrado", err.Error())
@@ -117,7 +117,7 @@ func (h *RoleHandler) DeleteRole(c *gin.Context) {
 		return
 	}
 
-	if err := h.roleService.DeleteRole(id); err != nil {
+	if err := h.roleService.DeleteRole(id, utils.RoleFromGinContext(c)); err != nil {
 		if err == utils.ErrNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Perfil não encontrado", err.Error())
 		} else if validator.IsValidationError(err) {
@@ -144,7 +144,7 @@ func (h *RoleHandler) UpdateRolePermissions(c *gin.Context) {
 		return
 	}
 
-	role, err := h.roleService.UpdateRolePermissions(id, req.PermissionIDs)
+	role, err := h.roleService.UpdateRolePermissions(id, req.PermissionIDs, utils.RoleFromGinContext(c))
 	if err != nil {
 		if err == utils.ErrNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Perfil não encontrado", err.Error())

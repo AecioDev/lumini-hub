@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { EditOutlined, EyeOutlined, PlusOutlined } from "@ant-design/icons";
 import {
-  App as AntdApp,
   Avatar,
   Button,
   Card,
@@ -16,6 +15,7 @@ import { Link } from "react-router-dom";
 import { userService } from "@/services/users/user-service";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserDetailDrawer } from "@/components/users/UserDetailDrawer";
+import { useFeedback } from "@/hooks/useFeedback";
 import { getAvatarGradient, getInitials, getTagColor } from "@/utils/avatar";
 import type { ApiUser } from "@/types/auth";
 
@@ -25,7 +25,7 @@ const PAGE_SIZE = 10;
 
 export function UsersListPage() {
   const { hasPermission } = useAuth();
-  const { message } = AntdApp.useApp();
+  const feedback = useFeedback();
 
   const [users, setUsers] = useState<ApiUser[]>([]);
   const [totalRows, setTotalRows] = useState(0);
@@ -42,9 +42,9 @@ export function UsersListPage() {
         setUsers(result.users);
         setTotalRows(result.pagination?.totalRows ?? result.users.length);
       })
-      .catch(() => message.error("Erro ao carregar usuários."))
+      .catch(() => feedback.error("Erro ao carregar usuários."))
       .finally(() => setLoading(false));
-  }, [page, message]);
+  }, [page, feedback]);
 
   const filteredUsers = useMemo(() => {
     const term = search.trim().toLowerCase();

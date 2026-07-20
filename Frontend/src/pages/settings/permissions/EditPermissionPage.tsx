@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { App as AntdApp, Result, Skeleton, Typography } from "antd";
+import { Result, Skeleton, Typography } from "antd";
 import { useNavigate, useParams } from "react-router-dom";
 import { PermissionForm } from "@/components/permissions/forms/PermissionForm";
 import { permissionService } from "@/services/permissions/permission-service";
 import { getApiErrorMessage } from "@/utils/api-error";
+import { useFeedback } from "@/hooks/useFeedback";
 import type { ApiPermissionDetail } from "@/types/permission";
 import type { PermissionFormValues } from "@/schemas/permission-schema";
 
@@ -13,7 +14,7 @@ export function EditPermissionPage() {
   const { id } = useParams<{ id: string }>();
   const permissionId = Number(id);
   const navigate = useNavigate();
-  const { message } = AntdApp.useApp();
+  const feedback = useFeedback();
 
   const [permission, setPermission] = useState<ApiPermissionDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -27,14 +28,14 @@ export function EditPermissionPage() {
       .then((result) => {
         if (!cancelled) setPermission(result);
       })
-      .catch(() => message.error("Erro ao carregar permissão."))
+      .catch(() => feedback.error("Erro ao carregar permissão."))
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
     return () => {
       cancelled = true;
     };
-  }, [id, permissionId, message]);
+  }, [id, permissionId, feedback]);
 
   if (!id || Number.isNaN(permissionId)) {
     return <Result status="404" title="Permissão não encontrada" />;
@@ -44,10 +45,10 @@ export function EditPermissionPage() {
     setSubmitting(true);
     try {
       await permissionService.update(permissionId, values);
-      message.success("Permissão atualizada com sucesso.");
+      feedback.success("Permissão atualizada com sucesso.");
       navigate("/settings/roles?tab=permissoes");
     } catch (error) {
-      message.error(getApiErrorMessage(error, "Erro ao atualizar permissão."));
+      feedback.error(getApiErrorMessage(error, "Erro ao atualizar permissão."));
     } finally {
       setSubmitting(false);
     }

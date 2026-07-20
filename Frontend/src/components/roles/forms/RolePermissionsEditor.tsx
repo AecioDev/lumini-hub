@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { App as AntdApp, Button, Card, Col, Row, Skeleton } from "antd";
+import { Button, Card, Col, Row, Skeleton } from "antd";
 import { ModulePermissionsPanel, pickDefaultModule } from "@/components/users/forms/ModulePermissionsPanel";
 import { ModuleList } from "./ModuleList";
 import { permissionService } from "@/services/permissions/permission-service";
 import { roleService } from "@/services/roles/role-service";
 import { getApiErrorMessage } from "@/utils/api-error";
+import { useFeedback } from "@/hooks/useFeedback";
 import type { ApiPermissionsByModule } from "@/types/permission";
 
 interface RolePermissionsEditorProps {
@@ -16,7 +17,7 @@ export function RolePermissionsEditor({
   roleId,
   initialPermissionIds,
 }: RolePermissionsEditorProps) {
-  const { message } = AntdApp.useApp();
+  const feedback = useFeedback();
 
   const [permissionsByModule, setPermissionsByModule] = useState<
     ApiPermissionsByModule[]
@@ -37,23 +38,25 @@ export function RolePermissionsEditor({
         setPermissionsByModule(result);
         setActiveModule(pickDefaultModule(result, new Set(initialPermissionIds)));
       })
-      .catch(() => message.error("Erro ao carregar o catálogo de permissões."))
+      .catch(() => feedback.error("Erro ao carregar o catálogo de permissões."))
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
     return () => {
       cancelled = true;
     };
+    // initialPermissionIds propositalmente fora das deps: só serve pra
+    // calcular o módulo padrão na primeira carga, não deve disparar refetch.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [feedback]);
 
   const handleSave = async () => {
     setSaving(true);
     try {
       await roleService.updatePermissions(roleId, { permission_ids: [...selectedIds] });
-      message.success("Permissões do perfil atualizadas com sucesso.");
+      feedback.success("Permissões do perfil atualizadas com sucesso.");
     } catch (error) {
-      message.error(getApiErrorMessage(error, "Erro ao salvar permissões do perfil."));
+      feedback.error(getApiErrorMessage(error, "Erro ao salvar permissões do perfil."));
     } finally {
       setSaving(false);
     }

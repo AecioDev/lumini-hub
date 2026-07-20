@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
-import { AutoComplete, App as AntdApp, Button, Card, Input } from "antd";
+import { AutoComplete, Button, Card, Input } from "antd";
 import { FormField } from "@/components/common/FormField";
 import { permissionService } from "@/services/permissions/permission-service";
+import { useFeedback } from "@/hooks/useFeedback";
 import {
   permissionSchema,
   type PermissionFormValues,
@@ -24,15 +25,15 @@ export function PermissionForm({
   onSubmit,
   onCancel,
 }: PermissionFormProps) {
-  const { message } = AntdApp.useApp();
+  const feedback = useFeedback();
   const [modules, setModules] = useState<string[]>([]);
 
   useEffect(() => {
     permissionService
       .modules()
       .then(setModules)
-      .catch(() => message.error("Erro ao carregar módulos existentes."));
-  }, [message]);
+      .catch(() => feedback.error("Erro ao carregar módulos existentes."));
+  }, [feedback]);
 
   const {
     control,

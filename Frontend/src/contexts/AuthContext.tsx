@@ -24,9 +24,14 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 // Espelha utils.IsDeveloperOnlyPermission (Backend/common/utils/rbac.go): o
-// catálogo de Perfis e Permissões só faz bypass pro perfil "Desenvolvedor" —
-// o ADMIN passa em tudo, EXCETO nessas.
+// CADASTRO/MANUTENÇÃO do catálogo de Perfis e Permissões só faz bypass pro
+// perfil "DEVELOP" — o ADMIN passa em tudo, EXCETO nessas. `roles.view`/
+// `permissions.view` ficam de fora do bloqueio: são necessárias pra telas
+// de Usuários (atribuir Perfil/permissões a alguém), não é "mexer no catálogo".
 function isDeveloperOnlyPermission(permissionCode: string): boolean {
+  if (permissionCode === "roles.view" || permissionCode === "permissions.view") {
+    return false;
+  }
   return (
     permissionCode === "admin.create_permissions" ||
     permissionCode.startsWith("roles.") ||

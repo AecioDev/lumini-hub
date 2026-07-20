@@ -12,7 +12,7 @@ import (
 // UserRepository define as operações de acesso a dados para usuários
 type UserRepository interface {
 	Repository
-	FindAll(pagination *utils.Pagination) ([]domain.User, error)
+	FindAll(pagination *utils.Pagination, hideRoleName string) ([]domain.User, error)
 	FindByID(id uint) (*domain.User, error)
 	FindByIDWithRole(id uint) (*domain.User, error)
 	FindByUsername(username string) (*domain.User, error)
@@ -41,11 +41,17 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 	}
 }
 
-// FindAll retorna todos os usuários com paginação
-func (r *GormUserRepository) FindAll(pagination *utils.Pagination) ([]domain.User, error) {
+// FindAll retorna todos os usuários com paginação. hideRoleName, quando não
+// vazio, exclui da listagem qualquer usuário cujo Perfil tenha esse nome
+// (usado para esconder usuários do perfil DEVELOP de quem não é DEVELOP) —
+// filtrado via subquery, não em memória, pra não bagunçar o total da paginação.
+func (r *GormUserRepository) FindAll(pagination *utils.Pagination, hideRoleName string) ([]domain.User, error) {
 	var users []domain.User
 
 	query := r.GetDB().Model(&domain.User{}).Preload("Role")
+	if hideRoleName != "" {
+		query = query.Where("role_id NOT IN (SELECT id FROM roles WHERE name = ?)", hideRoleName)
+	}
 	// Ajustado utils.Paginate para retornar gorm.DB
 	paginatedQuery, err := utils.Paginate(&domain.User{}, pagination, query)
 	if err != nil {

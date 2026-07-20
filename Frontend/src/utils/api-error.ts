@@ -20,3 +20,11 @@ export function getApiErrorMessage(error: unknown, fallback: string): string {
   }
   return fallback;
 }
+
+// 403 = a sessão é válida mas falta permissão (RequirePermission do backend
+// recusou). Diferente de 401 (sessão expirada, já tratado pelo interceptor
+// do axios) — aqui a tela deve parar de tentar renderizar e mostrar
+// explicitamente "sem acesso" em vez de um formulário pela metade.
+export function isForbiddenError(error: unknown): boolean {
+  return isAxiosError(error) && error.response?.status === 403;
+}

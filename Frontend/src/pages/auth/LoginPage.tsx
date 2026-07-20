@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
-import { App as AntdApp, Button, Checkbox, Input, Typography } from "antd";
+import { Button, Checkbox, Input, Typography } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { FormField } from "@/components/common/FormField";
+import { useFeedback } from "@/hooks/useFeedback";
 import { loginSchema, type LoginFormValues } from "@/schemas/login-schema";
 
 const { Title, Paragraph } = Typography;
@@ -12,7 +13,7 @@ const { Title, Paragraph } = Typography;
 export function LoginPage() {
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const { message } = AntdApp.useApp();
+  const feedback = useFeedback();
   const [submitting, setSubmitting] = useState(false);
 
   const {
@@ -34,7 +35,7 @@ export function LoginPage() {
       await login({ username: values.username, password: values.password });
       navigate("/dashboard", { replace: true });
     } catch {
-      message.error("Usuário ou senha inválidos.");
+      feedback.error("Usuário ou senha inválidos.");
     } finally {
       setSubmitting(false);
     }

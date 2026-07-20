@@ -1,18 +1,19 @@
 import { useEffect, useState } from "react";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
-import { App as AntdApp, Button, Card, Input, Popconfirm, Select, Space, Table, Tag } from "antd";
+import { Button, Card, Input, Popconfirm, Select, Space, Table, Tag } from "antd";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { permissionService } from "@/services/permissions/permission-service";
 import { getApiErrorMessage } from "@/utils/api-error";
 import { getTagColor } from "@/utils/avatar";
+import { useFeedback } from "@/hooks/useFeedback";
 import type { ApiPermission } from "@/types/permission";
 
 const PAGE_SIZE = 10;
 
 export function PermissionsTable() {
   const { hasPermission } = useAuth();
-  const { message } = AntdApp.useApp();
+  const feedback = useFeedback();
 
   const [permissions, setPermissions] = useState<ApiPermission[]>([]);
   const [total, setTotal] = useState(0);
@@ -35,20 +36,20 @@ export function PermissionsTable() {
         setPermissions(result.data);
         setTotal(result.pagination.totalRows);
       })
-      .catch(() => message.error("Erro ao carregar permissões."))
+      .catch(() => feedback.error("Erro ao carregar permissões."))
       .finally(() => setLoading(false));
   };
 
-  useEffect(load, [page, name, module, message]);
+  useEffect(load, [page, name, module, feedback]);
 
   const handleDelete = async (permission: ApiPermission) => {
     setDeletingId(permission.id);
     try {
       await permissionService.remove(permission.id);
-      message.success("Permissão excluída com sucesso.");
+      feedback.success("Permissão excluída com sucesso.");
       load();
     } catch (error) {
-      message.error(getApiErrorMessage(error, "Erro ao excluir permissão."));
+      feedback.error(getApiErrorMessage(error, "Erro ao excluir permissão."));
     } finally {
       setDeletingId(null);
     }
@@ -109,7 +110,8 @@ export function PermissionsTable() {
         }}
         scroll={{ x: "max-content" }}
         columns={[
-          { title: "Código", dataIndex: "permission" },
+          { title: "Código", dataIndex: "id", width: 90 },
+          { title: "Permissão", dataIndex: "permission" },
           { title: "Descrição", dataIndex: "description", ellipsis: true },
           {
             title: "Módulo",

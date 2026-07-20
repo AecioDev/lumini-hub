@@ -48,7 +48,7 @@ func NewUserHandler(db *gorm.DB) *UserHandler {
 func (h *UserHandler) GetUsers(c *gin.Context) {
 	pagination := utils.GetPaginationParams(c)
 
-	users, err := h.userService.GetUsers(&pagination)
+	users, err := h.userService.GetUsers(&pagination, utils.RoleFromGinContext(c))
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Erro ao buscar usuários", err.Error())
 		return
@@ -76,7 +76,7 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 		return
 	}
 
-	user, err := h.userService.GetUserByID(id)
+	user, err := h.userService.GetUserByID(id, utils.RoleFromGinContext(c))
 	if err != nil {
 		if err == utils.ErrNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Usuário não encontrado", err.Error())
@@ -109,7 +109,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 		return
 	}
 
-	user, err := h.userService.CreateUser(req)
+	user, err := h.userService.CreateUser(req, utils.RoleFromGinContext(c))
 	if err != nil {
 		if validator.IsValidationError(err) {
 			utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
@@ -149,7 +149,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	user, err := h.userService.UpdateUser(id, req)
+	user, err := h.userService.UpdateUser(id, req, utils.RoleFromGinContext(c))
 	if err != nil {
 		if err == utils.ErrNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Usuário não encontrado", err.Error())
@@ -248,7 +248,7 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 		return
 	}
 
-	if err := h.userService.DeleteUser(id); err != nil {
+	if err := h.userService.DeleteUser(id, utils.RoleFromGinContext(c)); err != nil {
 		if err == utils.ErrNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Usuário não encontrado", err.Error())
 		} else {
@@ -287,7 +287,7 @@ func (h *UserHandler) UpdateUserPermissions(c *gin.Context) {
 		return
 	}
 
-	user, err := h.userService.UpdateUserPermissions(id, req.PermissionIDs)
+	user, err := h.userService.UpdateUserPermissions(id, req.PermissionIDs, utils.RoleFromGinContext(c))
 	if err != nil {
 		if err == utils.ErrNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Usuário não encontrado", err.Error())

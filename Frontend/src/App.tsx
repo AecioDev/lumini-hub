@@ -11,7 +11,7 @@ function ThemedApp() {
 
   return (
     <ConfigProvider theme={buildAntdTheme(mode)} locale={ptBR}>
-      <AntdApp>
+      <AntdApp notification={{ placement: "topRight" }}>
         <AuthProvider>
           <RouterProvider router={router} future={{ v7_startTransition: true }} />
         </AuthProvider>

@@ -1,26 +1,18 @@
 import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm, type FieldErrors } from "react-hook-form";
-import {
-  App as AntdApp,
-  Button,
-  Card,
-  Col,
-  Input,
-  Row,
-  Skeleton,
-  Switch,
-  Tabs,
-  Typography,
-} from "antd";
+import { Button, Card, Col, Input, Row, Skeleton, Switch, Tabs, Typography } from "antd";
 import { useNavigate } from "react-router-dom";
 import { FormField } from "@/components/common/FormField";
+import { AccessDeniedResult } from "@/components/common/AccessDeniedResult";
 import { ModulePermissionsPanel, pickModuleForRole } from "./ModulePermissionsPanel";
 import { RolePresetPicker } from "./RolePresetPicker";
 import { updateUserSchema, type UpdateUserFormValues } from "@/schemas/update-user-schema";
 import { roleService } from "@/services/roles/role-service";
 import { permissionService } from "@/services/permissions/permission-service";
 import { userService } from "@/services/users/user-service";
+import { useFeedback } from "@/hooks/useFeedback";
+import { isForbiddenError } from "@/utils/api-error";
 import type { ApiRole } from "@/types/role";
 import type { ApiPermissionsByModule } from "@/types/permission";
 
@@ -36,13 +28,14 @@ function setsEqual(a: Set<number>, b: Set<number>): boolean {
 
 export function EditUserForm({ userId }: { userId: number }) {
   const navigate = useNavigate();
-  const { message } = AntdApp.useApp();
+  const feedback = useFeedback();
 
   const [roles, setRoles] = useState<ApiRole[]>([]);
   const [permissionsByModule, setPermissionsByModule] = useState<
     ApiPermissionsByModule[]
   >([]);
   const [loading, setLoading] = useState(true);
+  const [forbidden, setForbidden] = useState(false);
   const [username, setUsername] = useState("");
 
   const [selectedRoleId, setSelectedRoleId] = useState<number | null>(null);
@@ -96,7 +89,14 @@ export function EditUserForm({ userId }: { userId: number }) {
           setIsCustom(!setsEqual(userPermissionIds, rolePermissionIds));
         }
       })
-      .catch(() => message.error("Erro ao carregar o usuário."))
+      .catch((error) => {
+        if (cancelled) return;
+        if (isForbiddenError(error)) {
+          setForbidden(true);
+        } else {
+          feedback.error("Erro ao carregar o usuário.");
+        }
+      })
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
@@ -104,7 +104,7 @@ export function EditUserForm({ userId }: { userId: number }) {
     return () => {
       cancelled = true;
     };
-  }, [userId, setValue, message]);
+  }, [userId, setValue, feedback]);
 
   const handleSelectRole = async (roleId: number) => {
     setSelectedRoleId(roleId);
@@ -116,7 +116,7 @@ export function EditUserForm({ userId }: { userId: number }) {
       setActiveModule(pickModuleForRole(detail.name, permissionsByModule, ids));
       setIsCustom(false);
     } catch {
-      message.error("Erro ao carregar as permissões do perfil selecionado.");
+      feedback.error("Erro ao carregar as permissões do perfil selecionado.");
     }
   };
 
@@ -137,10 +137,10 @@ export function EditUserForm({ userId }: { userId: number }) {
           permission_ids: [...selectedPermissionIds],
         });
       }
-      message.success("Usuário atualizado com sucesso.");
+      feedback.success("Usuário atualizado com sucesso.");
       navigate("/settings/users");
     } catch {
-      message.error("Erro ao salvar usuário. Confira os dados e tente novamente.");
+      feedback.error("Erro ao salvar usuário. Confira os dados e tente novamente.");
     } finally {
       setSubmitting(false);
     }
@@ -156,6 +156,12 @@ export function EditUserForm({ userId }: { userId: number }) {
 
   if (loading) {
     return <Skeleton active paragraph={{ rows: 10 }} />;
+  }
+
+  if (forbidden) {
+    return (
+      <AccessDeniedResult subTitle="Você não tem permissão para editar usuários ou visualizar perfis/permissões." />
+    );
   }
 
   return (

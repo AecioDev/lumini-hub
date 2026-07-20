@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { App as AntdApp, Skeleton, Tabs, Typography } from "antd";
+import { Skeleton, Tabs, Typography } from "antd";
 import { useAuth } from "@/contexts/AuthContext";
 import { integrationConfigService } from "@/services/integrations/integration-config-service";
 import { legacyLookupService } from "@/services/integrations/legacy-lookup-service";
@@ -7,13 +7,14 @@ import { IntegrationsOverview } from "@/components/integrations/IntegrationsOver
 import { IntegrationSettingsForm } from "@/components/integrations/IntegrationSettingsForm";
 import { SyncLogsTable } from "@/components/integrations/SyncLogsTable";
 import { WebhookEventsTable } from "@/components/integrations/WebhookEventsTable";
+import { useFeedback } from "@/hooks/useFeedback";
 import type { ApiIntegrationSettings, LegacyCompany, LegacyLocation } from "@/types/integration";
 
 const { Title, Paragraph } = Typography;
 
 export function IntegrationsPage() {
   const { hasPermission } = useAuth();
-  const { message } = AntdApp.useApp();
+  const feedback = useFeedback();
 
   const [settings, setSettings] = useState<ApiIntegrationSettings | null>(null);
   const [loadingSettings, setLoadingSettings] = useState(true);
@@ -29,7 +30,7 @@ export function IntegrationsPage() {
       .then((result) => {
         if (!cancelled) setSettings(result);
       })
-      .catch(() => message.error("Erro ao carregar configurações de integrações."))
+      .catch(() => feedback.error("Erro ao carregar configurações de integrações."))
       .finally(() => {
         if (!cancelled) setLoadingSettings(false);
       });
@@ -48,7 +49,7 @@ export function IntegrationsPage() {
     return () => {
       cancelled = true;
     };
-  }, [message]);
+  }, [feedback]);
 
   const canEdit = hasPermission("integrations.edit");
 
