@@ -9,10 +9,12 @@ import (
 	"syscall"
 	"time"
 
+	"lumini-hub/api.core/internal/domain"
 	"lumini-hub/api.core/internal/repository"
 	"lumini-hub/api.core/internal/routes"
 	"lumini-hub/common/config"
 	"lumini-hub/common/database"
+	"lumini-hub/common/middlewares"
 
 	"github.com/gin-gonic/gin"
 )
@@ -28,6 +30,14 @@ func main() {
 	db, err := database.InitDB(cfg)
 	if err != nil {
 		log.Fatalf("Erro ao conectar ao banco de dados: %v", err)
+	}
+	middlewares.InitPermissionChecker(db)
+
+	// Migração pontual da tabela de empresas (demais tabelas do api.core --
+	// Customer/Supplier -- não usam AutoMigrate hoje; escopo restrito só a
+	// esta struct nova, mesmo padrão já usado em api.auth pro MenuItem)
+	if err := db.AutoMigrate(&domain.Empresa{}); err != nil {
+		log.Fatalf("Erro ao migrar tabela de empresas: %v", err)
 	}
 
 	// Configurar engine do Gin

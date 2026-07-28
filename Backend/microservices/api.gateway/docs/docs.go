@@ -602,95 +602,24 @@ const docTemplate = `{
                 }
             }
         },
-        "/integrations/legacy/companies": {
+        "/empresas": {
             "get": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Usado para alimentar o select de codemp na tela de configuração",
+                "description": "Retorna todas as empresas cadastradas (Matriz e vinculadas)",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Integrações - Legado"
+                    "Empresas"
                 ],
-                "summary": "Lista as empresas do ERP legado",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    },
-                    "503": {
-                        "description": "Service Unavailable",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/integrations/legacy/locations": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Usado para alimentar os selects de codlocarm_oficial/codlocarm_reserva na tela de configuração",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Integrações - Legado"
-                ],
-                "summary": "Lista os locais de armazenamento do ERP legado",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    },
-                    "503": {
-                        "description": "Service Unavailable",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/integrations/settings": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retorna as chaves da Loja Integrada e os códigos do ERP legado configurados",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Integrações - Configurações"
-                ],
-                "summary": "Obtém as configurações do api.integrations",
+                "summary": "Lista empresas",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -703,7 +632,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/domain.ApiIntegrationSettings"
+                                            "$ref": "#/definitions/domain.ApiEmpresaList"
                                         }
                                     }
                                 }
@@ -712,6 +641,146 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Cadastra uma empresa (Matriz ou vinculada a outra) no sistema",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Empresas"
+                ],
+                "summary": "Cria nova empresa",
+                "parameters": [
+                    {
+                        "description": "Dados da Empresa",
+                        "name": "empresa",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.CreateEmpresaRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ApiEmpresa"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/empresas/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retorna os detalhes de uma única empresa cadastrada",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Empresas"
+                ],
+                "summary": "Busca empresa por ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID da Empresa",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ApiEmpresaDetail"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/utils.Response"
                         }
@@ -724,7 +793,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Faz o upsert em lote das chaves informadas (campos omitidos não são alterados)",
+                "description": "Altera dados cadastrais de uma empresa pelo ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -732,17 +801,24 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Integrações - Configurações"
+                    "Empresas"
                 ],
-                "summary": "Atualiza as configurações do api.integrations",
+                "summary": "Atualiza empresa",
                 "parameters": [
                     {
-                        "description": "Configurações a atualizar",
-                        "name": "settings",
+                        "type": "integer",
+                        "description": "ID da Empresa",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Novos dados da empresa",
+                        "name": "empresa",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.UpdateIntegrationSettingsRequest"
+                            "$ref": "#/definitions/domain.UpdateEmpresaRequest"
                         }
                     }
                 ],
@@ -758,7 +834,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/domain.ApiIntegrationSettings"
+                                            "$ref": "#/definitions/domain.ApiEmpresa"
                                         }
                                     }
                                 }
@@ -777,6 +853,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/utils.Response"
                         }
                     },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -784,16 +866,14 @@ const docTemplate = `{
                         }
                     }
                 }
-            }
-        },
-        "/integrations/sync-logs/filter": {
-            "post": {
+            },
+            "delete": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Busca e filtra os logs de sincronização entre a Loja Integrada e o SQL Server legado",
+                "description": "Realiza soft delete de uma empresa (bloqueado se houver outras empresas vinculadas a ela)",
                 "consumes": [
                     "application/json"
                 ],
@@ -801,37 +881,23 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Integrações - Sync Logs"
+                    "Empresas"
                 ],
-                "summary": "Filtra logs de sincronização com paginação",
+                "summary": "Exclui empresa",
                 "parameters": [
                     {
-                        "description": "Filtros e Dados de Paginação",
-                        "name": "filter",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/domain.SyncLogFilterRequest"
-                        }
+                        "type": "integer",
+                        "description": "ID da Empresa",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/utils.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/domain.ApiSyncLogListPaginated"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/utils.Response"
                         }
                     },
                     "400": {
@@ -842,124 +908,18 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/utils.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/integrations/webhook-events/filter": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Busca e filtra os eventos de webhook recebidos (ex.: da Loja Integrada)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Integrações - Webhook Events"
-                ],
-                "summary": "Filtra eventos de webhook com paginação",
-                "parameters": [
-                    {
-                        "description": "Filtros e Dados de Paginação",
-                        "name": "filter",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/domain.WebhookEventFilterRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/utils.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/domain.ApiWebhookEventListPaginated"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/integrations/webhooks/loja-integrada": {
-            "post": {
-                "description": "Endpoint público (sem AuthMiddleware), validado por um segredo compartilhado no header X-Webhook-Secret (configurado em /integrations/settings). Persiste o payload cru; o processamento em pedido de venda no SQL Server fica para a Fase 2.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Integrações - Webhooks"
-                ],
-                "summary": "Recebe webhook da Loja Integrada",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Segredo compartilhado configurado em /integrations/settings",
-                        "name": "X-Webhook-Secret",
-                        "in": "header"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Response"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/utils.Response"
                         }
@@ -1862,10 +1822,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "database.JSONB": {
-            "type": "object",
-            "additionalProperties": true
-        },
         "domain.Address": {
             "type": "object",
             "properties": {
@@ -2022,29 +1978,78 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.ApiIntegrationSettings": {
+        "domain.ApiEmpresa": {
             "type": "object",
             "properties": {
-                "codemp": {
+                "cnpj": {
                     "type": "string"
                 },
-                "codlocarm_oficial": {
+                "created_at": {
                     "type": "string"
                 },
-                "codlocarm_reserva": {
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "nome_fantasia": {
                     "type": "string"
                 },
-                "codtipnot": {
+                "parent_id": {
+                    "type": "integer"
+                },
+                "razao_social": {
                     "type": "string"
                 },
-                "li_api_key": {
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.ApiEmpresaDetail": {
+            "type": "object",
+            "properties": {
+                "cnpj": {
                     "type": "string"
                 },
-                "li_app_key": {
+                "created_at": {
                     "type": "string"
                 },
-                "li_webhook_secret": {
+                "created_by": {
+                    "$ref": "#/definitions/lumini-hub_api_core_internal_domain.ApiUser"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "nome_fantasia": {
                     "type": "string"
+                },
+                "parent_id": {
+                    "type": "integer"
+                },
+                "razao_social": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "updated_by": {
+                    "$ref": "#/definitions/lumini-hub_api_core_internal_domain.ApiUser"
+                }
+            }
+        },
+        "domain.ApiEmpresaList": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.ApiEmpresa"
+                    }
                 }
             }
         },
@@ -2173,49 +2178,6 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.ApiSyncLog": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "details": {
-                    "$ref": "#/definitions/lumini-hub_common_database.JSONB"
-                },
-                "direction": {
-                    "type": "string"
-                },
-                "entity_type": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "reference_id": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
-        "domain.ApiSyncLogListPaginated": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/domain.ApiSyncLog"
-                    }
-                },
-                "pagination": {
-                    "$ref": "#/definitions/utils.ApiPagination"
-                }
-            }
-        },
         "domain.ApiUserDetail": {
             "type": "object",
             "properties": {
@@ -2233,6 +2195,12 @@ const docTemplate = `{
                 },
                 "last_login": {
                     "type": "string"
+                },
+                "menu_items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.ApiUserMenuItem"
+                    }
                 },
                 "name": {
                     "type": "string"
@@ -2274,6 +2242,29 @@ const docTemplate = `{
                 }
             }
         },
+        "domain.ApiUserMenuItem": {
+            "type": "object",
+            "properties": {
+                "children": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.ApiUserMenuItem"
+                    }
+                },
+                "href": {
+                    "type": "string"
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "domain.ApiUserRole": {
             "type": "object",
             "properties": {
@@ -2291,49 +2282,6 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
-                }
-            }
-        },
-        "domain.ApiWebhookEvent": {
-            "type": "object",
-            "properties": {
-                "error_message": {
-                    "type": "string"
-                },
-                "event_type": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "payload": {
-                    "$ref": "#/definitions/database.JSONB"
-                },
-                "processed_at": {
-                    "type": "string"
-                },
-                "received_at": {
-                    "type": "string"
-                },
-                "source": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
-        "domain.ApiWebhookEventListPaginated": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/domain.ApiWebhookEvent"
-                    }
-                },
-                "pagination": {
-                    "$ref": "#/definitions/utils.ApiPagination"
                 }
             }
         },
@@ -2480,6 +2428,28 @@ const docTemplate = `{
                 },
                 "person_type": {
                     "type": "string"
+                }
+            }
+        },
+        "domain.CreateEmpresaRequest": {
+            "type": "object",
+            "required": [
+                "cnpj",
+                "razao_social"
+            ],
+            "properties": {
+                "cnpj": {
+                    "type": "string"
+                },
+                "nome_fantasia": {
+                    "type": "string"
+                },
+                "parent_id": {
+                    "type": "integer"
+                },
+                "razao_social": {
+                    "type": "string",
+                    "minLength": 3
                 }
             }
         },
@@ -2683,32 +2653,6 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.SyncLogFilterRequest": {
-            "type": "object",
-            "properties": {
-                "direction": {
-                    "type": "string"
-                },
-                "entity_type": {
-                    "type": "string"
-                },
-                "is_asc": {
-                    "type": "boolean"
-                },
-                "order_by_column": {
-                    "type": "string"
-                },
-                "page_no": {
-                    "type": "integer"
-                },
-                "page_size": {
-                    "type": "integer"
-                },
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
         "domain.UpdateCustomerRequest": {
             "type": "object",
             "required": [
@@ -2737,29 +2681,29 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.UpdateIntegrationSettingsRequest": {
+        "domain.UpdateEmpresaRequest": {
             "type": "object",
+            "required": [
+                "cnpj",
+                "razao_social"
+            ],
             "properties": {
-                "codemp": {
+                "cnpj": {
                     "type": "string"
                 },
-                "codlocarm_oficial": {
+                "is_active": {
+                    "description": "Sem ` + "`" + `binding:\"required\"` + "`" + ` de propósito: num bool, \"required\" exige true\n(zero value é false), o que impediria desativar uma empresa via PUT.",
+                    "type": "boolean"
+                },
+                "nome_fantasia": {
                     "type": "string"
                 },
-                "codlocarm_reserva": {
-                    "type": "string"
+                "parent_id": {
+                    "type": "integer"
                 },
-                "codtipnot": {
-                    "type": "string"
-                },
-                "li_api_key": {
-                    "type": "string"
-                },
-                "li_app_key": {
-                    "type": "string"
-                },
-                "li_webhook_secret": {
-                    "type": "string"
+                "razao_social": {
+                    "type": "string",
+                    "minLength": 3
                 }
             }
         },
@@ -2844,32 +2788,6 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.WebhookEventFilterRequest": {
-            "type": "object",
-            "properties": {
-                "event_type": {
-                    "type": "string"
-                },
-                "is_asc": {
-                    "type": "boolean"
-                },
-                "order_by_column": {
-                    "type": "string"
-                },
-                "page_no": {
-                    "type": "integer"
-                },
-                "page_size": {
-                    "type": "integer"
-                },
-                "source": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
         "gorm.DeletedAt": {
             "type": "object",
             "properties": {
@@ -2936,10 +2854,6 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
-        },
-        "lumini-hub_common_database.JSONB": {
-            "type": "object",
-            "additionalProperties": true
         },
         "lumini-hub_common_utils.Response": {
             "type": "object",

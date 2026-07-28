@@ -6,7 +6,7 @@ Aqui estruturamos as tarefas, metas de cada funcionalidade e diários de bordo p
 ## 📂 Estrutura de Diretórios
 
 - **[Historico/](file:///c:/Projetos/lumini-hub/Documentos/Planejamento/Historico/)**: Diário de bordo detalhando as atividades executadas por dia/período de desenvolvimento.
-- **[Modulo_0_Configuracao/](file:///c:/Projetos/lumini-hub/Documentos/Planejamento/Modulo_0_Configuracao/)**: Setup do projeto frontend e backend.
+- **[Modulo_0_Configuracao/](file:///c:/Projetos/lumini-hub/Documentos/Planejamento/Modulo_0_Configuracao/)**: Setup do projeto frontend e backend, e o cadastro base de Empresa (multi-empresa self-referencing, config fiscal e plano de contas) que serve de fundação pros demais módulos.
 - **[Modulo_1_CRM_Integracoes/](file:///c:/Projetos/lumini-hub/Documentos/Planejamento/Modulo_1_CRM_Integracoes/)**: Middleware (Loja Integrada $\leftrightarrow$ SQL Server) e o CRM do Vendedor.
 - **[Modulo_2_Produtos_Estoque/](file:///c:/Projetos/lumini-hub/Documentos/Planejamento/Modulo_2_Produtos_Estoque/)**: Catálogo de Produtos, Imagens e Localização/Saldos de Estoque.
 - **[Modulo_3_Compras/](file:///c:/Projetos/lumini-hub/Documentos/Planejamento/Modulo_3_Compras/)**: Pedidos de Compras e Manifesto Eletrônico da SEFAZ.

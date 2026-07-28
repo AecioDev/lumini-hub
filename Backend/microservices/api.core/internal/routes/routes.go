@@ -9,11 +9,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// SetupRoutes configura todas as rotas do microsserviço Core (Clientes e Fornecedores)
+// SetupRoutes configura todas as rotas do microsserviço Core (Clientes, Fornecedores e Empresas)
 func SetupRoutes(router *gin.RouterGroup, uow repository.UnitOfWork, cfg *config.Config) {
 	// Handlers
 	customerHandler := handlers.NewCustomerHandler(uow)
 	supplierHandler := handlers.NewSupplierHandler(uow)
+	empresaHandler := handlers.NewEmpresaHandler(uow)
 
 	// Rotas de Clientes (todas protegidas)
 	customers := router.Group("/customers")
@@ -37,5 +38,16 @@ func SetupRoutes(router *gin.RouterGroup, uow repository.UnitOfWork, cfg *config
 		suppliers.POST("", middlewares.RequirePermission("suppliers.create"), supplierHandler.CreateSupplier)
 		suppliers.PUT("/:id", middlewares.RequirePermission("suppliers.edit"), supplierHandler.UpdateSupplier)
 		suppliers.DELETE("/:id", middlewares.RequirePermission("suppliers.delete"), supplierHandler.DeleteSupplier)
+	}
+
+	// Rotas de Empresas (todas protegidas)
+	empresas := router.Group("/empresas")
+	empresas.Use(middlewares.AuthMiddleware(cfg))
+	{
+		empresas.GET("", middlewares.RequirePermission("empresas.view"), empresaHandler.GetEmpresas)
+		empresas.GET("/:id", middlewares.RequirePermission("empresas.view"), empresaHandler.GetEmpresa)
+		empresas.POST("", middlewares.RequirePermission("empresas.create"), empresaHandler.CreateEmpresa)
+		empresas.PUT("/:id", middlewares.RequirePermission("empresas.edit"), empresaHandler.UpdateEmpresa)
+		empresas.DELETE("/:id", middlewares.RequirePermission("empresas.delete"), empresaHandler.DeleteEmpresa)
 	}
 }

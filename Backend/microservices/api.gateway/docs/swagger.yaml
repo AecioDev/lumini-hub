@@ -1,8 +1,5 @@
 basePath: /api
 definitions:
-  database.JSONB:
-    additionalProperties: true
-    type: object
   domain.Address:
     properties:
       city:
@@ -105,22 +102,54 @@ definitions:
       pagination:
         $ref: '#/definitions/utils.ApiPagination'
     type: object
-  domain.ApiIntegrationSettings:
+  domain.ApiEmpresa:
     properties:
-      codemp:
+      cnpj:
         type: string
-      codlocarm_oficial:
+      created_at:
         type: string
-      codlocarm_reserva:
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      nome_fantasia:
         type: string
-      codtipnot:
+      parent_id:
+        type: integer
+      razao_social:
         type: string
-      li_api_key:
+      updated_at:
         type: string
-      li_app_key:
+    type: object
+  domain.ApiEmpresaDetail:
+    properties:
+      cnpj:
         type: string
-      li_webhook_secret:
+      created_at:
         type: string
+      created_by:
+        $ref: '#/definitions/lumini-hub_api_core_internal_domain.ApiUser'
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      nome_fantasia:
+        type: string
+      parent_id:
+        type: integer
+      razao_social:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        $ref: '#/definitions/lumini-hub_api_core_internal_domain.ApiUser'
+    type: object
+  domain.ApiEmpresaList:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/domain.ApiEmpresa'
+        type: array
     type: object
   domain.ApiPermission:
     properties:
@@ -204,34 +233,6 @@ definitions:
       pagination:
         $ref: '#/definitions/utils.ApiPagination'
     type: object
-  domain.ApiSyncLog:
-    properties:
-      created_at:
-        type: string
-      details:
-        $ref: '#/definitions/lumini-hub_common_database.JSONB'
-      direction:
-        type: string
-      entity_type:
-        type: string
-      id:
-        type: integer
-      message:
-        type: string
-      reference_id:
-        type: string
-      status:
-        type: string
-    type: object
-  domain.ApiSyncLogListPaginated:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/domain.ApiSyncLog'
-        type: array
-      pagination:
-        $ref: '#/definitions/utils.ApiPagination'
-    type: object
   domain.ApiUserDetail:
     properties:
       created_at:
@@ -244,6 +245,10 @@ definitions:
         type: boolean
       last_login:
         type: string
+      menu_items:
+        items:
+          $ref: '#/definitions/domain.ApiUserMenuItem'
+        type: array
       name:
         type: string
       permissions:
@@ -270,6 +275,21 @@ definitions:
           $ref: '#/definitions/lumini-hub_api_auth_internal_domain.ApiUser'
         type: array
     type: object
+  domain.ApiUserMenuItem:
+    properties:
+      children:
+        items:
+          $ref: '#/definitions/domain.ApiUserMenuItem'
+        type: array
+      href:
+        type: string
+      icon:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
   domain.ApiUserRole:
     properties:
       created_at:
@@ -282,34 +302,6 @@ definitions:
         type: string
       updated_at:
         type: string
-    type: object
-  domain.ApiWebhookEvent:
-    properties:
-      error_message:
-        type: string
-      event_type:
-        type: string
-      id:
-        type: integer
-      payload:
-        $ref: '#/definitions/database.JSONB'
-      processed_at:
-        type: string
-      received_at:
-        type: string
-      source:
-        type: string
-      status:
-        type: string
-    type: object
-  domain.ApiWebhookEventListPaginated:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/domain.ApiWebhookEvent'
-        type: array
-      pagination:
-        $ref: '#/definitions/utils.ApiPagination'
     type: object
   domain.ChangePasswordRequest:
     properties:
@@ -408,6 +400,21 @@ definitions:
     - document_number
     - first_name
     - person_type
+    type: object
+  domain.CreateEmpresaRequest:
+    properties:
+      cnpj:
+        type: string
+      nome_fantasia:
+        type: string
+      parent_id:
+        type: integer
+      razao_social:
+        minLength: 3
+        type: string
+    required:
+    - cnpj
+    - razao_social
     type: object
   domain.CreateSupplierRequest:
     properties:
@@ -543,23 +550,6 @@ definitions:
       person_type:
         type: string
     type: object
-  domain.SyncLogFilterRequest:
-    properties:
-      direction:
-        type: string
-      entity_type:
-        type: string
-      is_asc:
-        type: boolean
-      order_by_column:
-        type: string
-      page_no:
-        type: integer
-      page_size:
-        type: integer
-      status:
-        type: string
-    type: object
   domain.UpdateCustomerRequest:
     properties:
       company_name:
@@ -579,22 +569,25 @@ definitions:
     - first_name
     - is_active
     type: object
-  domain.UpdateIntegrationSettingsRequest:
+  domain.UpdateEmpresaRequest:
     properties:
-      codemp:
+      cnpj:
         type: string
-      codlocarm_oficial:
+      is_active:
+        description: |-
+          Sem `binding:"required"` de propósito: num bool, "required" exige true
+          (zero value é false), o que impediria desativar uma empresa via PUT.
+        type: boolean
+      nome_fantasia:
         type: string
-      codlocarm_reserva:
+      parent_id:
+        type: integer
+      razao_social:
+        minLength: 3
         type: string
-      codtipnot:
-        type: string
-      li_api_key:
-        type: string
-      li_app_key:
-        type: string
-      li_webhook_secret:
-        type: string
+    required:
+    - cnpj
+    - razao_social
     type: object
   domain.UpdateSupplierRequest:
     properties:
@@ -650,23 +643,6 @@ definitions:
       role_id:
         type: integer
     type: object
-  domain.WebhookEventFilterRequest:
-    properties:
-      event_type:
-        type: string
-      is_asc:
-        type: boolean
-      order_by_column:
-        type: string
-      page_no:
-        type: integer
-      page_size:
-        type: integer
-      source:
-        type: string
-      status:
-        type: string
-    type: object
   gorm.DeletedAt:
     properties:
       time:
@@ -710,9 +686,6 @@ definitions:
         type: string
       username:
         type: string
-    type: object
-  lumini-hub_common_database.JSONB:
-    additionalProperties: true
     type: object
   lumini-hub_common_utils.Response:
     properties:
@@ -1127,57 +1100,11 @@ paths:
       summary: Filtra clientes com paginação (PostFilter)
       tags:
       - Clientes
-  /integrations/legacy/companies:
+  /empresas:
     get:
-      description: Usado para alimentar o select de codemp na tela de configuração
-      produces:
+      consumes:
       - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "503":
-          description: Service Unavailable
-          schema:
-            $ref: '#/definitions/utils.Response'
-      security:
-      - ApiKeyAuth: []
-      summary: Lista as empresas do ERP legado
-      tags:
-      - Integrações - Legado
-  /integrations/legacy/locations:
-    get:
-      description: Usado para alimentar os selects de codlocarm_oficial/codlocarm_reserva
-        na tela de configuração
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "503":
-          description: Service Unavailable
-          schema:
-            $ref: '#/definitions/utils.Response'
-      security:
-      - ApiKeyAuth: []
-      summary: Lista os locais de armazenamento do ERP legado
-      tags:
-      - Integrações - Legado
-  /integrations/settings:
-    get:
-      description: Retorna as chaves da Loja Integrada e os códigos do ERP legado
-        configurados
+      description: Retorna todas as empresas cadastradas (Matriz e vinculadas)
       produces:
       - application/json
       responses:
@@ -1188,29 +1115,156 @@ paths:
             - $ref: '#/definitions/utils.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/domain.ApiIntegrationSettings'
+                  $ref: '#/definitions/domain.ApiEmpresaList'
               type: object
         "401":
           description: Unauthorized
           schema:
             $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
       security:
       - ApiKeyAuth: []
-      summary: Obtém as configurações do api.integrations
+      summary: Lista empresas
       tags:
-      - Integrações - Configurações
+      - Empresas
+    post:
+      consumes:
+      - application/json
+      description: Cadastra uma empresa (Matriz ou vinculada a outra) no sistema
+      parameters:
+      - description: Dados da Empresa
+        in: body
+        name: empresa
+        required: true
+        schema:
+          $ref: '#/definitions/domain.CreateEmpresaRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiEmpresa'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Cria nova empresa
+      tags:
+      - Empresas
+  /empresas/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Realiza soft delete de uma empresa (bloqueado se houver outras
+        empresas vinculadas a ela)
+      parameters:
+      - description: ID da Empresa
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Exclui empresa
+      tags:
+      - Empresas
+    get:
+      consumes:
+      - application/json
+      description: Retorna os detalhes de uma única empresa cadastrada
+      parameters:
+      - description: ID da Empresa
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiEmpresaDetail'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Busca empresa por ID
+      tags:
+      - Empresas
     put:
       consumes:
       - application/json
-      description: Faz o upsert em lote das chaves informadas (campos omitidos não
-        são alterados)
+      description: Altera dados cadastrais de uma empresa pelo ID
       parameters:
-      - description: Configurações a atualizar
+      - description: ID da Empresa
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Novos dados da empresa
         in: body
-        name: settings
+        name: empresa
         required: true
         schema:
-          $ref: '#/definitions/domain.UpdateIntegrationSettingsRequest'
+          $ref: '#/definitions/domain.UpdateEmpresaRequest'
       produces:
       - application/json
       responses:
@@ -1221,7 +1275,7 @@ paths:
             - $ref: '#/definitions/utils.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/domain.ApiIntegrationSettings'
+                  $ref: '#/definitions/domain.ApiEmpresa'
               type: object
         "400":
           description: Bad Request
@@ -1231,46 +1285,8 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/utils.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/utils.Response'
-      security:
-      - ApiKeyAuth: []
-      summary: Atualiza as configurações do api.integrations
-      tags:
-      - Integrações - Configurações
-  /integrations/sync-logs/filter:
-    post:
-      consumes:
-      - application/json
-      description: Busca e filtra os logs de sincronização entre a Loja Integrada
-        e o SQL Server legado
-      parameters:
-      - description: Filtros e Dados de Paginação
-        in: body
-        name: filter
-        required: true
-        schema:
-          $ref: '#/definitions/domain.SyncLogFilterRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/domain.ApiSyncLogListPaginated'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "401":
-          description: Unauthorized
+        "404":
+          description: Not Found
           schema:
             $ref: '#/definitions/utils.Response'
         "500":
@@ -1279,81 +1295,9 @@ paths:
             $ref: '#/definitions/utils.Response'
       security:
       - ApiKeyAuth: []
-      summary: Filtra logs de sincronização com paginação
+      summary: Atualiza empresa
       tags:
-      - Integrações - Sync Logs
-  /integrations/webhook-events/filter:
-    post:
-      consumes:
-      - application/json
-      description: 'Busca e filtra os eventos de webhook recebidos (ex.: da Loja Integrada)'
-      parameters:
-      - description: Filtros e Dados de Paginação
-        in: body
-        name: filter
-        required: true
-        schema:
-          $ref: '#/definitions/domain.WebhookEventFilterRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/domain.ApiWebhookEventListPaginated'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/utils.Response'
-      security:
-      - ApiKeyAuth: []
-      summary: Filtra eventos de webhook com paginação
-      tags:
-      - Integrações - Webhook Events
-  /integrations/webhooks/loja-integrada:
-    post:
-      consumes:
-      - application/json
-      description: Endpoint público (sem AuthMiddleware), validado por um segredo
-        compartilhado no header X-Webhook-Secret (configurado em /integrations/settings).
-        Persiste o payload cru; o processamento em pedido de venda no SQL Server fica
-        para a Fase 2.
-      parameters:
-      - description: Segredo compartilhado configurado em /integrations/settings
-        in: header
-        name: X-Webhook-Secret
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/utils.Response'
-      summary: Recebe webhook da Loja Integrada
-      tags:
-      - Integrações - Webhooks
+      - Empresas
   /suppliers:
     get:
       consumes:
