@@ -30,30 +30,32 @@ export function RoleForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
-      <Card style={{ maxWidth: 480 }}>
-        <FormField label="Nome do perfil" error={errors.name}>
-          <Controller
-            name="name"
-            control={control}
-            render={({ field }) => <Input {...field} placeholder="Ex: Vendedor" />}
-          />
-        </FormField>
-        <FormField label="Descrição" error={errors.description}>
-          <Controller
-            name="description"
-            control={control}
-            render={({ field }) => (
-              <Input.TextArea {...field} rows={3} placeholder="Descrição do perfil" />
-            )}
-          />
-        </FormField>
-      </Card>
+      <div style={{ maxWidth: 560, margin: "0 auto" }}>
+        <Card>
+          <FormField label="Nome do perfil" error={errors.name}>
+            <Controller
+              name="name"
+              control={control}
+              render={({ field }) => <Input {...field} placeholder="Ex: Vendedor" />}
+            />
+          </FormField>
+          <FormField label="Descrição" error={errors.description}>
+            <Controller
+              name="description"
+              control={control}
+              render={({ field }) => (
+                <Input.TextArea {...field} rows={3} placeholder="Descrição do perfil" />
+              )}
+            />
+          </FormField>
+        </Card>
 
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 16 }}>
-        <Button onClick={onCancel}>Cancelar</Button>
-        <Button type="primary" htmlType="submit" loading={submitting}>
-          {submitLabel}
-        </Button>
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 16 }}>
+          <Button onClick={onCancel}>Cancelar</Button>
+          <Button type="primary" htmlType="submit" loading={submitting}>
+            {submitLabel}
+          </Button>
+        </div>
       </div>
     </form>
   );
