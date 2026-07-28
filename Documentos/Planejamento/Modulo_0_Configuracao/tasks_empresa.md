@@ -16,9 +16,9 @@ Acompanhamento da implementação do cadastro de Empresa e fundação fiscal/con
 
 ## Frontend
 
-- [ ] Tela de Cadastro/Edição de Empresa (seguindo o padrão de páginas full-page + Zod, mesmo de Usuários/Perfis)
+- [x] [CONCLUÍDO POR: Claude] Tela de Cadastro/Edição de Empresa (lista + full-page + Zod, mesmo padrão de Usuários/Perfis) — `CompaniesTable`, `CompanyForm` (com Select de "Vinculada a" excluindo a própria empresa), `CompaniesListPage`/`CreateCompanyPage`/`EditCompanyPage`, rotas em `router.tsx`.
 - [ ] Seletor de empresa ativa no header (visível só pro usuário master, Caso 1)
-- [ ] Item de menu "Empresas" (inserir em `menu_item_seeder.go`, dentro de Configurações, gate `companies.view`)
+- [x] [CONCLUÍDO POR: Claude] Item de menu "Empresas" inserido em `menu_item_seeder.go`, dentro de Configurações, gate `companies.view` — precisa reiniciar `api.auth` pra propagar (seeder é idempotente por item).
 - [ ] Aba/seção "Identidade Visual" na tela de Empresa — upload de logo + color pickers (primária/secundária/accent), preview ao vivo
 - [ ] `AuthContext.tsx` passa a expor a config visual da empresa ativa junto de `user`/`menuItems`; `App.tsx` aplica via `ConfigProvider` sobre os tokens padrão de `src/theme/antd-theme.ts` (fallback pra paleta Lumini Hub se a empresa não tiver configurado nada)
 

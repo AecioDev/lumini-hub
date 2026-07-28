@@ -16,6 +16,9 @@ import { CreateRolePage } from "@/pages/settings/roles/CreateRolePage";
 import { EditRolePage } from "@/pages/settings/roles/EditRolePage";
 import { CreatePermissionPage } from "@/pages/settings/permissions/CreatePermissionPage";
 import { EditPermissionPage } from "@/pages/settings/permissions/EditPermissionPage";
+import { CompaniesListPage } from "@/pages/settings/companies/CompaniesListPage";
+import { CreateCompanyPage } from "@/pages/settings/companies/CreateCompanyPage";
+import { EditCompanyPage } from "@/pages/settings/companies/EditCompanyPage";
 
 export const router = createBrowserRouter([
   {
@@ -33,6 +36,24 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <Navigate to="/dashboard" replace /> },
           { path: "dashboard", element: <CrmDashboardPage /> },
+          {
+            // Precisa bater com o href real semeado em menu_items ("Empresas" -> /settings/companies).
+            path: "settings/companies",
+            children: [
+              {
+                element: <RequirePermission permission="companies.view" />,
+                children: [{ index: true, element: <CompaniesListPage /> }],
+              },
+              {
+                element: <RequirePermission permission="companies.create" />,
+                children: [{ path: "create", element: <CreateCompanyPage /> }],
+              },
+              {
+                element: <RequirePermission permission="companies.edit" />,
+                children: [{ path: ":id/edit", element: <EditCompanyPage /> }],
+              },
+            ],
+          },
           {
             // Precisa bater com o href real semeado em menu_items ("Usuários" -> /settings/users).
             path: "settings/users",
