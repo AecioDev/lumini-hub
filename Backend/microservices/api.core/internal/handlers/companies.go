@@ -13,59 +13,59 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// EmpresaHandler gerencia as requisições relacionadas a empresas
-type EmpresaHandler struct {
-	empresaService *service.EmpresaService
+// CompanyHandler gerencia as requisições relacionadas a empresas
+type CompanyHandler struct {
+	companyService *service.CompanyService
 }
 
-// NewEmpresaHandler cria um novo handler de empresas recebendo o Unit of Work
-func NewEmpresaHandler(uow repository.UnitOfWork) *EmpresaHandler {
-	return &EmpresaHandler{
-		empresaService: service.NewEmpresaService(uow),
+// NewCompanyHandler cria um novo handler de empresas recebendo o Unit of Work
+func NewCompanyHandler(uow repository.UnitOfWork) *CompanyHandler {
+	return &CompanyHandler{
+		companyService: service.NewCompanyService(uow),
 	}
 }
 
-// GetEmpresas retorna todas as empresas cadastradas
+// GetCompanies retorna todas as empresas cadastradas
 // @Summary      Lista empresas
 // @Description  Retorna todas as empresas cadastradas (Matriz e vinculadas)
-// @Tags         Empresas
+// @Tags         Companies
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}  utils.Response{data=domain.ApiEmpresaList}
+// @Success      200  {object}  utils.Response{data=domain.ApiCompanyList}
 // @Failure      401  {object}  utils.Response
 // @Failure      500  {object}  utils.Response
-// @Router       /empresas [get]
+// @Router       /companies [get]
 // @Security     ApiKeyAuth
-func (h *EmpresaHandler) GetEmpresas(c *gin.Context) {
-	empresas, err := h.empresaService.GetEmpresas()
+func (h *CompanyHandler) GetCompanies(c *gin.Context) {
+	companies, err := h.companyService.GetCompanies()
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Erro ao buscar empresas", err.Error())
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusOK, "Empresas encontradas", empresas, nil)
+	utils.SuccessResponse(c, http.StatusOK, "Empresas encontradas", companies, nil)
 }
 
-// GetEmpresa retorna uma empresa específica pelo ID
+// GetCompany retorna uma empresa específica pelo ID
 // @Summary      Busca empresa por ID
 // @Description  Retorna os detalhes de uma única empresa cadastrada
-// @Tags         Empresas
+// @Tags         Companies
 // @Accept       json
 // @Produce      json
 // @Param        id   path      int  true  "ID da Empresa"
-// @Success      200  {object}  utils.Response{data=domain.ApiEmpresaDetail}
+// @Success      200  {object}  utils.Response{data=domain.ApiCompanyDetail}
 // @Failure      401  {object}  utils.Response
 // @Failure      404  {object}  utils.Response
 // @Failure      500  {object}  utils.Response
-// @Router       /empresas/{id} [get]
+// @Router       /companies/{id} [get]
 // @Security     ApiKeyAuth
-func (h *EmpresaHandler) GetEmpresa(c *gin.Context) {
+func (h *CompanyHandler) GetCompany(c *gin.Context) {
 	id, err := path.IdFromPathParamOrSendError(c)
 	if err != nil {
 		return
 	}
 
-	empresa, err := h.empresaService.GetEmpresaByID(id)
+	company, err := h.companyService.GetCompanyByID(id)
 	if err != nil {
 		if err == utils.ErrNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Empresa não encontrada", err.Error())
@@ -75,24 +75,24 @@ func (h *EmpresaHandler) GetEmpresa(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusOK, "Empresa encontrada", empresa, nil)
+	utils.SuccessResponse(c, http.StatusOK, "Empresa encontrada", company, nil)
 }
 
-// CreateEmpresa cria uma nova empresa
+// CreateCompany cria uma nova empresa
 // @Summary      Cria nova empresa
 // @Description  Cadastra uma empresa (Matriz ou vinculada a outra) no sistema
-// @Tags         Empresas
+// @Tags         Companies
 // @Accept       json
 // @Produce      json
-// @Param        empresa  body      domain.CreateEmpresaRequest  true  "Dados da Empresa"
-// @Success      201      {object}  utils.Response{data=domain.ApiEmpresa}
+// @Param        company  body      domain.CreateCompanyRequest  true  "Dados da Empresa"
+// @Success      201      {object}  utils.Response{data=domain.ApiCompany}
 // @Failure      400      {object}  utils.Response
 // @Failure      401      {object}  utils.Response
 // @Failure      500      {object}  utils.Response
-// @Router       /empresas [post]
+// @Router       /companies [post]
 // @Security     ApiKeyAuth
-func (h *EmpresaHandler) CreateEmpresa(c *gin.Context) {
-	var req domain.CreateEmpresaRequest
+func (h *CompanyHandler) CreateCompany(c *gin.Context) {
+	var req domain.CreateCompanyRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
 		return
@@ -104,7 +104,7 @@ func (h *EmpresaHandler) CreateEmpresa(c *gin.Context) {
 		return
 	}
 
-	empresa, err := h.empresaService.CreateEmpresa(req, userID)
+	company, err := h.companyService.CreateCompany(req, userID)
 	if err != nil {
 		if validator.IsValidationError(err) {
 			utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
@@ -114,31 +114,31 @@ func (h *EmpresaHandler) CreateEmpresa(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusCreated, "Empresa criada com sucesso", empresa, nil)
+	utils.SuccessResponse(c, http.StatusCreated, "Empresa criada com sucesso", company, nil)
 }
 
-// UpdateEmpresa atualiza uma empresa existente
+// UpdateCompany atualiza uma empresa existente
 // @Summary      Atualiza empresa
 // @Description  Altera dados cadastrais de uma empresa pelo ID
-// @Tags         Empresas
+// @Tags         Companies
 // @Accept       json
 // @Produce      json
-// @Param        id       path      int                           true  "ID da Empresa"
-// @Param        empresa  body      domain.UpdateEmpresaRequest  true  "Novos dados da empresa"
-// @Success      200      {object}  utils.Response{data=domain.ApiEmpresa}
+// @Param        id       path      int                          true  "ID da Empresa"
+// @Param        company  body      domain.UpdateCompanyRequest  true  "Novos dados da empresa"
+// @Success      200      {object}  utils.Response{data=domain.ApiCompany}
 // @Failure      400      {object}  utils.Response
 // @Failure      401      {object}  utils.Response
 // @Failure      404      {object}  utils.Response
 // @Failure      500      {object}  utils.Response
-// @Router       /empresas/{id} [put]
+// @Router       /companies/{id} [put]
 // @Security     ApiKeyAuth
-func (h *EmpresaHandler) UpdateEmpresa(c *gin.Context) {
+func (h *CompanyHandler) UpdateCompany(c *gin.Context) {
 	id, err := path.IdFromPathParamOrSendError(c)
 	if err != nil {
 		return
 	}
 
-	var req domain.UpdateEmpresaRequest
+	var req domain.UpdateCompanyRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
 		return
@@ -150,7 +150,7 @@ func (h *EmpresaHandler) UpdateEmpresa(c *gin.Context) {
 		return
 	}
 
-	empresa, err := h.empresaService.UpdateEmpresa(id, req, userID)
+	company, err := h.companyService.UpdateCompany(id, req, userID)
 	if err != nil {
 		if err == utils.ErrNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Empresa não encontrada", err.Error())
@@ -162,13 +162,13 @@ func (h *EmpresaHandler) UpdateEmpresa(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusOK, "Empresa atualizada com sucesso", empresa, nil)
+	utils.SuccessResponse(c, http.StatusOK, "Empresa atualizada com sucesso", company, nil)
 }
 
-// DeleteEmpresa exclui uma empresa pelo ID
+// DeleteCompany exclui uma empresa pelo ID
 // @Summary      Exclui empresa
 // @Description  Realiza soft delete de uma empresa (bloqueado se houver outras empresas vinculadas a ela)
-// @Tags         Empresas
+// @Tags         Companies
 // @Accept       json
 // @Produce      json
 // @Param        id   path      int  true  "ID da Empresa"
@@ -177,15 +177,15 @@ func (h *EmpresaHandler) UpdateEmpresa(c *gin.Context) {
 // @Failure      401  {object}  utils.Response
 // @Failure      404  {object}  utils.Response
 // @Failure      500  {object}  utils.Response
-// @Router       /empresas/{id} [delete]
+// @Router       /companies/{id} [delete]
 // @Security     ApiKeyAuth
-func (h *EmpresaHandler) DeleteEmpresa(c *gin.Context) {
+func (h *CompanyHandler) DeleteCompany(c *gin.Context) {
 	id, err := path.IdFromPathParamOrSendError(c)
 	if err != nil {
 		return
 	}
 
-	if err := h.empresaService.DeleteEmpresa(id); err != nil {
+	if err := h.companyService.DeleteCompany(id); err != nil {
 		if err == utils.ErrNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Empresa não encontrada", err.Error())
 		} else if validator.IsValidationError(err) {

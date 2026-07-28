@@ -31,6 +31,55 @@ definitions:
         description: CEP com 8 dígitos
         type: string
     type: object
+  domain.ApiCompany:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      legal_name:
+        type: string
+      parent_id:
+        type: integer
+      tax_id:
+        type: string
+      trade_name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  domain.ApiCompanyDetail:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        $ref: '#/definitions/lumini-hub_api_core_internal_domain.ApiUser'
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      legal_name:
+        type: string
+      parent_id:
+        type: integer
+      tax_id:
+        type: string
+      trade_name:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        $ref: '#/definitions/lumini-hub_api_core_internal_domain.ApiUser'
+    type: object
+  domain.ApiCompanyList:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/domain.ApiCompany'
+        type: array
+    type: object
   domain.ApiCustomer:
     properties:
       addresses:
@@ -101,55 +150,6 @@ definitions:
         type: array
       pagination:
         $ref: '#/definitions/utils.ApiPagination'
-    type: object
-  domain.ApiEmpresa:
-    properties:
-      cnpj:
-        type: string
-      created_at:
-        type: string
-      id:
-        type: integer
-      is_active:
-        type: boolean
-      nome_fantasia:
-        type: string
-      parent_id:
-        type: integer
-      razao_social:
-        type: string
-      updated_at:
-        type: string
-    type: object
-  domain.ApiEmpresaDetail:
-    properties:
-      cnpj:
-        type: string
-      created_at:
-        type: string
-      created_by:
-        $ref: '#/definitions/lumini-hub_api_core_internal_domain.ApiUser'
-      id:
-        type: integer
-      is_active:
-        type: boolean
-      nome_fantasia:
-        type: string
-      parent_id:
-        type: integer
-      razao_social:
-        type: string
-      updated_at:
-        type: string
-      updated_by:
-        $ref: '#/definitions/lumini-hub_api_core_internal_domain.ApiUser'
-    type: object
-  domain.ApiEmpresaList:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/domain.ApiEmpresa'
-        type: array
     type: object
   domain.ApiPermission:
     properties:
@@ -380,6 +380,21 @@ definitions:
       updatedAt:
         type: string
     type: object
+  domain.CreateCompanyRequest:
+    properties:
+      legal_name:
+        minLength: 3
+        type: string
+      parent_id:
+        type: integer
+      tax_id:
+        type: string
+      trade_name:
+        type: string
+    required:
+    - legal_name
+    - tax_id
+    type: object
   domain.CreateCustomerRequest:
     properties:
       company_name:
@@ -400,21 +415,6 @@ definitions:
     - document_number
     - first_name
     - person_type
-    type: object
-  domain.CreateEmpresaRequest:
-    properties:
-      cnpj:
-        type: string
-      nome_fantasia:
-        type: string
-      parent_id:
-        type: integer
-      razao_social:
-        minLength: 3
-        type: string
-    required:
-    - cnpj
-    - razao_social
     type: object
   domain.CreateSupplierRequest:
     properties:
@@ -550,6 +550,26 @@ definitions:
       person_type:
         type: string
     type: object
+  domain.UpdateCompanyRequest:
+    properties:
+      is_active:
+        description: |-
+          Sem `binding:"required"` de propósito: num bool, "required" exige true
+          (zero value é false), o que impediria desativar uma empresa via PUT.
+        type: boolean
+      legal_name:
+        minLength: 3
+        type: string
+      parent_id:
+        type: integer
+      tax_id:
+        type: string
+      trade_name:
+        type: string
+    required:
+    - legal_name
+    - tax_id
+    type: object
   domain.UpdateCustomerRequest:
     properties:
       company_name:
@@ -568,26 +588,6 @@ definitions:
     - document_number
     - first_name
     - is_active
-    type: object
-  domain.UpdateEmpresaRequest:
-    properties:
-      cnpj:
-        type: string
-      is_active:
-        description: |-
-          Sem `binding:"required"` de propósito: num bool, "required" exige true
-          (zero value é false), o que impediria desativar uma empresa via PUT.
-        type: boolean
-      nome_fantasia:
-        type: string
-      parent_id:
-        type: integer
-      razao_social:
-        minLength: 3
-        type: string
-    required:
-    - cnpj
-    - razao_social
     type: object
   domain.UpdateSupplierRequest:
     properties:
@@ -852,6 +852,204 @@ paths:
       summary: Renova token de autenticação
       tags:
       - Autenticação
+  /companies:
+    get:
+      consumes:
+      - application/json
+      description: Retorna todas as empresas cadastradas (Matriz e vinculadas)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiCompanyList'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Lista empresas
+      tags:
+      - Companies
+    post:
+      consumes:
+      - application/json
+      description: Cadastra uma empresa (Matriz ou vinculada a outra) no sistema
+      parameters:
+      - description: Dados da Empresa
+        in: body
+        name: company
+        required: true
+        schema:
+          $ref: '#/definitions/domain.CreateCompanyRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiCompany'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Cria nova empresa
+      tags:
+      - Companies
+  /companies/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Realiza soft delete de uma empresa (bloqueado se houver outras
+        empresas vinculadas a ela)
+      parameters:
+      - description: ID da Empresa
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Exclui empresa
+      tags:
+      - Companies
+    get:
+      consumes:
+      - application/json
+      description: Retorna os detalhes de uma única empresa cadastrada
+      parameters:
+      - description: ID da Empresa
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiCompanyDetail'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Busca empresa por ID
+      tags:
+      - Companies
+    put:
+      consumes:
+      - application/json
+      description: Altera dados cadastrais de uma empresa pelo ID
+      parameters:
+      - description: ID da Empresa
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Novos dados da empresa
+        in: body
+        name: company
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UpdateCompanyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiCompany'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Atualiza empresa
+      tags:
+      - Companies
   /customers:
     get:
       consumes:
@@ -1100,204 +1298,6 @@ paths:
       summary: Filtra clientes com paginação (PostFilter)
       tags:
       - Clientes
-  /empresas:
-    get:
-      consumes:
-      - application/json
-      description: Retorna todas as empresas cadastradas (Matriz e vinculadas)
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/domain.ApiEmpresaList'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/utils.Response'
-      security:
-      - ApiKeyAuth: []
-      summary: Lista empresas
-      tags:
-      - Empresas
-    post:
-      consumes:
-      - application/json
-      description: Cadastra uma empresa (Matriz ou vinculada a outra) no sistema
-      parameters:
-      - description: Dados da Empresa
-        in: body
-        name: empresa
-        required: true
-        schema:
-          $ref: '#/definitions/domain.CreateEmpresaRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/domain.ApiEmpresa'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/utils.Response'
-      security:
-      - ApiKeyAuth: []
-      summary: Cria nova empresa
-      tags:
-      - Empresas
-  /empresas/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Realiza soft delete de uma empresa (bloqueado se houver outras
-        empresas vinculadas a ela)
-      parameters:
-      - description: ID da Empresa
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/utils.Response'
-      security:
-      - ApiKeyAuth: []
-      summary: Exclui empresa
-      tags:
-      - Empresas
-    get:
-      consumes:
-      - application/json
-      description: Retorna os detalhes de uma única empresa cadastrada
-      parameters:
-      - description: ID da Empresa
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/domain.ApiEmpresaDetail'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/utils.Response'
-      security:
-      - ApiKeyAuth: []
-      summary: Busca empresa por ID
-      tags:
-      - Empresas
-    put:
-      consumes:
-      - application/json
-      description: Altera dados cadastrais de uma empresa pelo ID
-      parameters:
-      - description: ID da Empresa
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Novos dados da empresa
-        in: body
-        name: empresa
-        required: true
-        schema:
-          $ref: '#/definitions/domain.UpdateEmpresaRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/utils.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/domain.ApiEmpresa'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/utils.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/utils.Response'
-      security:
-      - ApiKeyAuth: []
-      summary: Atualiza empresa
-      tags:
-      - Empresas
   /suppliers:
     get:
       consumes:

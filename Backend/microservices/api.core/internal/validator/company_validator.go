@@ -6,15 +6,15 @@ import (
 	"lumini-hub/common/utils"
 )
 
-// EmpresaValidator valida regras de negócio relacionadas a empresas
-type EmpresaValidator struct {
-	empresaRepo repository.EmpresaRepository
+// CompanyValidator valida regras de negócio relacionadas a empresas
+type CompanyValidator struct {
+	companyRepo repository.CompanyRepository
 }
 
-// NewEmpresaValidator cria um novo validador de empresas
-func NewEmpresaValidator(empresaRepo repository.EmpresaRepository) *EmpresaValidator {
-	return &EmpresaValidator{
-		empresaRepo: empresaRepo,
+// NewCompanyValidator cria um novo validador de empresas
+func NewCompanyValidator(companyRepo repository.CompanyRepository) *CompanyValidator {
+	return &CompanyValidator{
+		companyRepo: companyRepo,
 	}
 }
 
@@ -23,7 +23,7 @@ func NewEmpresaValidator(empresaRepo repository.EmpresaRepository) *EmpresaValid
 // na cadeia de ancestrais dela mesma) — protege qualquer resolução futura
 // de hierarquia (ex.: permission empresa.hierarquia.view) de entrar em loop
 // infinito. selfID é 0 na criação (ainda não existe).
-func (v *EmpresaValidator) validateParent(parentID *uint, selfID uint) error {
+func (v *CompanyValidator) validateParent(parentID *uint, selfID uint) error {
 	if parentID == nil {
 		return nil
 	}
@@ -36,7 +36,7 @@ func (v *EmpresaValidator) validateParent(parentID *uint, selfID uint) error {
 
 	current := *parentID
 	for {
-		parent, err := v.empresaRepo.FindByID(current)
+		parent, err := v.companyRepo.FindByID(current)
 		if err != nil {
 			return err
 		}
@@ -58,20 +58,20 @@ func (v *EmpresaValidator) validateParent(parentID *uint, selfID uint) error {
 }
 
 // ValidateForCreation valida os dados para criação de uma empresa
-func (v *EmpresaValidator) ValidateForCreation(req domain.CreateEmpresaRequest) error {
+func (v *CompanyValidator) ValidateForCreation(req domain.CreateCompanyRequest) error {
 	var errors ValidationErrors
 
-	cnpj := utils.RemoveMask(req.CNPJ)
-	exists, err := v.empresaRepo.ExistsByCNPJ(cnpj)
+	taxID := utils.RemoveMask(req.TaxID)
+	exists, err := v.companyRepo.ExistsByTaxID(taxID)
 	if err != nil {
 		return err
 	}
 	if exists {
-		errors.AddError("cnpj", "CNPJ já está em uso")
+		errors.AddError("tax_id", "CNPJ já está em uso")
 	}
 
 	if req.ParentID == nil {
-		hasRoot, err := v.empresaRepo.ExistsRoot()
+		hasRoot, err := v.companyRepo.ExistsRoot()
 		if err != nil {
 			return err
 		}
@@ -93,31 +93,31 @@ func (v *EmpresaValidator) ValidateForCreation(req domain.CreateEmpresaRequest) 
 }
 
 // ValidateForUpdate valida os dados para atualização de uma empresa
-func (v *EmpresaValidator) ValidateForUpdate(id uint, req domain.UpdateEmpresaRequest) error {
+func (v *CompanyValidator) ValidateForUpdate(id uint, req domain.UpdateCompanyRequest) error {
 	var errors ValidationErrors
 
-	empresa, err := v.empresaRepo.FindByID(id)
+	company, err := v.companyRepo.FindByID(id)
 	if err != nil {
 		return err
 	}
-	if empresa == nil {
+	if company == nil {
 		errors.AddError("id", "empresa não encontrada")
 		return errors
 	}
 
-	cnpj := utils.RemoveMask(req.CNPJ)
-	if cnpj != empresa.CNPJ {
-		exists, err := v.empresaRepo.ExistsByCNPJExcept(cnpj, id)
+	taxID := utils.RemoveMask(req.TaxID)
+	if taxID != company.TaxID {
+		exists, err := v.companyRepo.ExistsByTaxIDExcept(taxID, id)
 		if err != nil {
 			return err
 		}
 		if exists {
-			errors.AddError("cnpj", "CNPJ já está em uso")
+			errors.AddError("tax_id", "CNPJ já está em uso")
 		}
 	}
 
 	if req.ParentID == nil {
-		hasRoot, err := v.empresaRepo.ExistsRootExcept(id)
+		hasRoot, err := v.companyRepo.ExistsRootExcept(id)
 		if err != nil {
 			return err
 		}
@@ -139,19 +139,19 @@ func (v *EmpresaValidator) ValidateForUpdate(id uint, req domain.UpdateEmpresaRe
 }
 
 // ValidateForDeletion valida se uma empresa pode ser excluída
-func (v *EmpresaValidator) ValidateForDeletion(id uint) error {
+func (v *CompanyValidator) ValidateForDeletion(id uint) error {
 	var errors ValidationErrors
 
-	empresa, err := v.empresaRepo.FindByID(id)
+	company, err := v.companyRepo.FindByID(id)
 	if err != nil {
 		return err
 	}
-	if empresa == nil {
+	if company == nil {
 		errors.AddError("id", "empresa não encontrada")
 		return errors
 	}
 
-	count, err := v.empresaRepo.CountByParentID(id)
+	count, err := v.companyRepo.CountByParentID(id)
 	if err != nil {
 		return err
 	}

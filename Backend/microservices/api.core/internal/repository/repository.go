@@ -8,7 +8,7 @@ import (
 type UnitOfWork interface {
 	Customers() CustomerRepository
 	Suppliers() SupplierRepository
-	Empresas() EmpresaRepository
+	Companies() CompanyRepository
 	Execute(fn func(uow UnitOfWork) error) error
 	GetDB() *gorm.DB
 }
@@ -33,9 +33,9 @@ func (u *GormUnitOfWork) Suppliers() SupplierRepository {
 	return NewSupplierRepository(u.db)
 }
 
-// Empresas fornece acesso ao repositório de empresas sob o escopo atual (banco ou transação ativa)
-func (u *GormUnitOfWork) Empresas() EmpresaRepository {
-	return NewEmpresaRepository(u.db)
+// Companies fornece acesso ao repositório de empresas sob o escopo atual (banco ou transação ativa)
+func (u *GormUnitOfWork) Companies() CompanyRepository {
+	return NewCompanyRepository(u.db)
 }
 
 // GetDB expõe a conexão ativa com o banco de dados GORM

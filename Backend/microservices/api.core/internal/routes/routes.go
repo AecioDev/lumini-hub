@@ -14,7 +14,7 @@ func SetupRoutes(router *gin.RouterGroup, uow repository.UnitOfWork, cfg *config
 	// Handlers
 	customerHandler := handlers.NewCustomerHandler(uow)
 	supplierHandler := handlers.NewSupplierHandler(uow)
-	empresaHandler := handlers.NewEmpresaHandler(uow)
+	companyHandler := handlers.NewCompanyHandler(uow)
 
 	// Rotas de Clientes (todas protegidas)
 	customers := router.Group("/customers")
@@ -41,13 +41,13 @@ func SetupRoutes(router *gin.RouterGroup, uow repository.UnitOfWork, cfg *config
 	}
 
 	// Rotas de Empresas (todas protegidas)
-	empresas := router.Group("/empresas")
-	empresas.Use(middlewares.AuthMiddleware(cfg))
+	companies := router.Group("/companies")
+	companies.Use(middlewares.AuthMiddleware(cfg))
 	{
-		empresas.GET("", middlewares.RequirePermission("empresas.view"), empresaHandler.GetEmpresas)
-		empresas.GET("/:id", middlewares.RequirePermission("empresas.view"), empresaHandler.GetEmpresa)
-		empresas.POST("", middlewares.RequirePermission("empresas.create"), empresaHandler.CreateEmpresa)
-		empresas.PUT("/:id", middlewares.RequirePermission("empresas.edit"), empresaHandler.UpdateEmpresa)
-		empresas.DELETE("/:id", middlewares.RequirePermission("empresas.delete"), empresaHandler.DeleteEmpresa)
+		companies.GET("", middlewares.RequirePermission("companies.view"), companyHandler.GetCompanies)
+		companies.GET("/:id", middlewares.RequirePermission("companies.view"), companyHandler.GetCompany)
+		companies.POST("", middlewares.RequirePermission("companies.create"), companyHandler.CreateCompany)
+		companies.PUT("/:id", middlewares.RequirePermission("companies.edit"), companyHandler.UpdateCompany)
+		companies.DELETE("/:id", middlewares.RequirePermission("companies.delete"), companyHandler.DeleteCompany)
 	}
 }
