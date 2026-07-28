@@ -3,11 +3,11 @@
 // campo de cor). Determinístico: o mesmo nome sempre cai na mesma cor.
 
 const AVATAR_GRADIENTS = [
-  "linear-gradient(135deg, #1677ff, #9254de)",
-  "linear-gradient(135deg, #13a8a8, #1677ff)",
-  "linear-gradient(135deg, #eb2f96, #722ed1)",
-  "linear-gradient(135deg, #fa8c16, #d4b106)",
-  "linear-gradient(135deg, #52c41a, #13a8a8)",
+  "linear-gradient(135deg, #2563EB, #06B6D4)",
+  "linear-gradient(135deg, #7C3AED, #2563EB)",
+  "linear-gradient(135deg, #06B6D4, #7C3AED)",
+  "linear-gradient(135deg, #1D4ED8, #7C3AED)",
+  "linear-gradient(135deg, #06B6D4, #1D4ED8)",
 ];
 
 const TAG_COLORS = ["blue", "purple", "cyan", "gold", "green", "magenta", "volcano"];
