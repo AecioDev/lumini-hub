@@ -14,6 +14,7 @@ Este módulo cria o cadastro de **Empresa** — a estrutura organizacional de um
 2. **Configuração Fiscal por Empresa** — certificado digital A1, tipo de tributação (Simples/Presumido/Real), dados do contador responsável, contadores/séries de numeração de notas fiscais.
 3. **Plano de Contas por Empresa** — estrutura hierárquica de contas contábeis pra lançamentos em partida dobrada (base do Módulo 7 — CMV, DRE, Balancete).
 4. **Escopo por empresa em todo o resto do sistema** — regra de visibilidade de dados (usuário só vê o que é da(s) empresa(s) dele) e a decisão de escopo obrigatória em toda entidade nova (já reforçada em `.agents/skills/lumini_hub_entity_creation/SKILL.md`, Step 0).
+5. **Configuração Visual por Empresa** — logo e paleta de cores próprias, aplicadas no frontend pra personalizar a experiência de cada cliente que usa a Lumini Hub (ver `EmpresaConfiguracaoVisual` abaixo).
 
 ---
 
@@ -56,6 +57,20 @@ Este módulo cria o cadastro de **Empresa** — a estrutura organizacional de um
 | `CFOP` | string | varia por entrada/saída e por estadual/interestadual — provavelmente mais de um CFOP configurado por combinação, estrutura exata a definir |
 
 > **Config geral, não só fiscal**: como você apontou, `Empresa` vai precisar de uma "gaveta" de configurações que cresce com o sistema (não só fiscal) — outros módulos vão pedir suas próprias configs por empresa conforme forem sendo construídos. Não vou tentar prever isso tudo agora; cada módulo novo pede sua própria tabela de configuração quando chegar a vez dele (mesma lógica do Step 0 de escopo por empresa — perguntar antes de modelar, não assumir).
+
+### `EmpresaConfiguracaoVisual` (1:1 com Empresa)
+**Definido 2026-07-27**: personalização visual por cliente (a Lumini Hub é usada por várias empresas diferentes, cada uma podendo querer sua própria marca aparecendo no sistema). Tabela própria, não uma coluna solta em `Empresa` nem misturada nas outras configs (fiscal/emissão de nota) — é um conceito totalmente diferente (visual, não fiscal/contábil) e mais uma "gaveta" que só cresce (pode ganhar campos como tema dark/light forçado, fonte, etc. no futuro).
+
+| Campo | Tipo | Observação |
+|---|---|---|
+| `EmpresaID` | uint | FK |
+| `LogoArquivo` | bytea | mesmo raciocínio do `CertificadoArquivo` em `EmpresaConfiguracaoFiscal` — arquivo pequeno, guardado na própria linha, viaja junto do backup |
+| `LogoMimeType` | string | `image/png`, `image/svg+xml`, `image/jpeg` — necessário pra servir o arquivo corretamente, já que é `bytea` puro |
+| `CorPrimaria` | string | hex, ex: `#2563EB` — vira `colorPrimary` no `ConfigProvider` do antd |
+| `CorSecundaria` | string (nullable) | hex — uso pontual (ex: `colorInfo`/detalhes), opcional |
+| `CorAccent` | string (nullable) | hex — terceira cor pra gradientes/destaques, opcional, mesmo espírito do roxo na paleta da própria Lumini Hub |
+
+> **Aplicação no frontend**: mesmo mecanismo do menu dinâmico (`AuthContext.tsx`) — a config visual da empresa ativa do usuário viaja no bootstrap da sessão (`GET /auth/me`/login/refresh) e substitui os tokens de `src/theme/antd-theme.ts` (`BRAND`) em runtime via `ConfigProvider`. **Fallback**: campos vazios/tabela sem registro para aquela empresa usam a paleta padrão da própria Lumini Hub (não força o cliente a configurar nada pra já ter um visual coerente).
 
 ### `PlanoDeContas` (N:1 com Empresa, self-referencing)
 **Definido 2026-07-21**: template global padrão (o mais comumente usado no Brasil), clonado pra cada empresa na criação — facilita a vida do cliente, que já começa operando sem montar plano de contas do zero. Depois de clonado, cada empresa pode customizar o próprio livremente.

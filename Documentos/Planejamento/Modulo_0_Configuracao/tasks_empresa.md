@@ -8,6 +8,7 @@ Acompanhamento da implementação do cadastro de Empresa e fundação fiscal/con
 - [ ] `EmpresaConfiguracaoFiscal` — domain/repository/service/handler/rotas (certificado A1 em `bytea`, senha criptografada, vencimento, tipo de tributação, dados do contador)
 - [ ] `EmpresaConfiguracaoEmissaoNota` — estrutura fina depende do Módulo 6 (Fiscal) ser desenhado; não iniciar antes disso
 - [ ] `PlanoDeContas` — domain/repository/service/handler/rotas, self-referencing, com endpoint/lógica de clonar o template padrão na criação de uma Empresa
+- [ ] `EmpresaConfiguracaoVisual` — domain/repository/service/handler/rotas (logo em `bytea` + mimetype, cor primária/secundária/accent), 1:1 com Empresa, endpoint de upload de logo separado do PUT de configuração (multipart)
 - [ ] Conteúdo do template padrão do Plano de Contas (seed) — bloqueado até o usuário decidir/fornecer o conteúdo (ver `plano_empresa.md`, ele disse que por enquanto pode ser um modelo básico a alinhar depois com o contador)
 - [ ] `User.EmpresaID` — campo em `api.auth`, nullable, referência por ID puro (sem GORM relation cross-service)
 - [ ] Regra de visibilidade hierárquica — permission `empresa.hierarquia.view` + lógica de resolver o conjunto de `EmpresaID`s visíveis por usuário (Caso 1 master / Caso 2 com hierarquia)
@@ -18,6 +19,8 @@ Acompanhamento da implementação do cadastro de Empresa e fundação fiscal/con
 - [ ] Tela de Cadastro/Edição de Empresa (seguindo o padrão de páginas full-page + Zod, mesmo de Usuários/Perfis)
 - [ ] Seletor de empresa ativa no header (visível só pro usuário master, Caso 1)
 - [ ] Item de menu "Empresas" (inserir em `menu_item_seeder.go`, dentro de Configurações, gate `empresas.view`)
+- [ ] Aba/seção "Identidade Visual" na tela de Empresa — upload de logo + color pickers (primária/secundária/accent), preview ao vivo
+- [ ] `AuthContext.tsx` passa a expor a config visual da empresa ativa junto de `user`/`menuItems`; `App.tsx` aplica via `ConfigProvider` sobre os tokens padrão de `src/theme/antd-theme.ts` (fallback pra paleta Lumini Hub se a empresa não tiver configurado nada)
 
 ## Fora do escopo por enquanto
 
