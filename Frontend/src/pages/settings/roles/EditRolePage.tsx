@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Result, Skeleton, Tabs, Typography } from "antd";
+import { Result, Skeleton, Tabs } from "antd";
 import { useNavigate, useParams } from "react-router-dom";
+import { PageHeader } from "@/components/common/PageHeader";
 import { RoleForm } from "@/components/roles/forms/RoleForm";
 import { RolePermissionsEditor } from "@/components/roles/forms/RolePermissionsEditor";
 import { roleService } from "@/services/roles/role-service";
@@ -8,8 +9,6 @@ import { getApiErrorMessage } from "@/utils/api-error";
 import { useFeedback } from "@/hooks/useFeedback";
 import type { ApiRoleDetail } from "@/types/role";
 import type { RoleFormValues } from "@/schemas/role-schema";
-
-const { Title, Paragraph } = Typography;
 
 export function EditRolePage() {
   const { id } = useParams<{ id: string }>();
@@ -57,12 +56,11 @@ export function EditRolePage() {
 
   return (
     <div>
-      <Title level={4} style={{ margin: "0 0 4px" }}>
-        Editar Perfil
-      </Title>
-      <Paragraph type="secondary" style={{ marginBottom: 20 }}>
-        Atualize os dados e permissões do perfil
-      </Paragraph>
+      <PageHeader
+        title="Editar Perfil"
+        subtitle="Atualize os dados e permissões do perfil"
+        backTo="/settings/roles"
+      />
 
       {loading || !role ? (
         <Skeleton active paragraph={{ rows: 10 }} />

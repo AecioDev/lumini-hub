@@ -1,13 +1,11 @@
 import { useState } from "react";
-import { Typography } from "antd";
 import { useNavigate } from "react-router-dom";
+import { PageHeader } from "@/components/common/PageHeader";
 import { PermissionForm } from "@/components/permissions/forms/PermissionForm";
 import { permissionService } from "@/services/permissions/permission-service";
 import { getApiErrorMessage } from "@/utils/api-error";
 import { useFeedback } from "@/hooks/useFeedback";
 import type { PermissionFormValues } from "@/schemas/permission-schema";
-
-const { Title, Paragraph } = Typography;
 
 export function CreatePermissionPage() {
   const navigate = useNavigate();
@@ -29,12 +27,11 @@ export function CreatePermissionPage() {
 
   return (
     <div>
-      <Title level={4} style={{ margin: "0 0 4px" }}>
-        Nova Permissão
-      </Title>
-      <Paragraph type="secondary" style={{ marginBottom: 20 }}>
-        Cadastre uma nova permissão no catálogo
-      </Paragraph>
+      <PageHeader
+        title="Nova Permissão"
+        subtitle="Cadastre uma nova permissão no catálogo"
+        backTo="/settings/roles?tab=permissoes"
+      />
       <PermissionForm
         submitting={submitting}
         submitLabel="Criar Permissão"

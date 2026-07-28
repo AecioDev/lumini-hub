@@ -15,9 +15,9 @@ type PermissionRepository interface {
 	FindAll() ([]domain.Permission, error)
 	FindByID(id uint) (*domain.Permission, error)
 	FindByIDs(ids []uint) ([]domain.Permission, error)
-	FindAllFiltered(pagination *utils.Pagination, filters domain.InGetPermissionsFilters) ([]domain.Permission, error)
-	GroupByModule() (map[string][]domain.Permission, error)
-	FindAllModules() ([]string, error)
+	FindAllFiltered(pagination *utils.Pagination, filters domain.InGetPermissionsFilters, excludeModule string) ([]domain.Permission, error)
+	GroupByModule(excludeModule string) (map[string][]domain.Permission, error)
+	FindAllModules(excludeModule string) ([]string, error)
 	Create(permission *domain.Permission) error
 	Update(permission *domain.Permission) error
 	Delete(id uint) error
@@ -47,8 +47,11 @@ func (r *GormPermissionRepository) FindAll() ([]domain.Permission, error) {
 	return permissions, nil
 }
 
-// FindAllFiltered retorna todas as permissões paginadas e filtradas
-func (r *GormPermissionRepository) FindAllFiltered(pagination *utils.Pagination, filters domain.InGetPermissionsFilters) ([]domain.Permission, error) {
+// FindAllFiltered retorna todas as permissões paginadas e filtradas.
+// excludeModule (quando não vazio) tira as permissões daquele módulo do
+// resultado — usado pra esconder o módulo DeveloperModule de quem não é
+// DEVELOP, mantendo a contagem/paginação corretas (ver utils.DeveloperModule).
+func (r *GormPermissionRepository) FindAllFiltered(pagination *utils.Pagination, filters domain.InGetPermissionsFilters, excludeModule string) ([]domain.Permission, error) {
 	var permissions []domain.Permission
 	query := r.GetDB().Model(&domain.Permission{})
 
@@ -58,6 +61,9 @@ func (r *GormPermissionRepository) FindAllFiltered(pagination *utils.Pagination,
 	}
 	if filters.Module != "" {
 		query = query.Where("module = ?", filters.Module)
+	}
+	if excludeModule != "" {
+		query = query.Where("module <> ?", excludeModule)
 	}
 	if filters.RoleId != 0 {
 		if filters.IsLinkedToRole != nil && *filters.IsLinkedToRole == false {
@@ -107,10 +113,15 @@ func (r *GormPermissionRepository) FindByIDs(ids []uint) ([]domain.Permission, e
 	return permissions, nil
 }
 
-// GroupByModule retorna permissões agrupadas por módulo
-func (r *GormPermissionRepository) GroupByModule() (map[string][]domain.Permission, error) {
+// GroupByModule retorna permissões agrupadas por módulo (ver excludeModule
+// em FindAllFiltered).
+func (r *GormPermissionRepository) GroupByModule(excludeModule string) (map[string][]domain.Permission, error) {
 	var permissions []domain.Permission
-	if err := r.GetDB().Find(&permissions).Error; err != nil {
+	query := r.GetDB()
+	if excludeModule != "" {
+		query = query.Where("module <> ?", excludeModule)
+	}
+	if err := query.Find(&permissions).Error; err != nil {
 		return nil, err
 	}
 
@@ -123,10 +134,15 @@ func (r *GormPermissionRepository) GroupByModule() (map[string][]domain.Permissi
 	return moduleMap, nil
 }
 
-// FindAllModules retorna a lista de módulos cadastrados
-func (r *GormPermissionRepository) FindAllModules() ([]string, error) {
+// FindAllModules retorna a lista de módulos cadastrados (ver excludeModule
+// em FindAllFiltered).
+func (r *GormPermissionRepository) FindAllModules(excludeModule string) ([]string, error) {
 	var modules []string
-	if err := r.GetDB().Model(&domain.Permission{}).Distinct("module").Pluck("module", &modules).Error; err != nil {
+	query := r.GetDB().Model(&domain.Permission{})
+	if excludeModule != "" {
+		query = query.Where("module <> ?", excludeModule)
+	}
+	if err := query.Distinct("module").Pluck("module", &modules).Error; err != nil {
 		return nil, err
 	}
 	return modules, nil

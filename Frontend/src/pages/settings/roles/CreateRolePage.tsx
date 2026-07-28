@@ -1,13 +1,11 @@
 import { useState } from "react";
-import { Typography } from "antd";
 import { useNavigate } from "react-router-dom";
+import { PageHeader } from "@/components/common/PageHeader";
 import { RoleForm } from "@/components/roles/forms/RoleForm";
 import { roleService } from "@/services/roles/role-service";
 import { getApiErrorMessage } from "@/utils/api-error";
 import { useFeedback } from "@/hooks/useFeedback";
 import type { RoleFormValues } from "@/schemas/role-schema";
-
-const { Title, Paragraph } = Typography;
 
 export function CreateRolePage() {
   const navigate = useNavigate();
@@ -31,12 +29,11 @@ export function CreateRolePage() {
 
   return (
     <div>
-      <Title level={4} style={{ margin: "0 0 4px" }}>
-        Novo Perfil
-      </Title>
-      <Paragraph type="secondary" style={{ marginBottom: 20 }}>
-        Cadastre um novo perfil de acesso
-      </Paragraph>
+      <PageHeader
+        title="Novo Perfil"
+        subtitle="Cadastre um novo perfil de acesso"
+        backTo="/settings/roles"
+      />
       <RoleForm
         submitting={submitting}
         submitLabel="Criar Perfil"

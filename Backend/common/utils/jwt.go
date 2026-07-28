@@ -9,24 +9,29 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// JWTClaims representa os claims do token JWT
+// JWTClaims representa os claims do token JWT.
+//
+// Não carrega a lista de permissões do usuário — ela crescia sem limite
+// conforme o usuário acumulava permissões (chegando a inviabilizar
+// cookies/URIs grandes, um problema real para o futuro uso de WebSockets).
+// RequirePermission (common/middlewares/permission.go) consulta a tabela
+// user_permissions direto no banco a cada requisição em vez de confiar numa
+// cópia embutida no token.
 type JWTClaims struct {
-	UserID      uint     `json:"user_id"`
-	Username    string   `json:"username"`
-	RoleID      uint     `json:"role_id"`
-	Role        string   `json:"role"`
-	Permissions []string `json:"permissions"`
+	UserID   uint   `json:"user_id"`
+	Username string `json:"username"`
+	RoleID   uint   `json:"role_id"`
+	Role     string `json:"role"`
 	jwt.RegisteredClaims
 }
 
 // GenerateAccessToken gera um novo token JWT de acesso
-func GenerateAccessToken(userID uint, username string, roleID uint, role string, permissions []string, cfg *config.Config) (string, error) {
+func GenerateAccessToken(userID uint, username string, roleID uint, role string, cfg *config.Config) (string, error) {
 	claims := JWTClaims{
-		UserID:      userID,
-		Username:    username,
-		RoleID:      roleID,
-		Role:        role,
-		Permissions: permissions,
+		UserID:   userID,
+		Username: username,
+		RoleID:   roleID,
+		Role:     role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(cfg.JWT.AccessTokenExp)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

@@ -26,9 +26,11 @@ func NewPermissionService(
 	}
 }
 
-// GetPermissions retorna todas as permissões
-func (s *PermissionService) GetPermissions(pagination *utils.Pagination, filters domain.InGetPermissionsFilters) (*domain.ApiPermissionListPaginated, error) {
-	permissions, err := s.permRepo.FindAllFiltered(pagination, filters)
+// GetPermissions retorna todas as permissões. O módulo utils.DeveloperModule
+// (roles.*/permissions.*/admin.create_permissions) fica escondido de quem
+// não é DEVELOP.
+func (s *PermissionService) GetPermissions(pagination *utils.Pagination, filters domain.InGetPermissionsFilters, requesterRole string) (*domain.ApiPermissionListPaginated, error) {
+	permissions, err := s.permRepo.FindAllFiltered(pagination, filters, excludeModuleFor(requesterRole))
 	if err != nil {
 		return nil, err
 	}
@@ -60,9 +62,13 @@ func (s *PermissionService) GetPermissionByID(id uint) (*domain.ApiPermissionDet
 	return &permissionDetailDTO, nil
 }
 
-// GetPermissionsByModule retorna permissões agrupadas por módulo
-func (s *PermissionService) GetPermissionsByModule() ([]domain.ApiPermissionsByModule, error) {
-	moduleMap, err := s.permRepo.GroupByModule()
+// GetPermissionsByModule retorna permissões agrupadas por módulo. O módulo
+// utils.DeveloperModule fica escondido de quem não é DEVELOP — inclusive
+// aqui, já que este endpoint alimenta o seletor de permissões usado ao
+// editar um Perfil (senão um ADMIN poderia atribuir permissões de DEVELOP a
+// um Perfil customizado).
+func (s *PermissionService) GetPermissionsByModule(requesterRole string) ([]domain.ApiPermissionsByModule, error) {
+	moduleMap, err := s.permRepo.GroupByModule(excludeModuleFor(requesterRole))
 	if err != nil {
 		return nil, err
 	}
@@ -85,13 +91,23 @@ func (s *PermissionService) GetPermissionsByModule() ([]domain.ApiPermissionsByM
 	return resultDTOs, nil
 }
 
-// GetAvailableModules retorna uma lista de módulos cadastrados
-func (s *PermissionService) GetAvailableModules() ([]string, error) {
-	modules, err := s.permRepo.FindAllModules()
+// GetAvailableModules retorna uma lista de módulos cadastrados. O módulo
+// utils.DeveloperModule fica escondido de quem não é DEVELOP.
+func (s *PermissionService) GetAvailableModules(requesterRole string) ([]string, error) {
+	modules, err := s.permRepo.FindAllModules(excludeModuleFor(requesterRole))
 	if err != nil {
 		return nil, err
 	}
 	return modules, nil
+}
+
+// excludeModuleFor devolve utils.DeveloperModule pra qualquer requisitante
+// que não seja DEVELOP (nenhuma exclusão pro próprio DEVELOP).
+func excludeModuleFor(requesterRole string) string {
+	if requesterRole == utils.RoleDeveloper {
+		return ""
+	}
+	return utils.DeveloperModule
 }
 
 // CreatePermission cria uma nova permissão

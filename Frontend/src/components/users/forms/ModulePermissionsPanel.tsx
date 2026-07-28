@@ -62,7 +62,7 @@ function extractAction(code: string): string {
   return lastDot >= 0 ? code.slice(lastDot + 1) : code;
 }
 
-interface PermissionItem {
+export interface PermissionItem {
   permission: ApiPermission;
   label: string;
 }
@@ -71,7 +71,7 @@ interface PermissionItem {
 // uma que colida — ex.: o módulo "dashboard" tem 5 permissões diferentes
 // terminando em ".view", uma por perfil de dashboard) usa a própria
 // descrição da permissão. No fim é só uma lista só, sem distinção visual.
-function buildPermissionItems(permissions: ApiPermission[]): PermissionItem[] {
+export function buildPermissionItems(permissions: ApiPermission[]): PermissionItem[] {
   const grouped = new Map<string, ApiPermission[]>();
   for (const perm of permissions) {
     const action = extractAction(perm.permission);

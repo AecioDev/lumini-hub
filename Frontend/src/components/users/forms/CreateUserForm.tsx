@@ -1,12 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm, type FieldErrors } from "react-hook-form";
-import { Button, Card, Col, Input, Row, Skeleton, Tabs, Typography } from "antd";
+import { Button, Card, Col, Input, Row, Select, Skeleton, Tabs } from "antd";
 import { useNavigate } from "react-router-dom";
 import { FormField } from "@/components/common/FormField";
 import { AccessDeniedResult } from "@/components/common/AccessDeniedResult";
 import { ModulePermissionsPanel, pickModuleForRole } from "./ModulePermissionsPanel";
 import { RolePresetPicker } from "./RolePresetPicker";
+import { UserPermissionsSummary } from "./UserPermissionsSummary";
 import { createUserSchema, type CreateUserFormValues } from "@/schemas/create-user-schema";
 import { roleService } from "@/services/roles/role-service";
 import { permissionService } from "@/services/permissions/permission-service";
@@ -16,14 +17,13 @@ import { isForbiddenError } from "@/utils/api-error";
 import type { ApiRole } from "@/types/role";
 import type { ApiPermissionsByModule } from "@/types/permission";
 
-const { Text } = Typography;
-
 const DADOS_FIELDS: (keyof CreateUserFormValues)[] = [
   "username",
   "password",
   "name",
   "email",
   "phone",
+  "role_id",
 ];
 
 export function CreateUserForm() {
@@ -37,11 +37,14 @@ export function CreateUserForm() {
   const [loadingPresets, setLoadingPresets] = useState(true);
   const [forbidden, setForbidden] = useState(false);
 
-  const [selectedRoleId, setSelectedRoleId] = useState<number | null>(null);
+  // Perfil atribuído ao usuário (campo "Perfil" na aba Dados do Usuário).
+  const [roleId, setRoleId] = useState<number | null>(null);
+  // Perfil usado só como filtro para pré-carregar a matriz de permissões
+  // (aba Permissões) — independente do Perfil atribuído acima.
+  const [filterRoleId, setFilterRoleId] = useState<number | null>(null);
   const [selectedPermissionIds, setSelectedPermissionIds] = useState<Set<number>>(
     new Set()
   );
-  const [isCustom, setIsCustom] = useState(false);
   const [activeModule, setActiveModule] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"dados" | "permissoes">("dados");
   const [submitting, setSubmitting] = useState(false);
@@ -74,7 +77,8 @@ export function CreateUserForm() {
 
         if (rolesResult.length > 0) {
           const first = rolesResult[0];
-          setSelectedRoleId(first.id);
+          setRoleId(first.id);
+          setFilterRoleId(first.id);
           setValue("role_id", first.id, { shouldValidate: true });
           const detail = await roleService.getById(first.id);
           if (!cancelled) {
@@ -101,37 +105,63 @@ export function CreateUserForm() {
     };
   }, [setValue, feedback]);
 
-  const handleSelectRole = async (roleId: number) => {
-    setSelectedRoleId(roleId);
-    setValue("role_id", roleId, { shouldValidate: true });
+  // Select "Perfil" na aba Dados do Usuário — muda o Perfil atribuído ao
+  // usuário e pré-preenche a matriz de permissões com o padrão desse perfil.
+  const handleChangeUserRole = async (newRoleId: number) => {
+    setRoleId(newRoleId);
+    setValue("role_id", newRoleId, { shouldValidate: true });
     try {
-      const detail = await roleService.getById(roleId);
+      const detail = await roleService.getById(newRoleId);
       const ids = new Set(detail.permissions.map((p) => p.id));
       setSelectedPermissionIds(ids);
+      setFilterRoleId(newRoleId);
       setActiveModule(pickModuleForRole(detail.name, permissionsByModule, ids));
-      setIsCustom(false);
     } catch {
       feedback.error("Erro ao carregar as permissões do perfil selecionado.");
     }
   };
 
-  const handlePermissionsChange = (next: Set<number>) => {
-    setSelectedPermissionIds(next);
-    setIsCustom(true);
+  // Botões de Perfil na aba Permissões — só navegam até o módulo de
+  // permissões daquele perfil para visualização/edição. Não mexem no Perfil
+  // atribuído ao usuário (role_id) nem substituem a seleção de permissões já
+  // marcada (que pode acumular permissões de vários módulos diferentes).
+  const handleFilterRole = (newFilterRoleId: number) => {
+    setFilterRoleId(newFilterRoleId);
+    const role = roles.find((r) => r.id === newFilterRoleId);
+    if (role) {
+      setActiveModule(pickModuleForRole(role.name, permissionsByModule, selectedPermissionIds));
+    }
   };
 
-  const selectedRoleName = roles.find((r) => r.id === selectedRoleId)?.name ?? "";
-  const perfilLabel = isCustom ? "Personalizado" : selectedRoleName;
+  const handlePermissionsChange = (next: Set<number>) => {
+    setSelectedPermissionIds(next);
+  };
+
+  const filterRoleName = roles.find((r) => r.id === filterRoleId)?.name ?? "";
+
+  // Perfis cujo módulo tem alguma permissão marcada — usado pra destacar,
+  // no filtro de perfil, quais perfis "contribuíram" com alguma permissão
+  // além do que veio do Perfil atribuído ao usuário.
+  const rolesWithPermissions = useMemo(() => {
+    const ids = new Set<number>();
+    for (const role of roles) {
+      const entry = permissionsByModule.find(
+        (m) => m.module.trim().toLowerCase() === role.name.trim().toLowerCase()
+      );
+      if (entry?.permissions.some((p) => selectedPermissionIds.has(p.id))) {
+        ids.add(role.id);
+      }
+    }
+    return ids;
+  }, [roles, permissionsByModule, selectedPermissionIds]);
 
   const onSubmit = async (values: CreateUserFormValues) => {
     setSubmitting(true);
     try {
       const created = await userService.create(values);
-      if (isCustom) {
-        await userService.updatePermissions(created.id, {
-          permission_ids: [...selectedPermissionIds],
-        });
-      }
+      await userService.updatePermissions(created.id, {
+        permission_ids: [...selectedPermissionIds],
+      });
       feedback.success("Usuário criado com sucesso.");
       navigate("/settings/users");
     } catch {
@@ -146,8 +176,6 @@ export function CreateUserForm() {
   const onInvalid = (formErrors: FieldErrors<CreateUserFormValues>) => {
     if (DADOS_FIELDS.some((field) => formErrors[field])) {
       setActiveTab("dados");
-    } else if (formErrors.role_id) {
-      setActiveTab("permissoes");
     }
   };
 
@@ -224,6 +252,23 @@ export function CreateUserForm() {
                       />
                     </FormField>
                   </Col>
+                  <Col xs={24} sm={12}>
+                    <FormField label="Perfil" error={errors.role_id}>
+                      {loadingPresets ? (
+                        <Skeleton.Input active block style={{ width: "100%" }} />
+                      ) : (
+                        <Select
+                          value={roleId ?? undefined}
+                          placeholder="Selecione o perfil do usuário"
+                          options={roles.map((role) => ({
+                            value: role.id,
+                            label: role.name,
+                          }))}
+                          onChange={(id) => void handleChangeUserRole(id)}
+                        />
+                      )}
+                    </FormField>
+                  </Col>
                 </Row>
               </Card>
             ),
@@ -232,45 +277,45 @@ export function CreateUserForm() {
             key: "permissoes",
             label: "Permissões",
             children: (
-              <Row gutter={[16, 16]}>
-                <Col xs={24} sm={8} lg={6}>
-                  <Card title="Perfil">
-                    {loadingPresets ? (
-                      <Skeleton active paragraph={{ rows: 3 }} />
-                    ) : (
-                      <RolePresetPicker
-                        roles={roles}
-                        selectedRoleId={selectedRoleId}
-                        isCustom={isCustom}
-                        onSelectRole={(id) => void handleSelectRole(id)}
-                      />
-                    )}
-                    {errors.role_id && (
-                      <Text
-                        type="danger"
-                        style={{ fontSize: 12, marginTop: 8, display: "block" }}
-                      >
-                        {errors.role_id.message}
-                      </Text>
-                    )}
-                  </Card>
-                </Col>
+              <>
+                {!loadingPresets && (
+                  <UserPermissionsSummary
+                    permissionsByModule={permissionsByModule}
+                    selectedIds={selectedPermissionIds}
+                  />
+                )}
+                <Row gutter={[16, 16]}>
+                  <Col xs={24} sm={8} lg={6}>
+                    <Card title="Filtrar perfil">
+                      {loadingPresets ? (
+                        <Skeleton active paragraph={{ rows: 3 }} />
+                      ) : (
+                        <RolePresetPicker
+                          roles={roles}
+                          selectedRoleId={filterRoleId}
+                          onSelectRole={handleFilterRole}
+                          rolesWithPermissions={rolesWithPermissions}
+                        />
+                      )}
+                    </Card>
+                  </Col>
 
-                <Col xs={24} sm={16} lg={18}>
-                  <Card title={`Permissões — ${perfilLabel}`}>
-                    {loadingPresets ? (
-                      <Skeleton active paragraph={{ rows: 5 }} />
-                    ) : (
-                      <ModulePermissionsPanel
-                        permissionsByModule={permissionsByModule}
-                        selectedIds={selectedPermissionIds}
-                        onChange={handlePermissionsChange}
-                        activeModule={activeModule}
-                      />
-                    )}
-                  </Card>
-                </Col>
-              </Row>
+                  <Col xs={24} sm={16} lg={18}>
+                    <Card title={`Permissões — ${filterRoleName}`}>
+                      {loadingPresets ? (
+                        <Skeleton active paragraph={{ rows: 5 }} />
+                      ) : (
+                        <ModulePermissionsPanel
+                          permissionsByModule={permissionsByModule}
+                          selectedIds={selectedPermissionIds}
+                          onChange={handlePermissionsChange}
+                          activeModule={activeModule}
+                        />
+                      )}
+                    </Card>
+                  </Col>
+                </Row>
+              </>
             ),
           },
         ]}

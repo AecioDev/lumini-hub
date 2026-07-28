@@ -1,6 +1,7 @@
 package seeder
 
 import (
+	"errors"
 	"log"
 
 	"lumini-hub/api.auth/internal/domain"
@@ -101,36 +102,47 @@ var menuItemSeedTree = []menuItemSeed{
 	},
 }
 
-// SeedMenuItems popula a árvore inicial do menu, apenas se a tabela ainda estiver vazia.
+// SeedMenuItems garante que cada nó de menuItemSeedTree exista em `menu_items`,
+// inserindo apenas os que ainda faltam (identificados por Name+ParentID). Não
+// mexe em itens já existentes — customizações feitas via o CRUD de /menu-items
+// (is_active, position, etc.) são preservadas. Isso permite adicionar itens
+// novos à árvore e propagá-los para ambientes que já tinham sido semeados
+// antes, sem duplicar os que já existem.
 func SeedMenuItems(db *gorm.DB) error {
-	var count int64
-	if err := db.Model(&domain.MenuItem{}).Count(&count).Error; err != nil {
-		return err
-	}
-	if count > 0 {
-		return nil
-	}
-
-	log.Println("[api.auth] Semeando árvore inicial de itens de menu...")
 	return insertMenuItemSeeds(db, menuItemSeedTree, nil)
 }
 
 func insertMenuItemSeeds(db *gorm.DB, nodes []menuItemSeed, parentID *uint) error {
 	for position, node := range nodes {
-		item := domain.MenuItem{
-			Name:         node.Name,
-			Icon:         node.Icon,
-			Href:         node.Href,
-			ParentID:     parentID,
-			PermissionID: resolvePermissionID(db, node.PermissionCode),
-			Position:     position,
-			IsActive:     true,
-		}
-		if err := db.Create(&item).Error; err != nil {
+		var existing domain.MenuItem
+		err := db.Where("name = ? AND parent_id IS NOT DISTINCT FROM ?", node.Name, parentID).
+			First(&existing).Error
+
+		var itemID uint
+		switch {
+		case err == nil:
+			itemID = existing.ID
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			item := domain.MenuItem{
+				Name:         node.Name,
+				Icon:         node.Icon,
+				Href:         node.Href,
+				ParentID:     parentID,
+				PermissionID: resolvePermissionID(db, node.PermissionCode),
+				Position:     position,
+				IsActive:     true,
+			}
+			if err := db.Create(&item).Error; err != nil {
+				return err
+			}
+			log.Printf("[api.auth] Item de menu %q semeado.", node.Name)
+			itemID = item.ID
+		default:
 			return err
 		}
+
 		if len(node.Children) > 0 {
-			if err := insertMenuItemSeeds(db, node.Children, &item.ID); err != nil {
+			if err := insertMenuItemSeeds(db, node.Children, &itemID); err != nil {
 				return err
 			}
 		}

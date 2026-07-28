@@ -15,6 +15,7 @@ import (
 	"lumini-hub/api.integrations/internal/service"
 	"lumini-hub/common/config"
 	"lumini-hub/common/database"
+	"lumini-hub/common/middlewares"
 
 	"github.com/gin-gonic/gin"
 )
@@ -29,6 +30,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Erro ao conectar ao banco de dados: %v", err)
 	}
+	middlewares.InitPermissionChecker(db)
 
 	if err := db.AutoMigrate(
 		&domain.IntegrationConfig{},

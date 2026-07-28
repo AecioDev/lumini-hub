@@ -55,7 +55,6 @@ func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 		c.Set("username", claims.Username)
 		c.Set("roleID", claims.RoleID)
 		c.Set("role", claims.Role)
-		c.Set("permissions", claims.Permissions)
 
 		log.Printf("Middleware: Token validado com sucesso para UserID: %d", claims.UserID)
 		c.Next()

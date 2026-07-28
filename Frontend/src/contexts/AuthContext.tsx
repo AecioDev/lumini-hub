@@ -16,6 +16,11 @@ interface AuthContextValue {
   menuItems: ApiUserMenuItem[];
   isBootstrapping: boolean;
   isAuthenticated: boolean;
+  // Identidade de papel "crua" — pra UI que precisa saber se é literalmente
+  // o perfil DEVELOP (ex.: mostrar código técnico de permissão), não só "tem
+  // essa permissão" (hasPermission pode dar falso positivo se o usuário
+  // tiver um grant avulso de uma permissão normalmente exclusiva do DEVELOP).
+  isDeveloper: boolean;
   login: (payload: LoginRequest) => Promise<ApiUserDetail>;
   logout: () => Promise<void>;
   hasPermission: (permissionCode: string) => boolean;
@@ -24,17 +29,19 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 // Espelha utils.IsDeveloperOnlyPermission (Backend/common/utils/rbac.go): o
-// CADASTRO/MANUTENÇÃO do catálogo de Perfis e Permissões só faz bypass pro
-// perfil "DEVELOP" — o ADMIN passa em tudo, EXCETO nessas. `roles.view`/
-// `permissions.view` ficam de fora do bloqueio: são necessárias pra telas
-// de Usuários (atribuir Perfil/permissões a alguém), não é "mexer no catálogo".
+// catálogo de Perfis (`roles.*` — criar/editar/excluir/atribuir permissões)
+// é do ADMIN, sem restrição — quem manda é a permissão em si, checada em
+// tempo real pelo backend. Ficam exclusivos do DEVELOP: criar/editar/excluir
+// no catálogo de Permissões (`permissions.create/edit/delete`) e
+// `admin.create_permissions` (CRUD de /menu-items). `permissions.view` fica
+// de fora (mesmo motivo de `roles.view`): é só leitura, e o módulo Develop
+// já não vem na resposta pra quem não é DEVELOP.
 function isDeveloperOnlyPermission(permissionCode: string): boolean {
-  if (permissionCode === "roles.view" || permissionCode === "permissions.view") {
+  if (permissionCode === "permissions.view") {
     return false;
   }
   return (
     permissionCode === "admin.create_permissions" ||
-    permissionCode.startsWith("roles.") ||
     permissionCode.startsWith("permissions.")
   );
 }
@@ -95,11 +102,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       menuItems: user?.menu_items ?? [],
       isBootstrapping,
       isAuthenticated: user !== null,
+      isDeveloper,
       login,
       logout,
       hasPermission,
     }),
-    [user, isBootstrapping, login, logout, hasPermission]
+    [user, isBootstrapping, isDeveloper, login, logout, hasPermission]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

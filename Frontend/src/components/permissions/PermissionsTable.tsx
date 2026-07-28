@@ -12,7 +12,7 @@ import type { ApiPermission } from "@/types/permission";
 const PAGE_SIZE = 10;
 
 export function PermissionsTable() {
-  const { hasPermission } = useAuth();
+  const { hasPermission, isDeveloper } = useAuth();
   const feedback = useFeedback();
 
   const [permissions, setPermissions] = useState<ApiPermission[]>([]);
@@ -111,38 +111,46 @@ export function PermissionsTable() {
         scroll={{ x: "max-content" }}
         columns={[
           { title: "Código", dataIndex: "id", width: 90 },
-          { title: "Permissão", dataIndex: "permission" },
+          // Código técnico (ex.: "admin.create_permissions") só faz sentido
+          // pra quem mexe no catálogo de verdade — pro ADMIN é ruído.
+          ...(isDeveloper ? [{ title: "Permissão", dataIndex: "permission" }] : []),
           { title: "Descrição", dataIndex: "description", ellipsis: true },
           {
             title: "Módulo",
             dataIndex: "module",
             render: (value: string) => <Tag color={getTagColor(value)}>{value}</Tag>,
           },
-          {
-            title: "Ações",
-            key: "actions",
-            render: (_, permission) => (
-              <Space size={6}>
-                {hasPermission("permissions.edit") && (
-                  <Link to={`/settings/permissions/${permission.id}/edit`}>
-                    <Button size="small" icon={<EditOutlined />} />
-                  </Link>
-                )}
-                {hasPermission("permissions.delete") && (
-                  <Popconfirm
-                    title="Excluir permissão"
-                    description={`Tem certeza que deseja excluir "${permission.permission}"?`}
-                    okText="Excluir"
-                    okButtonProps={{ danger: true, loading: deletingId === permission.id }}
-                    cancelText="Cancelar"
-                    onConfirm={() => void handleDelete(permission)}
-                  >
-                    <Button size="small" danger icon={<DeleteOutlined />} />
-                  </Popconfirm>
-                )}
-              </Space>
-            ),
-          },
+          // ADMIN nunca tem permissions.edit/permissions.delete (catálogo é
+          // exclusivo do DEVELOP), então a coluna ficaria sempre vazia pra ele.
+          ...(isDeveloper
+            ? [
+                {
+                  title: "Ações",
+                  key: "actions",
+                  render: (_: unknown, permission: ApiPermission) => (
+                    <Space size={6}>
+                      {hasPermission("permissions.edit") && (
+                        <Link to={`/settings/permissions/${permission.id}/edit`}>
+                          <Button size="small" icon={<EditOutlined />} />
+                        </Link>
+                      )}
+                      {hasPermission("permissions.delete") && (
+                        <Popconfirm
+                          title="Excluir permissão"
+                          description={`Tem certeza que deseja excluir "${permission.permission}"?`}
+                          okText="Excluir"
+                          okButtonProps={{ danger: true, loading: deletingId === permission.id }}
+                          cancelText="Cancelar"
+                          onConfirm={() => void handleDelete(permission)}
+                        >
+                          <Button size="small" danger icon={<DeleteOutlined />} />
+                        </Popconfirm>
+                      )}
+                    </Space>
+                  ),
+                },
+              ]
+            : []),
         ]}
       />
     </Card>

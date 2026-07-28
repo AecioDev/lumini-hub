@@ -80,14 +80,8 @@ func (s *AuthService) Login(username, password string) (*LoginResponse, error) {
 		return nil, errors.New("senha incorreta")
 	}
 
-	// Extrair permissões do usuário para o token JWT (lidas da relação direta user_permissions)
-	var permissions []string
-	for _, perm := range user.Permissions {
-		permissions = append(permissions, perm.Permission)
-	}
-
 	// Gerar tokens
-	accessToken, err := utils.GenerateAccessToken(user.ID, user.Username, user.RoleID, user.Role.Name, permissions, s.cfg)
+	accessToken, err := utils.GenerateAccessToken(user.ID, user.Username, user.RoleID, user.Role.Name, s.cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -135,14 +129,8 @@ func (s *AuthService) RefreshToken(refreshToken string) (*LoginResponse, error) 
 		return nil, errors.New("usuário inativo")
 	}
 
-	// Extrair permissões do usuário para o token JWT (lidas da relação direta user_permissions)
-	var permissions []string
-	for _, perm := range user.Permissions {
-		permissions = append(permissions, perm.Permission)
-	}
-
 	// Gerar novo token de acesso
-	newAccessToken, err := utils.GenerateAccessToken(user.ID, user.Username, user.RoleID, user.Role.Name, permissions, s.cfg)
+	newAccessToken, err := utils.GenerateAccessToken(user.ID, user.Username, user.RoleID, user.Role.Name, s.cfg)
 	if err != nil {
 		return nil, err
 	}

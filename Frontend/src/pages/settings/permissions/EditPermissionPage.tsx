@@ -1,14 +1,13 @@
 import { useEffect, useState } from "react";
-import { Result, Skeleton, Typography } from "antd";
+import { Result, Skeleton } from "antd";
 import { useNavigate, useParams } from "react-router-dom";
+import { PageHeader } from "@/components/common/PageHeader";
 import { PermissionForm } from "@/components/permissions/forms/PermissionForm";
 import { permissionService } from "@/services/permissions/permission-service";
 import { getApiErrorMessage } from "@/utils/api-error";
 import { useFeedback } from "@/hooks/useFeedback";
 import type { ApiPermissionDetail } from "@/types/permission";
 import type { PermissionFormValues } from "@/schemas/permission-schema";
-
-const { Title, Paragraph } = Typography;
 
 export function EditPermissionPage() {
   const { id } = useParams<{ id: string }>();
@@ -56,12 +55,11 @@ export function EditPermissionPage() {
 
   return (
     <div>
-      <Title level={4} style={{ margin: "0 0 4px" }}>
-        Editar Permissão
-      </Title>
-      <Paragraph type="secondary" style={{ marginBottom: 20 }}>
-        Atualize os dados da permissão
-      </Paragraph>
+      <PageHeader
+        title="Editar Permissão"
+        subtitle="Atualize os dados da permissão"
+        backTo="/settings/roles?tab=permissoes"
+      />
 
       {loading || !permission ? (
         <Skeleton active paragraph={{ rows: 6 }} />

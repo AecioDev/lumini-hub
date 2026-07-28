@@ -69,7 +69,7 @@ func (h *RoleHandler) CreateRole(c *gin.Context) {
 		return
 	}
 
-	role, err := h.roleService.CreateRole(req)
+	role, err := h.roleService.CreateRole(req, utils.RoleFromGinContext(c))
 	if err != nil {
 		if validator.IsValidationError(err) {
 			utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())

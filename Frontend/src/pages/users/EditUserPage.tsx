@@ -1,8 +1,7 @@
-import { Result, Typography } from "antd";
+import { Result } from "antd";
 import { useParams } from "react-router-dom";
+import { PageHeader } from "@/components/common/PageHeader";
 import { EditUserForm } from "@/components/users/forms/EditUserForm";
-
-const { Title, Paragraph } = Typography;
 
 export function EditUserPage() {
   const { id } = useParams<{ id: string }>();
@@ -14,12 +13,11 @@ export function EditUserPage() {
 
   return (
     <div>
-      <Title level={4} style={{ margin: "0 0 4px" }}>
-        Editar Usuário
-      </Title>
-      <Paragraph type="secondary" style={{ marginBottom: 20 }}>
-        Atualize os dados e permissões do usuário
-      </Paragraph>
+      <PageHeader
+        title="Editar Usuário"
+        subtitle="Atualize os dados e permissões do usuário"
+        backTo="/settings/users"
+      />
       <EditUserForm userId={userId} />
     </div>
   );

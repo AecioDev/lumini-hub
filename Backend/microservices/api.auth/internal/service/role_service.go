@@ -69,9 +69,9 @@ func (s *RoleService) GetRoleByID(id uint, requesterRole string) (*domain.ApiRol
 }
 
 // CreateRole cria um novo papel
-func (s *RoleService) CreateRole(req domain.CreateRoleRequest) (*domain.ApiRole, error) {
+func (s *RoleService) CreateRole(req domain.CreateRoleRequest, requesterRole string) (*domain.ApiRole, error) {
 	// Validar dados
-	if err := s.validator.ValidateForCreation(req); err != nil {
+	if err := s.validator.ValidateForCreation(req, requesterRole); err != nil {
 		return nil, err
 	}
 
@@ -93,7 +93,7 @@ func (s *RoleService) CreateRole(req domain.CreateRoleRequest) (*domain.ApiRole,
 // UpdateRole atualiza um papel existente
 func (s *RoleService) UpdateRole(id uint, req domain.UpdateRoleRequest, requesterRole string) (*domain.ApiRole, error) {
 	// Validar dados
-	if err := s.validator.ValidateForUpdate(id, req); err != nil {
+	if err := s.validator.ValidateForUpdate(id, req, requesterRole); err != nil {
 		return nil, err
 	}
 
@@ -153,7 +153,7 @@ func (s *RoleService) DeleteRole(id uint, requesterRole string) error {
 // UpdateRolePermissions atualiza as permissões de um papel
 func (s *RoleService) UpdateRolePermissions(id uint, permissionIDs []uint, requesterRole string) (*domain.ApiRoleDetail, error) {
 	// Validar dados
-	if err := s.validator.ValidatePermissionUpdate(id, permissionIDs); err != nil {
+	if err := s.validator.ValidatePermissionUpdate(id, permissionIDs, requesterRole); err != nil {
 		return nil, err
 	}
 

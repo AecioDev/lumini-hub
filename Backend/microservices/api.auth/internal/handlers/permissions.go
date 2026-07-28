@@ -38,7 +38,7 @@ func (h *PermissionHandler) GetPermissions(c *gin.Context) {
 		return
 	}
 
-	permissions, err := h.permService.GetPermissions(&pagination, filters)
+	permissions, err := h.permService.GetPermissions(&pagination, filters, utils.RoleFromGinContext(c))
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Erro ao buscar permissões", err.Error())
 		return
@@ -69,7 +69,7 @@ func (h *PermissionHandler) GetPermission(c *gin.Context) {
 
 // GetPermissionsByModule retorna permissões agrupadas por módulo
 func (h *PermissionHandler) GetPermissionsByModule(c *gin.Context) {
-	permissions, err := h.permService.GetPermissionsByModule()
+	permissions, err := h.permService.GetPermissionsByModule(utils.RoleFromGinContext(c))
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Erro ao buscar permissões", err.Error())
 		return
@@ -80,7 +80,7 @@ func (h *PermissionHandler) GetPermissionsByModule(c *gin.Context) {
 
 // GetAvailableModules retorna todos os módulos cadastrados
 func (h *PermissionHandler) GetAvailableModules(c *gin.Context) {
-	modules, err := h.permService.GetAvailableModules()
+	modules, err := h.permService.GetAvailableModules(utils.RoleFromGinContext(c))
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Erro ao buscar módulos", err.Error())
 		return

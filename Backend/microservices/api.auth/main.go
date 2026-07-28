@@ -14,6 +14,7 @@ import (
 	"lumini-hub/api.auth/internal/seeder"
 	"lumini-hub/common/config"
 	"lumini-hub/common/database"
+	"lumini-hub/common/middlewares"
 
 	"github.com/gin-gonic/gin"
 )
@@ -30,6 +31,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Erro ao conectar ao banco de dados: %v", err)
 	}
+	middlewares.InitPermissionChecker(db)
 
 	// Migração pontual da tabela de itens de menu (demais tabelas do api.auth
 	// não usam AutoMigrate hoje; escopo restrito só a esta struct nova)

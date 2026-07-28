@@ -18,6 +18,20 @@ All file paths below are relative to the specific microservice folder where the 
 
 ---
 
+## Step 0: Empresa (Company) Scoping — Ask Before Modeling
+
+Lumini Hub is multi-company **within a single tenant database** (multi-tenant itself is one physical database per client, handled outside this skill). A holding company can have subsidiary/branch companies self-referencing under it (`Empresa.ParentID`, same shape as `MenuItem.ParentID`). Almost every entity has to take a position on how it relates to `Empresa`, and getting this wrong is expensive to retrofit once rows exist — **never assume, ask the user which of these three buckets the new entity falls into before writing Step 1's model**:
+
+1. **Hard-scoped** — the entity has its own `EmpresaID uint` FK and every row belongs to exactly one Empresa. Default assumption for anything operational/transactional that must never mix between companies: stock, sales, purchase orders, financial entries, invoices, cash registers, etc. Repositories/services for hard-scoped entities must filter by the requester's Empresa (see visibility rule below) in every query — this is as mandatory as the Unit of Work pattern, not optional hardening.
+2. **Global with a visibility relationship** — no `EmpresaID` on the entity itself (the catalog stays shared/global), but a weak many-to-many table (`<entity>_empresas`) controls which Empresas can see/use each row. Reference case: `Product` — one shared catalog, but a `product_empresas` join table controls which products a given Empresa's sellers can see/sell.
+3. **Global, unscoped** — no Empresa relationship at all. Reserved for genuinely cross-company reference data (e.g., the Permission catalog, generic lookup tables). Justify explicitly why an entity belongs here instead of bucket 1 or 2 — it should be the exception, not the default.
+
+**Visibility rule to apply once `Empresa` exists** (confirmed 2026-07-21): a user has a default `EmpresaID` on their own record. They only see data scoped to that Empresa, UNLESS they hold a permission that grants visibility into subsidiary Empresas below their own in the self-referencing hierarchy (or, if the user has no Empresa linked, that same permission decides whether they see everything) — this is a permission-gated exception, not automatic just from being higher in the tree.
+
+If `Empresa` itself doesn't exist yet in a given codebase snapshot, still ask the scoping question and record the answer in the feature's `plano_*.md` so the `EmpresaID` FK/join table is added in the same pass once `Empresa` lands, instead of being silently forgotten.
+
+---
+
 ## Step-by-Step Entity Creation Process
 
 ### Step 1: Base Domain Model
@@ -84,3 +98,4 @@ Create unit/integration tests in `internal/service/<entity>_service_test.go` or 
     swag init -g main.go -d ./,../../common,../api.auth,../api.core --parseDependency
     ```
 5.  **Automatic Permission Seeding**: When generating files for a new entity, you **MUST** automatically write/propose the GORM seeder logic (e.g. in `seeder.go`) or the equivalent database migration scripts to seed the new permissions (`view_<entity>`, `create_<entity>`, `edit_<entity>`, `delete_<entity>`) and map them to the `ADMIN` role template immediately.
+6.  **Ask the Empresa scoping question before Step 1, every time**: hard-scoped (own `EmpresaID`), global-with-visibility-relationship (join table), or global-unscoped — see Step 0 above. Do not default to "unscoped" just because `Empresa` doesn't exist in the codebase yet; record the intended answer in `plano_*.md` regardless.

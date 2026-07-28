@@ -59,11 +59,13 @@ export const router = createBrowserRouter([
           },
           {
             // Precisa bater com o href real semeado em menu_items
-            // ("Perfis e Permissões" -> /settings/roles, gate admin.create_permissions).
+            // ("Perfis e Permissões" -> /settings/roles, gate roles.view — mesma
+            // permissão que já abre o menu pro ADMIN; admin.create_permissions
+            // fica reservado pro CRUD de /menu-items, dev-only).
             path: "settings/roles",
             children: [
               {
-                element: <RequirePermission permission="admin.create_permissions" />,
+                element: <RequirePermission permission="roles.view" />,
                 children: [{ index: true, element: <RolesAndPermissionsPage /> }],
               },
               {
