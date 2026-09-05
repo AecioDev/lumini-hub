@@ -13,7 +13,7 @@ Este módulo cria o cadastro de **Empresa** — a estrutura organizacional de um
 1. **Cadastro de Empresa** — self-referencing (Matriz → Filiais/Empresas vinculadas), CNPJ, razão social, nome fantasia, dados básicos.
 2. **Configuração Fiscal por Empresa** — certificado digital A1, tipo de tributação (Simples/Presumido/Real), dados do contador responsável, contadores/séries de numeração de notas fiscais.
 3. **Plano de Contas por Empresa** — estrutura hierárquica de contas contábeis pra lançamentos em partida dobrada (base do Módulo 7 — CMV, DRE, Balancete).
-4. **Escopo por empresa em todo o resto do sistema** — regra de visibilidade de dados (usuário só vê o que é da(s) empresa(s) dele) e a decisão de escopo obrigatória em toda entidade nova (já reforçada em `.agents/skills/lumini_hub_entity_creation/SKILL.md`, Step 0).
+4. **Escopo por empresa em todo o resto do sistema** — regra de visibilidade de dados (usuário só vê o que é da(s) empresa(s) dele) e a decisão de escopo obrigatória em toda entidade nova (já reforçada em `.claude/skills/lumini_hub_entity_creation/SKILL.md`, Step 0).
 5. **Configuração Visual por Empresa** — logo e paleta de cores próprias, aplicadas no frontend pra personalizar a experiência de cada cliente que usa a Lumini Hub (ver `CompanyVisualConfig` abaixo).
 
 ---

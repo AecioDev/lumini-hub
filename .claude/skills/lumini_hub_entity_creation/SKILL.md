@@ -60,25 +60,24 @@ Create the service in `internal/service/<entity>_service.go`.
 *   **Strict rule**: Use the Unit of Work (`s.uow.Execute(func(uow repository.UnitOfWork) error { ... })`) to wrap all repository insert, update, or delete operations. This guarantees transactions are committed atomically.
 
 ### Step 6: Handler Layer (Controller)
-Create the handler in `internal/api/handlers/<entity>.go`.
+Create the handler in `internal/handlers/<entity>.go`.
 *   Inject the Service.
 *   Implement endpoints for Create, Update, Delete, GetByID, and Search (`/filter` POST method).
 *   Always use `utils.SuccessResponse`, `utils.ErrorResponse`, or `utils.ValidationErrorResponse` for returning payloads.
 *   Document every endpoint using standard declarative Swagger annotations (`@Summary`, `@Tags`, `@Router`, etc.).
 
 ### Step 7: Routes Definition
-Create the routes file in `internal/api/routes/<entity>_routes.go`.
+Create the routes file in `internal/routes/<entity>_routes.go`.
 *   Register endpoints to the Gin router group, applying necessary Auth or Role-based middleware.
 
 ### Step 8: Server Integration
-Update the router setup in `internal/api/server/server.go`.
-*   Instantiate the repository, validator, service, handler, and call the route registration function inside the server initialization.
+Wire the repository, validator, service, handler and route registration together in the microservice's own startup code (`main.go` today — neither `api.core` nor `api.auth` has a separate `internal/server/` package yet, despite `CLAUDE.md` naming one as the convention; check the current microservice before assuming the file exists).
 
 ### Step 9: Automatic DB Migrations
-Update the database migration process in `internal/models/migrate.go` (or `main.go` database initialization) to include the new domain struct in the `AutoMigrate` chain.
+Add the new struct to the `AutoMigrate(...)` call in the microservice's `main.go` (e.g. `api.core/main.go` for the `Company` entity). There is no dedicated `migrate.go` file in either `api.core` or `api.auth` today.
 
 ### Step 10: Database Seeder
-Add default seed data or system configurations (like system status) in `internal/models/seeder.go` (or equivalent seeder script).
+Add default seed data (permissions, menu items, system config) via the microservice's `internal/seeder/` package if it has one (`api.auth` does, e.g. `menu_item_seeder.go`; `api.core` doesn't yet — follow the same package-per-microservice pattern if you're the first entity there needing seed data).
 
 ### Step 11: Security & RBAC Permissions
 Register the new entity permissions (e.g., `view_<entities>`, `create_<entities>`, `edit_<entities>`, `delete_<entities>`) in the permissions table via seeders or initial SQL scripts. Map them to default user roles (Admin, Manager).

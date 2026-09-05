@@ -11,9 +11,10 @@ O backend está subdividido em módulos independentes sob o mesmo workspace:
 *   **`common/`**: Pacote de código compartilhado que contém configurações, conexões de banco de dados, middlewares utilitários de autorização e paginação comuns.
 *   **`microservices/api.gateway/`**: Proxy reverso transparente centralizado rodando na porta **`4000`**. Roteia as requisições para os microsserviços correspondentes e gerencia a segurança CORS de forma única.
 *   **`microservices/api.auth/`**: Microsserviço rodando na porta **`4001`**, responsável por autenticação de usuários, renovação de tokens (JWT), gerenciamento de usuários e controle de acesso RBAC.
-*   **`microservices/api.core/`**: Microsserviço rodando na porta **`4002`**, contendo os cadastros essenciais do ERP: Clientes, Fornecedores, Endereços, Contatos e Documentos.
+*   **`microservices/api.core/`**: Microsserviço rodando na porta **`4002`**, contendo os cadastros essenciais do ERP: Clientes, Fornecedores, Endereços, Contatos, Documentos e Empresas (fundação multi-empresa).
+*   **`microservices/api.integrations/`**: Microsserviço rodando na porta **`4007`**, middleware de sincronização com a Loja Integrada e o ERP legado em SQL Server.
 
-Para obter mais detalhes conceituais da arquitetura e seu modelo de dados, consulte a [Documentação de Arquitetura de Microsserviços](file:///c:/Projetos/lumini-hub/Documentos/arquitetura_microsservicos.md).
+Os padrões obrigatórios de código (Response DTO, Repository genérico, Unit of Work, RBAC, etc.) e o detalhamento de cada microsserviço estão documentados em [`CLAUDE.md`](../CLAUDE.md), na raiz do repositório — é a referência técnica canônica do projeto.
 
 ---
 
@@ -51,7 +52,7 @@ Para facilitar a inicialização simultânea dos serviços do backend, disponibi
    ```powershell
    .\run_services.bat
    ```
-   *(Isso abrirá automaticamente 3 novas janelas do Prompt de Comando para executar individualmente a `api.auth`, `api.core` e o `api.gateway`)*.
+   *(Isso abrirá automaticamente novas janelas do Prompt de Comando para executar individualmente a `api.auth`, `api.core`, `api.integrations` e o `api.gateway`)*.
 
 Agora, todas as requisições do frontend devem ser feitas diretamente à porta **`4000`** (ex: `http://localhost:4000/api/...`).
 
@@ -69,7 +70,8 @@ Backend/
 ├── microservices/
 │   ├── api.gateway/       # Gateway de Entrada (Porta 4000)
 │   ├── api.auth/          # Auth, Users, Roles & Perms (Porta 4001)
-│   └── api.core/          # Clientes, Fornecedores & Cadastros (Porta 4002)
+│   ├── api.core/          # Clientes, Fornecedores, Empresas & Cadastros (Porta 4002)
+│   └── api.integrations/  # Sync Loja Integrada <-> SQL Server legado (Porta 4007)
 ├── go.work                # Configuração do Workspace do Go
 ├── run_services.bat       # Script utilitário de execução paralela
 └── README.md              # Este arquivo

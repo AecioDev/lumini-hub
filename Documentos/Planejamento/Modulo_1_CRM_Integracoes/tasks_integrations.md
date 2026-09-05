@@ -1,6 +1,6 @@
 # Tasks - api.integrations (Fase 1: Estrutura, Conexões e Gateway)
 
-Acompanhamento da Fase 1 do `api.integrations` (porta 4007), conforme `Documentos/Lumini Hub Project Initiation.md` e o plano registrado no `CLAUDE.md`. Escopo completo desta fase em `C:\Users\espir\.claude\plans\lexical-sprouting-yeti.md`.
+Acompanhamento da Fase 1 do `api.integrations` (porta 4007), conforme `Documentos/Diversos/Lumini Hub Project Initiation.md` e o plano registrado no `CLAUDE.md`.
 
 ## Backend
 

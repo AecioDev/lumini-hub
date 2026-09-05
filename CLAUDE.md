@@ -34,13 +34,30 @@ Local login: `admin` / `987321`.
 
 ## Backend Architecture
 
-Go Workspace (`Backend/go.work`) with four modules:
+Go Workspace (`Backend/go.work`) with five modules:
 - **`common/`** — shared package: `config` (env loading), `database` (GORM/Postgres pool), `middlewares` (`AuthMiddleware` JWT-from-cookie, `RequirePermission` RBAC), `utils` (JWT, bcrypt, `response.go`, pagination), `repository` (generic `Repository[T]` / `GormRepository[T]`).
 - **`microservices/api.gateway`** (port 4000) — sole entrypoint. Reverse-proxies by path prefix to the other services and is the **only** place CORS is configured.
 - **`microservices/api.auth`** (port 4001) — users, roles, permissions, menu items (dynamic sidebar tree), login/refresh (HTTP-only cookies).
-- **`microservices/api.core`** (port 4002) — customers, suppliers, addresses, contacts, documents.
+- **`microservices/api.core`** (port 4002) — customers, suppliers, addresses, contacts, documents, companies (multi-company, see `Company` below).
+- **`microservices/api.integrations`** (port 4007) — bidirectional sync middleware with the legacy SQL Server ERP and Loja Integrada, see [dedicated section](#legacy-sql-server-integration-apiintegrations-port-4007) below.
 
-Both services share one physical Postgres database during this migration phase but never join across each other's tables — cross-service data (e.g. `User` inside a Customer DTO) is passed as plain IDs and re-hydrated into a local simplified struct (e.g. `ApiUser`), not a GORM relation.
+```mermaid
+graph TD
+    Client[Frontend - Vite/React/antd<br>Porta 3000] -->|HTTP/API| Gateway[api.gateway<br>Porta 4000]
+    Gateway -->|/api/auth, /api/users, /api/roles, /api/permissions, /api/menu-items| Auth[api.auth<br>Porta 4001]
+    Gateway -->|/api/customers, /api/suppliers, /api/companies| Core[api.core<br>Porta 4002]
+    Gateway -->|/api/integrations| Integrations[api.integrations<br>Porta 4007]
+    Auth -.->|imports| Common[common]
+    Core -.->|imports| Common
+    Integrations -.->|imports| Common
+    Auth --> PG[(PostgreSQL<br>Porta 5432)]
+    Core --> PG
+    Integrations --> PG
+    Integrations -->|read/write, no UoW/AutoMigrate| Legacy[(SQL Server<br>FOCCO_ERP)]
+    Integrations <-->|webhook + REST| LI[Loja Integrada]
+```
+
+`api.auth`, `api.core` and `api.integrations` share one physical Postgres database during this migration phase but never join across each other's tables — cross-service data (e.g. `User` inside a Customer DTO) is passed as plain IDs and re-hydrated into a local simplified struct (e.g. `ApiUser`), not a GORM relation.
 
 ### Mandatory backend patterns
 - **Responses**: every handler returns via `utils.SuccessResponse` / `utils.ErrorResponse` / `utils.ValidationErrorResponse` ([response.go](Backend/common/utils/response.go)). Never hand-roll `gin.H` payloads.
@@ -54,7 +71,7 @@ Both services share one physical Postgres database during this migration phase b
 - **Routing**: new route prefixes must be registered both in the microservice's own routes file and proxied from `api.gateway/main.go` (via `router.NoRoute`, careful not to collide with `/swagger/*any`).
 
 ### Adding a new entity (Core or Auth microservice)
-Follow this order (see `.agents/skills/lumini_hub_entity_creation/SKILL.md` for full detail):
+Follow this order (see `.claude/skills/lumini_hub_entity_creation/SKILL.md` for full detail):
 1. `internal/models` (or `domain`) — GORM struct + `Create<Entity>Request`/`Update<Entity>Request` with `binding` validation tags.
 2. `internal/models/<entity>_dto.go` — DTOs + `ToDTO()`/`ToDetailDTO()` mappers.
 3. `internal/repository/<entity>_repository.go` — interface extending `commonrepo.Repository[domain.<Entity>]` + GORM impl, with `Preload` overrides as needed.
@@ -70,11 +87,11 @@ Follow this order (see `.agents/skills/lumini_hub_entity_creation/SKILL.md` for 
 
 Filenames are snake_case (`customer_supplier_repository.go`), and controllers must never bind directly to repositories — always Service → UoW.
 
-### Legacy SQL Server Integration (`api.integrations`, planned — port 4007)
+### Legacy SQL Server Integration (`api.integrations`, port 4007)
 
-Not yet implemented (design discussion in `Documentos/Planejamento/Modulo_1_CRM_Integracoes/`). It is a **bidirectional sync middleware** between the **Loja Integrada** e-commerce platform and the client's legacy SQL Server ERP (`FOCCO_ERP`), which this project is gradually replacing:
-- **Loja Integrada → SQL Server**: a webhook receiver imports web orders as sales notes (`tipentsai=50`) into the legacy DB.
-- **SQL Server → Loja Integrada**: polls the `LogAltera` change-log table and pushes product/price/stock updates to the LI REST API.
+**Phase 1 is implemented and running** (see `Documentos/Planejamento/Modulo_1_CRM_Integracoes/tasks_integrations.md` for the exact checklist): the module skeleton, Postgres domain/repositories/UoW, read-only legacy SQL Server layer, `ConfigService`, handlers/routes (`/settings`, `/sync-logs/filter`, `/webhook-events/filter`, `/legacy/locations`, `/legacy/companies`, `/webhooks/loja-integrada`), the gateway proxy, `run_services.bat` entry, and a frontend Configurações → Integrações screen are all done. It is a **bidirectional sync middleware** between the **Loja Integrada** e-commerce platform and the client's legacy SQL Server ERP (`FOCCO_ERP`), which this project is gradually replacing:
+- **Loja Integrada → SQL Server**: a webhook receiver imports web orders as sales notes (`tipentsai=50`) into the legacy DB. *(Phase 2, not yet implemented — see below.)*
+- **SQL Server → Loja Integrada**: polls the `LogAltera` change-log table and pushes product/price/stock updates to the LI REST API. *(Phase 2, not yet implemented.)*
 - Owns its own PostgreSQL persistence for sync state: `SyncLog`, `ProductMapping`, `WebhookEvent`, `IntegrationConfig` (API keys, `codtipnot`, `codlocarm_oficial`/`codlocarm_reserva`, `codemp` — cached in memory, not re-read per request).
 
 Because it talks to the legacy DB, it breaks from the api.core/api.auth pattern: no `UnitOfWork`/`AutoMigrate` against SQL Server tables (schema is owned by the legacy system), and writes there (e.g. incrementing `CADSEQ` sequences) must run inside an explicit SQL Server transaction with `UPDLOCK` to stay atomic, mirroring the legacy `GetSequencia` logic (select → increment → update).
@@ -86,7 +103,7 @@ Legacy schema glossary (FOCCO_ERP / SQL Server) relevant to this integration:
 - `CADPRO.codint` — stores the product's Loja Integrada ID (the cross-system mapping field).
 - `LOCARM` / `CENCUS` — stock locations and companies. Stock flow on a web sale: **Oficial → Reserva** (moved on web sale close) → **sent to customer** (on financeiro invoicing/faturamento).
 
-Open items still pending before full implementation: Loja Integrada API/App keys, the `codtipnot` value to use for LI-originated orders, and the stock-priority policy between the physical and web store when both sell the last unit concurrently (pending confirmation with the client's board).
+**Phase 2 (not yet implemented)**: `NOTAS`/`NOTAS1`/`NOTAS3`/`CADPRO` domain + real sales-note creation from an LI order, the Loja Integrada HTTP client (products/orders), the polling scheduler that actually pushes `LogAltera` changes to LI, and processing a received `WebhookEvent` into a sales order. Blocked on: Loja Integrada API/App keys, the `codtipnot` value to use for LI-originated orders, and the stock-priority policy between the physical and web store when both sell the last unit concurrently (pending confirmation with the client's board).
 
 ## Frontend Architecture
 
@@ -115,7 +132,7 @@ Modals are reserved for **confirming destructive/user actions** — never for da
 
 Non-Zod-managed sub-sections (e.g. the Perfil/permissions picker tied to a user but not itself a form field) live as sibling `useState` in the form component, not inside the RHF schema — see `CreateUserForm.tsx`/`EditUserForm.tsx`: the Perfil preset buttons (`RolePresetPicker.tsx`, roles fetched live from `GET /roles`) drive `ModulePermissionsPanel.tsx`, which shows only the permissions of the module whose name matches the selected Perfil, falling back to the first module with a selected permission when the names don't match (the Role/module naming in the seeded catalog isn't fully consistent yet — e.g. "Gerente"/"ADMIN" roles have no same-named module).
 
-As of 2026-07-19 this pattern is fully implemented only for **Usuários** (`/settings/users`) — the frontend was rebuilt from scratch on that date and only Login, Recuperar senha (UI-only, no backend endpoint yet), Dashboard CRM (mocked, no `api.crm` backend yet) and the Usuários module are real; every other sidebar destination falls through to `PlaceholderPage`. Apply this pattern when building each of those out.
+This pattern is fully implemented for **Usuários** (`/settings/users`) and **Empresas** (`/settings/companies`, added 2026-07-27 as part of the multi-company foundation — `src/pages/settings/companies/`, `company-service.ts`, `company-schema.ts`). The frontend was rebuilt from scratch on 2026-07-19; Login, Recuperar senha (UI-only, no backend endpoint yet), Dashboard CRM (mocked, no `api.crm` backend yet) and Configurações → Integrações (real, see `api.integrations` above) round out what's real today — every other sidebar destination falls through to `PlaceholderPage`. Apply this pattern when building each of those out.
 
 ## Development Workflow / Planning
 
@@ -125,4 +142,4 @@ As of 2026-07-19 this pattern is fully implemented only for **Usuários** (`/set
 - Concurrent task locking in `tasks_*.md`: pick a free task (`- [ ]`), mark it `- [/] [EM EXECUÇÃO POR: NOME_DO_AGENTE]` and save *before* touching code; never start a task already tagged `[EM EXECUÇÃO POR: ...]` or `[BLOQUEADO POR: ...]`. On success mark `- [x] [CONCLUÍDO POR: NOME_DO_AGENTE]`; on interruption, revert to `- [ ]`.
 - At the end of a working session, add/update `Documentos/Planejamento/Historico/log_YYYY-MM-DD.md` with what was done and what's pending, and update the relevant `tasks_*.md`.
 
-Full skill definitions for the above (loaded automatically by Claude Code from `.agents/skills/`): `lumini_hub_backend_architecture`, `lumini_hub_dev_flow`, `lumini_hub_entity_creation`.
+Full skill definitions for the above (loaded automatically by Claude Code from `.claude/skills/`): `lumini_hub_backend_architecture`, `lumini_hub_dev_flow`, `lumini_hub_entity_creation`.

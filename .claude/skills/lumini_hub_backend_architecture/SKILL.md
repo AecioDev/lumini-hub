@@ -16,7 +16,8 @@ The Lumini Hub backend is structured as a **Go Workspace (`go.work`)** containin
 1.  **`common/`**: Shared module (database connections, JWT, pagination, standard responses).
 2.  **`microservices/api.gateway/`** (Port `4000`): Reverse proxy entrypoint and CORS manager.
 3.  **`microservices/api.auth/`** (Port `4001`): Users, Roles, Permissions (RBAC) microservice.
-4.  **`microservices/api.core/`** (Port `4002`): Customers, Suppliers, Addresses, Contacts microservice.
+4.  **`microservices/api.core/`** (Port `4002`): Customers, Suppliers, Addresses, Contacts, Companies (multi-company foundation) microservice.
+5.  **`microservices/api.integrations/`** (Port `4007`): Bidirectional sync middleware with the legacy SQL Server ERP and Loja Integrada. Phase 1 (config, sync-log/webhook-event tracking, legacy read-only lookups, gateway proxy) is implemented; Phase 2 (actual order/stock sync) is not — see `CLAUDE.md`'s dedicated section for the current split.
 
 To run all backend microservices locally in parallel:
 ```powershell
