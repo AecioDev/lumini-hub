@@ -1,5 +1,5 @@
 import { ArrowLeftOutlined } from "@ant-design/icons";
-import { Button, Typography } from "antd";
+import { Button, Typography, theme } from "antd";
 import { useNavigate } from "react-router-dom";
 
 const { Title, Paragraph } = Typography;
@@ -15,8 +15,15 @@ interface PageHeaderProps {
 // esquerda, botão "Voltar" à direita. Existe pra sempre ter uma saída da
 // página mesmo quando o formulário abaixo não tem seu próprio botão
 // Cancelar (ex.: aba "Permissões" de Editar Perfil, que não tem).
+//
+// Fixo no topo (position: sticky) em relação ao <Content> rolável de
+// AppLayout.tsx — pedido do usuário pra não perder o título/Voltar ao
+// rolar formulários longos (ex.: Identidade Visual). `background` precisa
+// ser explícito com o token colorBgLayout, senão o conteúdo por trás
+// aparece atravessando o cabeçalho fixo durante o scroll.
 export function PageHeader({ title, subtitle, backTo }: PageHeaderProps) {
   const navigate = useNavigate();
+  const { token } = theme.useToken();
 
   return (
     <div
@@ -26,6 +33,11 @@ export function PageHeader({ title, subtitle, backTo }: PageHeaderProps) {
         alignItems: "flex-start",
         gap: 16,
         marginBottom: 20,
+        position: "sticky",
+        top: 0,
+        zIndex: 10,
+        background: token.colorBgLayout,
+        paddingBottom: 12,
       }}
     >
       <div>
