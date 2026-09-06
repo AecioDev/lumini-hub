@@ -56,7 +56,7 @@ func RequirePermission(permission string) gin.HandlerFunc {
 			}
 		}
 
-		hasPermission, err := userHasPermission(userID, permission)
+		hasPermission, err := utils.UserHasPermission(permissionDB, userID, permission)
 		if err != nil {
 			utils.ErrorResponse(c, http.StatusInternalServerError, "Erro interno", "Erro ao verificar permissões")
 			c.Abort()
@@ -71,19 +71,4 @@ func RequirePermission(permission string) gin.HandlerFunc {
 
 		c.Next()
 	}
-}
-
-// userHasPermission consulta user_permissions + permissions direto (sem
-// depender dos modelos Go de domínio de nenhum microsserviço específico,
-// já que common/middlewares é compartilhado por todos eles).
-func userHasPermission(userID uint, permission string) (bool, error) {
-	var count int64
-	err := permissionDB.Table("user_permissions AS up").
-		Joins("JOIN permissions AS p ON p.id = up.permission_id").
-		Where("up.user_id = ? AND p.permission = ?", userID, permission).
-		Count(&count).Error
-	if err != nil {
-		return false, err
-	}
-	return count > 0, nil
 }

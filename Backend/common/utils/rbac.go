@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 // Papéis com tratamento especial no RBAC hierárquico.
@@ -58,4 +59,24 @@ func IsDeveloperOnlyPermission(permission string) bool {
 	}
 	return permission == "admin.create_permissions" ||
 		strings.HasPrefix(permission, "permissions.")
+}
+
+// UserHasPermission consulta user_permissions + permissions diretamente
+// (sem depender dos modelos Go de domínio de nenhum microsserviço
+// específico — só nomes de tabela, mesmo truque que RequirePermission já
+// fazia antes desta função ser extraída pra cá). Não aplica o bypass
+// hierárquico DEVELOP/ADMIN (isso é decisão de gate de rota, não faz
+// sentido pra checagens de negócio como visibilidade de dados — ver
+// ResolveVisibleCompanyIDs). `db` é a conexão do microsserviço chamador
+// (mesmo banco físico compartilhado nesta fase de migração).
+func UserHasPermission(db *gorm.DB, userID uint, permission string) (bool, error) {
+	var count int64
+	err := db.Table("user_permissions AS up").
+		Joins("JOIN permissions AS p ON p.id = up.permission_id").
+		Where("up.user_id = ? AND p.permission = ?", userID, permission).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }

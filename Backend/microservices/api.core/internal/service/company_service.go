@@ -21,11 +21,35 @@ func NewCompanyService(uow repository.UnitOfWork) *CompanyService {
 	}
 }
 
-// GetCompanies retorna todas as empresas cadastradas (sem paginação — ver nota em CompanyRepository)
-func (s *CompanyService) GetCompanies() (*domain.ApiCompanyList, error) {
+// GetCompanies retorna as empresas visíveis pro usuário requisitante (sem
+// paginação — ver nota em CompanyRepository), aplicando a regra de
+// visibilidade fechada em plano_empresa.md (2026-07-21): usuário "master"
+// (sem Company vinculada) vê todas; usuário vinculado a uma Company vê só a
+// própria, + subsidiárias se tiver companies.hierarchy.view. Filtro feito em
+// memória de propósito (mesma justificativa de não ter /filter paginado
+// aqui: volume de empresas por tenant é baixo).
+func (s *CompanyService) GetCompanies(userID uint) (*domain.ApiCompanyList, error) {
 	companies, err := s.uow.Companies().FindAll()
 	if err != nil {
 		return nil, err
+	}
+
+	visibleIDs, unrestricted, err := utils.ResolveVisibleCompanyIDs(s.uow.Companies().GetDB(), userID)
+	if err != nil {
+		return nil, err
+	}
+	if !unrestricted {
+		visible := make(map[uint]bool, len(visibleIDs))
+		for _, id := range visibleIDs {
+			visible[id] = true
+		}
+		filtered := make([]domain.Company, 0, len(companies))
+		for _, company := range companies {
+			if visible[company.ID] {
+				filtered = append(filtered, company)
+			}
+		}
+		companies = filtered
 	}
 
 	companyDTOs := make([]domain.ApiCompany, 0, len(companies))

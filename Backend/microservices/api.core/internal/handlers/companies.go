@@ -37,7 +37,13 @@ func NewCompanyHandler(uow repository.UnitOfWork) *CompanyHandler {
 // @Router       /companies [get]
 // @Security     ApiKeyAuth
 func (h *CompanyHandler) GetCompanies(c *gin.Context) {
-	companies, err := h.companyService.GetCompanies()
+	userID, exists := utils.GetUserIDFromContext(c)
+	if !exists {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "Usuário não autenticado", "")
+		return
+	}
+
+	companies, err := h.companyService.GetCompanies(userID)
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Erro ao buscar empresas", err.Error())
 		return
