@@ -486,7 +486,6 @@ definitions:
         type: string
     required:
     - legal_name
-    - tax_id
     type: object
   domain.CreateCustomerRequest:
     properties:
@@ -676,7 +675,6 @@ definitions:
         type: string
     required:
     - legal_name
-    - tax_id
     type: object
   domain.UpdateCustomerRequest:
     properties:

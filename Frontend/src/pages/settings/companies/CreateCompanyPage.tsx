@@ -19,7 +19,7 @@ export function CreateCompanyPage() {
         parent_id: values.parent_id,
         legal_name: values.legal_name,
         trade_name: values.trade_name,
-        tax_id: values.tax_id,
+        tax_id: values.tax_id ?? "",
       });
       feedback.success("Empresa criada com sucesso.");
       navigate("/settings/companies", { replace: true });

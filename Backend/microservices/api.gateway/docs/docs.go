@@ -2908,8 +2908,7 @@ const docTemplate = `{
         "domain.CreateCompanyRequest": {
             "type": "object",
             "required": [
-                "legal_name",
-                "tax_id"
+                "legal_name"
             ],
             "properties": {
                 "legal_name": {
@@ -3184,8 +3183,7 @@ const docTemplate = `{
         "domain.UpdateCompanyRequest": {
             "type": "object",
             "required": [
-                "legal_name",
-                "tax_id"
+                "legal_name"
             ],
             "properties": {
                 "is_active": {

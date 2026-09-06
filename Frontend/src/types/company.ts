@@ -5,7 +5,9 @@ export interface ApiCompany {
   parent_id: number | null;
   legal_name: string;
   trade_name: string;
-  tax_id: string;
+  // null = sem CNPJ próprio — só permitido pra empresa vinculada (parent_id
+  // != null) cuja parte fiscal fica a cargo da Matriz (decidido 2026-09-05).
+  tax_id: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -20,6 +22,8 @@ export interface CreateCompanyRequest {
   parent_id: number | null;
   legal_name: string;
   trade_name?: string;
+  // String vazia = sem CNPJ (só válido se parent_id != null) — backend
+  // normaliza pra null internamente, ver CompanyValidator.
   tax_id: string;
 }
 

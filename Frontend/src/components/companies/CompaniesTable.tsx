@@ -35,7 +35,7 @@ export function CompaniesTable() {
       (c) =>
         c.legal_name.toLowerCase().includes(term) ||
         c.trade_name.toLowerCase().includes(term) ||
-        c.tax_id.includes(term)
+        (c.tax_id ?? "").includes(term)
     );
   }, [companies, search]);
 
@@ -88,7 +88,11 @@ export function CompaniesTable() {
         columns={[
           { title: "Razão Social", dataIndex: "legal_name" },
           { title: "Nome Fantasia", dataIndex: "trade_name" },
-          { title: "CNPJ", dataIndex: "tax_id" },
+          {
+            title: "CNPJ",
+            dataIndex: "tax_id",
+            render: (taxId: string | null) => taxId || <span style={{ opacity: 0.5 }}>—</span>,
+          },
           {
             title: "Tipo",
             key: "type",

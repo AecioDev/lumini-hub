@@ -34,6 +34,7 @@ export function CompanyForm({
   const {
     control,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<CompanyFormValues>({
     resolver: zodResolver(companySchema),
@@ -45,6 +46,10 @@ export function CompanyForm({
       is_active: true,
     },
   });
+
+  // CNPJ só é obrigatório pra Matriz (sem vínculo) — reflete isso no label
+  // em tempo real conforme o usuário mexe no Select "Vinculada a".
+  const isSubsidiary = watch("parent_id") !== null;
 
   // Só pode vincular a uma empresa que já não seja ela mesma — o backend
   // também valida (e detecta ciclo pra vínculos indiretos), isso aqui é só
@@ -73,11 +78,23 @@ export function CompanyForm({
             />
           </FormField>
 
-          <FormField label="CNPJ" error={errors.tax_id}>
+          <FormField
+            label={isSubsidiary ? "CNPJ (opcional)" : "CNPJ"}
+            error={errors.tax_id}
+          >
             <Controller
               name="tax_id"
               control={control}
-              render={({ field }) => <Input {...field} placeholder="00.000.000/0000-00" />}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  placeholder={
+                    isSubsidiary
+                      ? "Deixe em branco se a parte fiscal ficar com a Matriz"
+                      : "00.000.000/0000-00"
+                  }
+                />
+              )}
             />
           </FormField>
 
