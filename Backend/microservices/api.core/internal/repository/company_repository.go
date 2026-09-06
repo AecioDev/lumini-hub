@@ -21,8 +21,6 @@ type CompanyRepository interface {
 	FindByTaxID(taxID string) (*domain.Company, error)
 	ExistsByTaxID(taxID string) (bool, error)
 	ExistsByTaxIDExcept(taxID string, id uint) (bool, error)
-	ExistsRoot() (bool, error)
-	ExistsRootExcept(id uint) (bool, error)
 	CountByParentID(parentID uint) (int64, error)
 }
 
@@ -75,20 +73,6 @@ func (r *GormCompanyRepository) ExistsByTaxID(taxID string) (bool, error) {
 func (r *GormCompanyRepository) ExistsByTaxIDExcept(taxID string, id uint) (bool, error) {
 	var count int64
 	err := r.GetDB().Model(&domain.Company{}).Where("tax_id = ? AND id != ?", taxID, id).Count(&count).Error
-	return count > 0, err
-}
-
-// ExistsRoot verifica se já existe alguma empresa Matriz cadastrada (ParentID nulo)
-func (r *GormCompanyRepository) ExistsRoot() (bool, error) {
-	var count int64
-	err := r.GetDB().Model(&domain.Company{}).Where("parent_id IS NULL").Count(&count).Error
-	return count > 0, err
-}
-
-// ExistsRootExcept verifica se já existe outra empresa Matriz cadastrada, exceto a de ID informado
-func (r *GormCompanyRepository) ExistsRootExcept(id uint) (bool, error) {
-	var count int64
-	err := r.GetDB().Model(&domain.Company{}).Where("parent_id IS NULL AND id != ?", id).Count(&count).Error
 	return count > 0, err
 }
 

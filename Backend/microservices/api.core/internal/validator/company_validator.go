@@ -70,19 +70,17 @@ func (v *CompanyValidator) ValidateForCreation(req domain.CreateCompanyRequest) 
 		errors.AddError("tax_id", "CNPJ já está em uso")
 	}
 
-	if req.ParentID == nil {
-		hasRoot, err := v.companyRepo.ExistsRoot()
-		if err != nil {
-			return err
-		}
-		if hasRoot {
-			errors.AddError("parent_id", "já existe uma empresa Matriz cadastrada — informe a empresa à qual esta se vincula")
-		}
-	} else if err := v.validateParent(req.ParentID, 0); err != nil {
-		if ve, ok := err.(ValidationErrors); ok {
-			errors = append(errors, ve...)
-		} else {
-			return err
+	// ParentID nulo = esta empresa é (mais) uma Matriz — "Matriz" aqui
+	// significa apenas "sem empresa pai", não "a única raiz do tenant"
+	// (decidido 2026-09-05: o tenant pode ter vários grupos empresariais
+	// independentes, sem relação de holding entre si; ver plano_empresa.md).
+	if req.ParentID != nil {
+		if err := v.validateParent(req.ParentID, 0); err != nil {
+			if ve, ok := err.(ValidationErrors); ok {
+				errors = append(errors, ve...)
+			} else {
+				return err
+			}
 		}
 	}
 
@@ -116,19 +114,13 @@ func (v *CompanyValidator) ValidateForUpdate(id uint, req domain.UpdateCompanyRe
 		}
 	}
 
-	if req.ParentID == nil {
-		hasRoot, err := v.companyRepo.ExistsRootExcept(id)
-		if err != nil {
-			return err
-		}
-		if hasRoot {
-			errors.AddError("parent_id", "já existe uma empresa Matriz cadastrada — informe a empresa à qual esta se vincula")
-		}
-	} else if err := v.validateParent(req.ParentID, id); err != nil {
-		if ve, ok := err.(ValidationErrors); ok {
-			errors = append(errors, ve...)
-		} else {
-			return err
+	if req.ParentID != nil {
+		if err := v.validateParent(req.ParentID, id); err != nil {
+			if ve, ok := err.(ValidationErrors); ok {
+				errors = append(errors, ve...)
+			} else {
+				return err
+			}
 		}
 	}
 
