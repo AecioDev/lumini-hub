@@ -8,6 +8,33 @@ import { getApiErrorMessage } from "@/utils/api-error";
 import { useFeedback } from "@/hooks/useFeedback";
 import type { ApiCompany } from "@/types/company";
 
+interface CompanyTreeNode extends ApiCompany {
+  children?: CompanyTreeNode[];
+}
+
+// Monta a árvore self-referencing (Matriz -> vinculadas) pra exibição
+// hierárquica na grid — o antd Table já sabe renderizar recuo/expand-
+// collapse quando os itens do dataSource têm `children`. Só usada quando
+// não há termo de busca (buscar "achata" a árvore, ver `dataSource` mais
+// abaixo — senão um item que bate com o termo mas cujo pai não bate ficaria
+// escondido).
+function buildCompanyTree(companies: ApiCompany[]): CompanyTreeNode[] {
+  const byParent = new Map<number | null, ApiCompany[]>();
+  for (const company of companies) {
+    const key = company.parent_id;
+    if (!byParent.has(key)) byParent.set(key, []);
+    byParent.get(key)!.push(company);
+  }
+
+  const build = (parentId: number | null): CompanyTreeNode[] =>
+    (byParent.get(parentId) ?? []).map((company) => {
+      const children = build(company.id);
+      return children.length > 0 ? { ...company, children } : { ...company };
+    });
+
+  return build(null);
+}
+
 export function CompaniesTable() {
   const { hasPermission } = useAuth();
   const feedback = useFeedback();
@@ -35,9 +62,24 @@ export function CompaniesTable() {
       (c) =>
         c.legal_name.toLowerCase().includes(term) ||
         c.trade_name.toLowerCase().includes(term) ||
-        (c.tax_id ?? "").includes(term)
+        (c.cnpj ?? "").includes(term)
     );
   }, [companies, search]);
+
+  // Sem busca: árvore hierárquica (Matriz -> vinculadas). Com busca: lista
+  // achatada filtrada — senão um resultado cujo pai não bate com o termo
+  // ficaria escondido dentro de uma árvore que não teria motivo pra expandir.
+  const treeData = useMemo(() => buildCompanyTree(companies), [companies]);
+  const dataSource = search.trim() ? filtered : treeData;
+
+  // `defaultExpandAllRows` só decide o estado inicial contra o dataSource
+  // que existe na montagem (vazio, ainda carregando) e nunca reconsidera
+  // quando os dados chegam — por isso controlado aqui, recalculado sempre
+  // que a lista mudar, sempre com toda hierarquia visível.
+  const expandedRowKeys = useMemo(
+    () => [...new Set(companies.map((c) => c.parent_id).filter((id): id is number => id !== null))],
+    [companies]
+  );
 
   const handleDelete = async (company: ApiCompany) => {
     setDeletingId(company.id);
@@ -80,18 +122,20 @@ export function CompaniesTable() {
         </Space>
       }
     >
-      <Table<ApiCompany>
+      <Table<CompanyTreeNode>
         rowKey="id"
         loading={loading}
-        dataSource={filtered}
+        dataSource={dataSource}
         pagination={false}
+        expandable={{ expandedRowKeys }}
         columns={[
+          { title: "ID", dataIndex: "id", width: 70 },
           { title: "Razão Social", dataIndex: "legal_name" },
           { title: "Nome Fantasia", dataIndex: "trade_name" },
           {
             title: "CNPJ",
-            dataIndex: "tax_id",
-            render: (taxId: string | null) => taxId || <span style={{ opacity: 0.5 }}>—</span>,
+            dataIndex: "cnpj",
+            render: (cnpj: string | null) => cnpj || <span style={{ opacity: 0.5 }}>—</span>,
           },
           {
             title: "Tipo",

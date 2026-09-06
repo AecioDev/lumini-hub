@@ -40,7 +40,7 @@ interface CompanyFiscalConfigFormProps {
   companyId: number;
   // Usado só pra comparação visual com o documento extraído do certificado
   // (ver certificateDocumentMatch) — nunca bloqueia o upload, só avisa.
-  companyTaxId?: string;
+  companyCnpj?: string;
 }
 
 // Alerta visual de vencimento do certificado — vencido (vermelho), perto de
@@ -56,15 +56,15 @@ function certificateStatus(expiry: string | null): { color: string; text: string
 
 const onlyDigits = (value: string) => value.replace(/\D/g, "");
 
-// Compara o documento extraído do certificado com o tax_id da própria
+// Compara o documento extraído do certificado com o CNPJ da própria
 // Company — só pra exibição (o usuário confere visualmente), nunca bloqueia
 // o upload em caso de divergência.
 function certificateDocumentMatch(
   certificateDocument: string,
-  companyTaxId?: string
+  companyCnpj?: string
 ): { matches: boolean; text: string } | null {
-  if (!certificateDocument || !companyTaxId) return null;
-  const matches = onlyDigits(certificateDocument) === onlyDigits(companyTaxId);
+  if (!certificateDocument || !companyCnpj) return null;
+  const matches = onlyDigits(certificateDocument) === onlyDigits(companyCnpj);
   return {
     matches,
     text: matches ? "Confere com o CNPJ da empresa" : "Diverge do CNPJ cadastrado na empresa",
@@ -74,7 +74,7 @@ function certificateDocumentMatch(
 // Upload de certificado (arquivo + senha) é state irmão, fora do
 // react-hook-form — só existe depois que a Configuração Fiscal já foi
 // criada (o certificado é anexado a um registro existente).
-export function CompanyFiscalConfigForm({ companyId, companyTaxId }: CompanyFiscalConfigFormProps) {
+export function CompanyFiscalConfigForm({ companyId, companyCnpj }: CompanyFiscalConfigFormProps) {
   const feedback = useFeedback();
 
   const [config, setConfig] = useState<ApiCompanyFiscalConfigDetail | null>(null);
@@ -172,7 +172,7 @@ export function CompanyFiscalConfigForm({ companyId, companyTaxId }: CompanyFisc
   }
 
   const status = certificateStatus(config?.certificate_expiry ?? null);
-  const documentMatch = certificateDocumentMatch(config?.certificate_subject_document ?? "", companyTaxId);
+  const documentMatch = certificateDocumentMatch(config?.certificate_subject_document ?? "", companyCnpj);
 
   return (
     <div style={{ maxWidth: 720, margin: "0 auto" }}>

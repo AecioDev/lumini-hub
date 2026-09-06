@@ -9,15 +9,15 @@ export const companySchema = z
     parent_id: z.number().nullable(),
     legal_name: z.string().min(3, "Informe a razão social"),
     trade_name: z.string().optional(),
-    tax_id: z.string().optional(),
+    cnpj: z.string().optional(),
     is_active: z.boolean(),
   })
   .superRefine((values, ctx) => {
-    if (values.parent_id === null && !values.tax_id?.trim()) {
+    if (values.parent_id === null && !values.cnpj?.trim()) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "CNPJ é obrigatório para a empresa Matriz",
-        path: ["tax_id"],
+        path: ["cnpj"],
       });
     }
   });

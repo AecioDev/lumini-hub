@@ -29,7 +29,7 @@ Este módulo cria o cadastro de **Empresa** — a estrutura organizacional de um
 | `ParentID` | *uint (nullable) | self-referencing, mesmo padrão de `MenuItem.ParentID` (`Backend/microservices/api.auth/internal/domain/menu_item.go`). **Definido 2026-07-21, revisto 2026-09-05**: "Matriz" é simplesmente qualquer empresa com `ParentID == nil` — sem flag explícita `IsMatriz`. **Não é mais única por tenant**: o usuário pode ter vários grupos empresariais de fato independentes (sem holding entre si), cada um com sua própria raiz — removida a validação que bloqueava criar uma segunda empresa sem `parent_id` (`CompanyValidator`/`ExistsRoot`/`ExistsRootExcept`, existiam só até então). Continua validado: ciclo na cadeia de ancestrais (uma empresa não pode acabar sendo pai dela mesma via um vínculo indireto). |
 | `LegalName` (`legal_name`) | string | Razão Social |
 | `TradeName` (`trade_name`) | string | Nome Fantasia |
-| `TaxID` (`tax_id`) | string | CNPJ, único |
+| `CNPJ` (`cnpj`) | *string (nullable) | **Renomeado de `TaxID`/`tax_id` em 2026-09-05** — CPF/CNPJ/CEP/RG mantêm o nome brasileiro em vez de uma tradução literal, ver `CLAUDE.md` § "Brazilian document/address fields". Único (índice parcial, ignora linhas soft-deleted e nulas). **Obrigatório só pra Matriz** — empresa vinculada pode ficar sem CNPJ quando a parte fiscal fica a cargo da Matriz (caso real do usuário, decidido 2026-09-05: cadastro de uma "vinculada" só pra personalizar relatórios/logo de uma marca/setor). |
 | `IsActive` | bool | |
 
 ### `CompanyFiscalConfig` (1:1 com Empresa)

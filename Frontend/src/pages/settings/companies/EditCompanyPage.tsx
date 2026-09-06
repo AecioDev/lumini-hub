@@ -48,7 +48,7 @@ export function EditCompanyPage() {
         parent_id: values.parent_id,
         legal_name: values.legal_name,
         trade_name: values.trade_name,
-        tax_id: values.tax_id ?? "",
+        cnpj: values.cnpj ?? "",
         is_active: values.is_active,
       });
       setCompany((prev) => (prev ? { ...prev, ...updated } : prev));
@@ -83,7 +83,7 @@ export function EditCompanyPage() {
                     parent_id: company.parent_id,
                     legal_name: company.legal_name,
                     trade_name: company.trade_name,
-                    tax_id: company.tax_id ?? "",
+                    cnpj: company.cnpj ?? "",
                     is_active: company.is_active,
                   }}
                   submitting={submitting}
@@ -97,7 +97,7 @@ export function EditCompanyPage() {
               key: "fiscal",
               label: "Configuração Fiscal",
               children: (
-                <CompanyFiscalConfigForm companyId={company.id} companyTaxId={company.tax_id ?? undefined} />
+                <CompanyFiscalConfigForm companyId={company.id} companyCnpj={company.cnpj ?? undefined} />
               ),
             },
           ]}

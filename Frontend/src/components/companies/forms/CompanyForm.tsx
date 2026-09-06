@@ -42,7 +42,7 @@ export function CompanyForm({
       parent_id: null,
       legal_name: "",
       trade_name: "",
-      tax_id: "",
+      cnpj: "",
       is_active: true,
     },
   });
@@ -80,10 +80,10 @@ export function CompanyForm({
 
           <FormField
             label={isSubsidiary ? "CNPJ (opcional)" : "CNPJ"}
-            error={errors.tax_id}
+            error={errors.cnpj}
           >
             <Controller
-              name="tax_id"
+              name="cnpj"
               control={control}
               render={({ field }) => (
                 <Input
