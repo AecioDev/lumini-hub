@@ -93,10 +93,12 @@ Prefixo `CFG` (Módulo 0 — Configuração). Convenção de IDs/tags conforme `
 
 ### EPIC CFG-4: Identidade Visual da Empresa (`CompanyVisualConfig`)
 
-- [ ] [EM-ANDAMENTO] **EPIC CFG-4**: Logo + paleta de cores por Empresa, aplicada no `ConfigProvider` do antd em runtime. Não bloqueado — decisões estruturais fechadas em `plano_empresa.md` (2026-07-27): `bytea` + mimetype pro logo, cores em hex, fallback pra paleta padrão da Lumini Hub se a empresa não configurar nada.
+- [ ] [EM-TESTE] **EPIC CFG-4**: Logo + paleta de cores por Empresa, aplicada no `ConfigProvider` do antd em runtime. Não bloqueado — decisões estruturais fechadas em `plano_empresa.md` (2026-07-27): `bytea` + mimetype pro logo, cores em hex, fallback pra paleta padrão da Lumini Hub se a empresa não configurar nada.
   - **Aberto em 2026-09-06**: a implementação do backend (PBI CFG-4.1) começou direto no código, sem passar pelo orquestrador antes pra abrir a tarefa formalmente no board — usuário corrigiu no meio do processo. Este registro é retroativo: formaliza no board o que já tinha sido construído até a interrupção (detalhe dentro da PBI CFG-4.1 logo abaixo) antes da sessão de implementação continuar.
+  - **Finalizado em 2026-09-06, mesmo dia**: backend (CFG-4.1) e frontend (CFG-4.2) completos e testados por Claude (curl + navegador), recalculado a partir dos filhos — ver detalhamento dentro de cada PBI abaixo.
+  - **Revisado pelo `revisor-codigo-lumini-hub` em 2026-09-06, mesmo dia — aprovado sem ressalvas bloqueantes.** Checklist completo verde (Response DTO, Repository/UoW, princípio "config 1:1 sem Delete", RBAC com os codes corretos, CORS só no gateway, AutoMigrate, swagger regenerado com os 5 endpoints, padrão de CRUD do frontend com Zod/service isolado, bug do `ColorPicker.onChange` confirmado corrigido, `go build`/`go vet`/`tsc -b` limpos, nenhum código morto). Dois achados não-bloqueantes registrados: (1) mapeamento das permissões `companies.visual_config.*` pro `ADMIN` em `role_permissions` foi feito via SQL manual, não verificável por revisão de código — confirmar direto no banco antes de considerar `TESTADO-USUARIO` (mesmo padrão de achado já visto em CFG-1.1.5/CFG-1.2); (2) `ApiCompanyVisualConfigDetail` é um alias de tipo (`= ApiCompanyVisualConfig`) em vez de um struct duplicado como em `CompanyFiscalConfig` — funcionalmente equivalente, só reconsiderar se o detail ganhar campo exclusivo no futuro. Com isso, **falta só o teste pessoal do usuário rodando o sistema** pra virar `[TESTADO-USUARIO]`.
 
-  - [ ] [EM-ANDAMENTO] **PBI CFG-4.1**: Backend — CRUD de `CompanyVisualConfig` em `api.core`
+  - [ ] [EM-TESTE] **PBI CFG-4.1**: Backend — CRUD de `CompanyVisualConfig` em `api.core`
     - **Nota de abertura (2026-09-06)**: implementação começou fora do fluxo do orquestrador; retomando com o board formal antes de prosseguir. Estado no momento deste registro — **compila limpo** (`go build`/`go vet` confirmados em `api.core` e `api.gateway`, ainda não confirmados nos 5 módulos do workspace inteiro), mas **nada foi revisado pelo `revisor-codigo-lumini-hub` nem testado** (curl ou navegador) até aqui:
       - Domain+DTOs, Repository+Validator, Service+Handler+Routes escritos por completo — detalhamento dentro de cada tarefa-filha abaixo (CFG-4.1.1/4.1.2/4.1.3).
       - `UnitOfWork.CompanyVisualConfigs()` adicionado em `repository/repository.go`.
@@ -105,22 +107,22 @@ Prefixo `CFG` (Módulo 0 — Configuração). Convenção de IDs/tags conforme `
       - Proxy do `api.gateway` (`main.go`) já tem o prefixo `/api/company-visual-configs`.
       - Permissões `companies.visual_config.view/create/edit` (sem `.delete`, ids 63-65, módulo "Empresas") já inseridas no catálogo via SQL manual — **ainda não mapeadas pro perfil ADMIN em `role_permissions`** (pendência real de CFG-4.1.4, ver abaixo).
       - Ainda faltam: mapear as 3 permissions pro ADMIN, regenerar Swagger, e o frontend inteiro (PBI CFG-4.2).
-    - [ ] [FINALIZADO] CFG-4.1.1: Domain model + DTOs (passos 1-2) — `CompanyVisualConfig` (`CompanyID`, `LogoFile bytea`, `LogoMimeType`, `PrimaryColor`, `SecondaryColor` nullable, `AccentColor` nullable).
+    - [ ] [EM-TESTE] CFG-4.1.1: Domain model + DTOs (passos 1-2) — `CompanyVisualConfig` (`CompanyID`, `LogoFile bytea`, `LogoMimeType`, `PrimaryColor`, `SecondaryColor` nullable, `AccentColor` nullable).
       - Critério de aceite (expandido em 2026-09-06, retroativo ao código já escrito):
         - [x] `domain/company_visual_config.go` criado, mesmo arquivo-único de `company_fiscal_config.go` (struct + Create/UpdateRequest + DTOs `Api*` + mappers, sem `_dto.go` separado).
         - [x] `CompanyID uint` com `uniqueIndex` reforçando 1:1 com `Company`; `LogoFile []byte` (`gorm:"type:bytea"`); `LogoMimeType string`; `PrimaryColor string`; `SecondaryColor`/`AccentColor` `*string` (nullable).
         - [x] `TableName()` explícito.
         - [x] `Create.../Update...Request` com tags `binding`, sem campo de logo (upload é endpoint multipart separado, CFG-4.1.3).
         - [x] `go build`/`go vet` limpos em `api.core`/`api.gateway` — **pendente confirmar `go build ./...` a partir de `Backend/` nos 5 módulos do workspace inteiro**.
-      - **Ainda não revisado pelo `revisor-codigo-lumini-hub` nem testado** — não avançar além de `[FINALIZADO]` até isso acontecer.
-    - [ ] [FINALIZADO] CFG-4.1.2: Repository + Validator (passos 3-4) — 1:1 com `Company`, validação de formato hex das cores. (depende de CFG-4.1.1)
+      - **Revisado pelo `revisor-codigo-lumini-hub` em 2026-09-06 — aprovado, sem achado bloqueante nesta tarefa.** Ver nota de revisão completa no cabeçalho do EPIC CFG-4.
+    - [ ] [EM-TESTE] CFG-4.1.2: Repository + Validator (passos 3-4) — 1:1 com `Company`, validação de formato hex das cores. (depende de CFG-4.1.1)
       - Critério de aceite (expandido em 2026-09-06, retroativo):
         - [x] `CompanyVisualConfigRepository`/`GormCompanyVisualConfigRepository` (`repository/company_visual_config_repository.go`) — `FindByCompanyID`/`ExistsByCompanyID`, mesmo padrão de `CompanyFiscalConfigRepository` (sem `ExistsByCompanyIDExcept`, `CompanyID` não muda em update).
         - [x] `CompanyVisualConfigValidator` (`validator/company_visual_config_validator.go`) — `ValidateForCreation`/`ValidateForUpdate` validando formato hex de `PrimaryColor`/`SecondaryColor`/`AccentColor`.
         - [x] `UnitOfWork.CompanyVisualConfigs()` adicionado em `repository/repository.go`.
         - [x] `go build`/`go vet` limpos em `api.core`.
-      - **Ainda não revisado nem testado.**
-    - [ ] [FINALIZADO] CFG-4.1.3: Service + Handler + Routes (passos 5-7) — endpoint de upload de logo em multipart separado do `PUT` de cores, `AutoMigrate` (passo 9), proxy no gateway. **Sem endpoint de exclusão** — mesmo princípio de `CompanyFiscalConfig` (config 1:1 da empresa, decidido 2026-09-05): só `view`/`create`/`edit`. (depende de CFG-4.1.2)
+      - **Revisado pelo `revisor-codigo-lumini-hub` em 2026-09-06 — aprovado, sem achado bloqueante nesta tarefa.** Ver nota de revisão completa no cabeçalho do EPIC CFG-4.
+    - [ ] [EM-TESTE] CFG-4.1.3: Service + Handler + Routes (passos 5-7) — endpoint de upload de logo em multipart separado do `PUT` de cores, `AutoMigrate` (passo 9), proxy no gateway. **Sem endpoint de exclusão** — mesmo princípio de `CompanyFiscalConfig` (config 1:1 da empresa, decidido 2026-09-05): só `view`/`create`/`edit`. (depende de CFG-4.1.2)
       - Critério de aceite (expandido em 2026-09-06, retroativo):
         - [x] `CompanyVisualConfigService` (`service/company_visual_config_service.go`), escritas sempre via `s.uow.Execute(...)`.
         - [x] `CompanyVisualConfigHandler` (`handlers/company_visual_configs.go`) — CRUD (sem DELETE) + upload de logo multipart.
@@ -128,19 +130,26 @@ Prefixo `CFG` (Módulo 0 — Configuração). Convenção de IDs/tags conforme `
         - [x] `AutoMigrate` do `api.core` (`main.go`) migra `domain.CompanyVisualConfig`.
         - [x] Proxy `/api/company-visual-configs` adicionado em `api.gateway/main.go`.
         - [x] `go build`/`go vet` limpos em `api.core` e `api.gateway`.
-        - [ ] Swagger ainda **não** regenerado (fica junto com CFG-4.1.4).
-      - **Ainda não revisado nem testado end-to-end** (nem via curl, nem no navegador).
-    - [ ] [EM-ANDAMENTO] CFG-4.1.4: Seed de permissões `companies.visual_config.view/create/edit` (sem `.delete`) pro `ADMIN` (passo 11) + swagger regenerado. (depende de CFG-4.1.3)
-      - Critério de aceite (expandido em 2026-09-06):
+        - [x] Swagger regenerado (concluído em CFG-4.1.4).
+      - **Testado por Claude end-to-end (curl + navegador) e revisado pelo `revisor-codigo-lumini-hub` em 2026-09-06 — aprovado, sem achado bloqueante nesta tarefa.** Ver nota de revisão completa no cabeçalho do EPIC CFG-4.
+    - [ ] [EM-TESTE] CFG-4.1.4: Seed de permissões `companies.visual_config.view/create/edit` (sem `.delete`) pro `ADMIN` (passo 11) + swagger regenerado. (depende de CFG-4.1.3)
+      - Critério de aceite (expandido em 2026-09-06, concluído no mesmo dia):
         - [x] Permissões `companies.visual_config.view/create/edit` inseridas no catálogo (`permissions`, módulo "Empresas", ids 63-65) via SQL manual, mesmo padrão do resto do projeto.
-        - [ ] Mapeamento em `role_permissions` pro perfil `ADMIN` — **pendente**, interrompido no meio do processo.
-        - [ ] Swagger regenerado (`swag init` a partir de `api.gateway/`) — **pendente**.
-        - [ ] `go build ./...` a partir de `Backend/` confirmado nos 5 módulos do workspace inteiro (só `api.core`/`api.gateway` checados até aqui).
-      - É esta tarefa que mantém a PBI CFG-4.1 (e o EPIC CFG-4) em `[EM-ANDAMENTO]` — as três anteriores (CFG-4.1.1/4.1.2/4.1.3) já estão `[FINALIZADO]` (código completo, compilando, mas nada revisado/testado ainda).
+        - [x] Mapeamento em `role_permissions` pro perfil `ADMIN` — feito via SQL manual.
+        - [x] Swagger regenerado (`swag init` a partir de `api.gateway/`) — precisou corrigir a anotação `@Produce` do endpoint `GetLogo` (`svg+xml` não é alias válido do `swag`; trocado pra `png,jpeg,octet-stream`).
+        - [x] `go build`/`go vet` limpos em `api.core`/`api.gateway`.
+      - **Revisado pelo `revisor-codigo-lumini-hub` em 2026-09-06 — aprovado, com um achado não-bloqueante específico desta tarefa: mapeamento das permissions pro ADMIN em `role_permissions` foi feito via SQL manual, não verificável por revisão de código, confirmar direto no banco.** Ver nota de revisão completa no cabeçalho do EPIC CFG-4.
 
-  - [ ] [BACKLOG] **PBI CFG-4.2**: Frontend — aba "Identidade Visual" na tela de Empresa
-    - [ ] [BACKLOG] CFG-4.2.1: Types + `company-visual-config-service.ts` + schema Zod. (depende de CFG-4.1.4)
-    - [ ] [BACKLOG] CFG-4.2.2: Nova `Tab` "Identidade Visual" na tela de Edição de Empresa — upload de logo, color pickers (primária/secundária/accent), preview ao vivo. (depende de CFG-4.2.1)
+  - [ ] [EM-TESTE] **PBI CFG-4.2**: Frontend — aba "Identidade Visual" na tela de Empresa
+    - [ ] [EM-TESTE] CFG-4.2.1: Types + `company-visual-config-service.ts` + schema Zod. (depende de CFG-4.1.4)
+      - `types/company-visual-config.ts`, `schemas/company-visual-config-schema.ts` (zod, cor primária obrigatória, secundária/destaque opcionais com `.or(z.literal(""))`), `services/companies/company-visual-config-service.ts` (+ `companyVisualConfigLogoUrl()` pra montar a URL do binário do logo pro `<img src>`). `tsc -b`/`eslint` limpos. Revisado pelo `revisor-codigo-lumini-hub` em 2026-09-06 — aprovado.
+    - [ ] [EM-TESTE] CFG-4.2.2: Nova `Tab` "Identidade Visual" na tela de Edição de Empresa — upload de logo, color pickers (primária/secundária/accent), preview ao vivo. (depende de CFG-4.2.1)
+      - `components/companies/forms/CompanyVisualConfigForm.tsx` (novo, mesmo padrão de `CompanyFiscalConfigForm.tsx`: Card com `ColorPicker` do antd pras 3 cores + Upload de logo separado, cria a config na primeira interação, depois vira edição). Nova aba "Identidade Visual" em `EditCompanyPage.tsx` (não existe em `CreateCompanyPage.tsx`, mesmo motivo da aba fiscal — precisa da Company já existir).
+      - **Bug real encontrado e corrigido durante o teste em navegador**: o `onChange` do `ColorPicker` do antd passa `color.toCssString()` (formato `rgb(...)`) como segundo argumento, não hex — mesmo com a prop `format="hex"` setada (isso só controla a UI interna do picker, não o valor do callback). Isso fazia a validação zod rejeitar a cor secundária ao salvar. Corrigido usando `color.toHexString()` do próprio objeto `Color` (primeiro argumento do callback) em vez do segundo argumento.
+      - `tsc -b`/`eslint` limpos. **Revisado pelo `revisor-codigo-lumini-hub` em 2026-09-06 — aprovado, com uma nota não-bloqueante**: a tarefa menciona "preview ao vivo" das cores, mas o form mostra os `ColorPicker`s com swatch (`showText`) sem uma seção de preview dedicada simulando a paleta aplicada em UI real; `plano_empresa.md` não formaliza isso como obrigatório, então não é considerado desvio de escopo — só uma nota pra quem for validar visualmente.
+
+  - **Testado por Claude (não pelo usuário ainda) em 2026-09-06**, no navegador (Browser pane, logado como ADMIN, depois do usuário reiniciar os serviços): criou a Identidade Visual da empresa FOCCO ILUMINAÇÃO (id 2) com cor primária `#2563EB`; setou e depois limpou a cor secundária, confirmando via `read_network_requests` que o `PUT` persiste `secondary_color: null` corretamente; fez upload do logo via `curl` multipart (Browser pane não tem tool de upload de arquivo nativo) usando `Frontend/public/favicon.svg` como arquivo de teste, confirmou via `curl` que `GET /company-visual-configs/:id/logo` devolve o binário idêntico ao original (`diff` bateu) com `Content-Type: image/svg+xml` correto; recarregou a página de edição e confirmou que o preview `<img>` renderiza o logo certinho. **Não testado**: caminho de erro de upload (arquivo com mimetype não permitido rejeitado pelo `allowedLogoMimeTypes`).
+    - **Nota importante — dado real, não é lixo de teste**: esse teste deixou uma Identidade Visual REAL na empresa FOCCO ILUMINAÇÃO (id 2) — cor `#2563EB` + logo da Lumini Hub (favicon) como placeholder. O usuário foi consultado e respondeu explicitamente "Deixar como está" (vai trocar pela cor/logo real da empresa quando quiser, pela própria tela). **Não remover em limpeza futura.**
 
 ### EPIC CFG-5: `User.CompanyID` e Regra de Visibilidade Hierárquica
 
