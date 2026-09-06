@@ -134,6 +134,10 @@ Non-Zod-managed sub-sections (e.g. the Perfil/permissions picker tied to a user 
 
 This pattern is fully implemented for **Usuários** (`/settings/users`) and **Empresas** (`/settings/companies`, added 2026-07-27 as part of the multi-company foundation — `src/pages/settings/companies/`, `company-service.ts`, `company-schema.ts`). The frontend was rebuilt from scratch on 2026-07-19; Login, Recuperar senha (UI-only, no backend endpoint yet), Dashboard CRM (mocked, no `api.crm` backend yet) and Configurações → Integrações (real, see `api.integrations` above) round out what's real today — every other sidebar destination falls through to `PlaceholderPage`. Apply this pattern when building each of those out.
 
+### Masked fields (CPF/CNPJ/telefone/CEP): mask on screen, digits in the database
+
+Decided 2026-09-05, applies to every field of this kind, past and future (`Company.tax_id`, any future phone/CEP field, etc.): the frontend shows and types with the mask (better UX, and the mask shape itself is free client-side format validation — e.g. rejecting a CNPJ with the wrong digit count as you type), but **only the raw digits are ever sent to the backend and stored in the database** — never persist the punctuation. No masking library is installed yet (checked 2026-09-05); when a field like this is built or touched, add one (or a small local mask helper) rather than storing the masked string as-is. This is a frontend-only concern — backend request/DTO fields for these values are always plain digit strings, no format validation needed there beyond length/checksum if applicable.
+
 ## Development Workflow / Planning
 
 `Documentos/Planejamento/` is the authoritative task tracker for this project and applies to **all agents and developers**, not just this session:
