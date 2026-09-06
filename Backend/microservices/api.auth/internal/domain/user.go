@@ -29,6 +29,13 @@ type User struct {
 	// Matriz (ver regra de visibilidade em plano_empresa.md). Não nulo =
 	// usuário só vê a própria Empresa, exceto com companies.hierarchy.view.
 	CompanyID *uint `json:"company_id"`
+
+	// ActiveCompanyID é a Company que o usuário está "operando como" no
+	// momento — só é uma escolha real pra quem enxerga mais de uma Company
+	// (master, ou tem companies.hierarchy.view); pra todo mundo mais é
+	// sempre igual a CompanyID. Revalidado a cada leitura via
+	// utils.ResolveActiveCompany — nunca confiar cegamente neste valor.
+	ActiveCompanyID *uint `json:"active_company_id"`
 }
 
 // TableName especifica o nome da tabela
@@ -86,20 +93,26 @@ type ApiUserRole struct {
 
 // ApiUserDetail representa os dados detalhados de um usuário
 type ApiUserDetail struct {
-	ID          uint              `json:"id"`
-	Username    string            `json:"username"`
-	Name        string            `json:"name"`
-	Email       string            `json:"email,omitempty"`
-	Phone       string            `json:"phone"`
-	RoleID      uint              `json:"role_id"`
-	Role        ApiUserRole       `json:"role"`
-	IsActive    bool              `json:"is_active"`
-	LastLogin   string            `json:"last_login,omitempty"`
-	CompanyID   *uint             `json:"company_id"`
-	Permissions []ApiPermission   `json:"permissions,omitempty"`
-	MenuItems   []ApiUserMenuItem `json:"menu_items,omitempty"`
-	CreatedAt   string            `json:"created_at"`
-	UpdatedAt   string            `json:"updated_at"`
+	ID        uint        `json:"id"`
+	Username  string      `json:"username"`
+	Name      string      `json:"name"`
+	Email     string      `json:"email,omitempty"`
+	Phone     string      `json:"phone"`
+	RoleID    uint        `json:"role_id"`
+	Role      ApiUserRole `json:"role"`
+	IsActive  bool        `json:"is_active"`
+	LastLogin string      `json:"last_login,omitempty"`
+	CompanyID *uint       `json:"company_id"`
+	// ActiveCompanyID/RequiresCompanySelection só vêm com valor "de verdade"
+	// (revalidado) na resposta de login/refresh/me — ver AuthService. Em
+	// outras respostas de ApiUserDetail (ex.: admin olhando outro usuário)
+	// ActiveCompanyID é só o valor bruto salvo, sem repetir a validação.
+	ActiveCompanyID          *uint             `json:"active_company_id"`
+	RequiresCompanySelection bool              `json:"requires_company_selection,omitempty"`
+	Permissions              []ApiPermission   `json:"permissions,omitempty"`
+	MenuItems                []ApiUserMenuItem `json:"menu_items,omitempty"`
+	CreatedAt                string            `json:"created_at"`
+	UpdatedAt                string            `json:"updated_at"`
 }
 
 // ApiUserListPaginated representa uma lista paginada de usuários
@@ -141,16 +154,17 @@ func ApiUserFromModel(u User) ApiUser {
 // ApiUserDetailFromModel converte um modelo User para ApiUserDetail
 func ApiUserDetailFromModel(u User) ApiUserDetail {
 	dto := ApiUserDetail{
-		ID:        u.ID,
-		Username:  u.Username,
-		Name:      u.Name,
-		Email:     u.Email,
-		Phone:     u.Phone,
-		RoleID:    u.RoleID,
-		IsActive:  u.IsActive,
-		CompanyID: u.CompanyID,
-		CreatedAt: u.CreatedAt.Format("2006-01-02 15:04:05"),
-		UpdatedAt: u.UpdatedAt.Format("2006-01-02 15:04:05"),
+		ID:              u.ID,
+		Username:        u.Username,
+		Name:            u.Name,
+		Email:           u.Email,
+		Phone:           u.Phone,
+		RoleID:          u.RoleID,
+		IsActive:        u.IsActive,
+		CompanyID:       u.CompanyID,
+		ActiveCompanyID: u.ActiveCompanyID,
+		CreatedAt:       u.CreatedAt.Format("2006-01-02 15:04:05"),
+		UpdatedAt:       u.UpdatedAt.Format("2006-01-02 15:04:05"),
 	}
 
 	// Adicionar o último login se existir

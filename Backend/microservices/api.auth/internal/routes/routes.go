@@ -30,6 +30,7 @@ func SetupRoutes(router *gin.RouterGroup, db *gorm.DB, cfg *config.Config) {
 		{
 			protected.POST("/logout", authHandler.Logout)
 			protected.GET("/me", authHandler.GetMe)
+			protected.PUT("/active-company", authHandler.SetActiveCompany)
 		}
 	}
 

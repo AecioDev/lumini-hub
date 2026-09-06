@@ -100,6 +100,9 @@ func (s *AuthService) Login(username, password string) (*LoginResponse, error) {
 	if menuItems, err := s.GetMenuItemsForUser(user); err == nil {
 		userDetail.MenuItems = menuItems
 	}
+	if err := s.ResolveActiveCompany(&userDetail); err != nil {
+		return nil, err
+	}
 
 	return &LoginResponse{
 		User:         userDetail,
@@ -145,6 +148,9 @@ func (s *AuthService) RefreshToken(refreshToken string) (*LoginResponse, error) 
 	if menuItems, err := s.GetMenuItemsForUser(user); err == nil {
 		userDetail.MenuItems = menuItems
 	}
+	if err := s.ResolveActiveCompany(&userDetail); err != nil {
+		return nil, err
+	}
 
 	return &LoginResponse{
 		User:         userDetail,
@@ -154,12 +160,54 @@ func (s *AuthService) RefreshToken(refreshToken string) (*LoginResponse, error) 
 	}, nil
 }
 
-// GetUserByID busca um usuário pelo ID
-	func (s *AuthService) GetUserByID(userID uint) (*domain.User, error) {
-		var user domain.User
-		result := s.db.Preload("Role").Preload("Role.Permissions").Preload("Permissions").First(&user, userID)
-		if result.Error != nil {
-			return nil, result.Error
-		}
-		return &user, nil
+// ResolveActiveCompany preenche ActiveCompanyID/RequiresCompanySelection na
+// resposta com o valor revalidado (nunca confiar cegamente no que está
+// gravado em users.active_company_id — ver utils.ResolveActiveCompany).
+// Chamado só nos pontos em que a resposta é sobre o PRÓPRIO usuário logado
+// (login/refresh/me) — não faz sentido (nem vale o round-trip extra) pra
+// quando um admin só está consultando o cadastro de outro usuário.
+func (s *AuthService) ResolveActiveCompany(userDetail *domain.ApiUserDetail) error {
+	activeID, requiresSelection, err := utils.ResolveActiveCompany(s.db, userDetail.ID, userDetail.ActiveCompanyID)
+	if err != nil {
+		return err
 	}
+	userDetail.ActiveCompanyID = activeID
+	userDetail.RequiresCompanySelection = requiresSelection
+	return nil
+}
+
+// SetActiveCompany grava a empresa que o usuário está operando no momento
+// (utils.SetActiveCompany valida que ele realmente a enxerga antes de
+// gravar) e devolve o ApiUserDetail já atualizado, pronto pra resposta —
+// mesma forma de login/refresh, pra o frontend poder trocar o contexto sem
+// precisar dar reload na sessão inteira.
+func (s *AuthService) SetActiveCompany(userID uint, companyID uint) (*domain.ApiUserDetail, error) {
+	if err := utils.SetActiveCompany(s.db, userID, companyID); err != nil {
+		return nil, err
+	}
+
+	var user domain.User
+	if err := s.db.Preload("Role").Preload("Role.Permissions").Preload("Permissions").First(&user, userID).Error; err != nil {
+		return nil, err
+	}
+
+	userDetail := domain.ApiUserDetailFromModel(user)
+	if menuItems, err := s.GetMenuItemsForUser(user); err == nil {
+		userDetail.MenuItems = menuItems
+	}
+	if err := s.ResolveActiveCompany(&userDetail); err != nil {
+		return nil, err
+	}
+
+	return &userDetail, nil
+}
+
+// GetUserByID busca um usuário pelo ID
+func (s *AuthService) GetUserByID(userID uint) (*domain.User, error) {
+	var user domain.User
+	result := s.db.Preload("Role").Preload("Role.Permissions").Preload("Permissions").First(&user, userID)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &user, nil
+}

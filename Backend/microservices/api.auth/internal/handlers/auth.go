@@ -181,10 +181,65 @@ func (h *AuthHandler) GetMe(c *gin.Context) {
 	if menuItems, err := h.authService.GetMenuItemsForUser(*user); err == nil {
 		userDetail.MenuItems = menuItems
 	}
+	if err := h.authService.ResolveActiveCompany(&userDetail); err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Erro ao resolver empresa ativa", err.Error())
+		return
+	}
 
 	userResponse := domain.LoginSuccessResponse{
 		User: userDetail,
 	}
 
 	utils.SuccessResponse(c, http.StatusOK, "Usuário encontrado", userResponse, nil)
+}
+
+// SetActiveCompanyRequest representa o corpo de PUT /auth/active-company
+type SetActiveCompanyRequest struct {
+	CompanyID uint `json:"company_id" binding:"required"`
+}
+
+// SetActiveCompany define a empresa que o usuário logado está "operando
+// como" — mecanismo de empresa ativa (plano_empresa.md), obrigatório pra
+// quem enxerga mais de uma Company (usuário master, ou com
+// companies.hierarchy.view) antes de usar o restante do sistema.
+// @Summary      Define a empresa ativa do usuário logado
+// @Description  Grava qual Company o usuário está operando no momento — só aceita uma que ele realmente enxergue (nunca confia cegamente no ID vindo do cliente)
+// @Tags         Autenticação
+// @Accept       json
+// @Produce      json
+// @Param        body  body      SetActiveCompanyRequest  true  "ID da Empresa"
+// @Success      200   {object}  utils.Response{data=domain.LoginSuccessResponse}
+// @Failure      400   {object}  utils.Response
+// @Failure      401   {object}  utils.Response
+// @Failure      403   {object}  utils.Response
+// @Failure      404   {object}  utils.Response
+// @Router       /auth/active-company [put]
+// @Security     ApiKeyAuth
+func (h *AuthHandler) SetActiveCompany(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "Não autorizado", "Usuário não autenticado")
+		return
+	}
+
+	var req SetActiveCompanyRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+		return
+	}
+
+	user, err := h.authService.SetActiveCompany(userID.(uint), req.CompanyID)
+	if err != nil {
+		switch err {
+		case utils.ErrNotFound:
+			utils.ErrorResponse(c, http.StatusNotFound, "Empresa não encontrada", err.Error())
+		case utils.ErrForbidden:
+			utils.ErrorResponse(c, http.StatusForbidden, "Você não tem acesso a essa empresa", err.Error())
+		default:
+			utils.ErrorResponse(c, http.StatusInternalServerError, "Erro ao definir empresa ativa", err.Error())
+		}
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "Empresa ativa definida com sucesso", domain.LoginSuccessResponse{User: *user}, nil)
 }
