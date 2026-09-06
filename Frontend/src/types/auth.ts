@@ -33,6 +33,10 @@ export interface ApiUserDetail {
   is_active: boolean;
   last_login?: string;
   company_id: number | null;
+  // active_company_id/requires_company_selection só vêm revalidados de
+  // verdade nas respostas de login/refresh/me — ver AuthService no backend.
+  active_company_id: number | null;
+  requires_company_selection?: boolean;
   permissions?: ApiPermission[];
   menu_items?: ApiUserMenuItem[];
   created_at: string;

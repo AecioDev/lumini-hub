@@ -26,4 +26,12 @@ export const authService = {
   async logout(): Promise<void> {
     await api.post("/auth/logout");
   },
+
+  async setActiveCompany(companyId: number): Promise<ApiUserDetail> {
+    const { data } = await api.put<ApiResponse<LoginSuccessResponse>>(
+      "/auth/active-company",
+      { company_id: companyId }
+    );
+    return data.data!.user;
+  },
 };

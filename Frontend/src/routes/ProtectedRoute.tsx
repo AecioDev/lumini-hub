@@ -1,9 +1,10 @@
 import { Spin } from "antd";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { CompanySelectionGate } from "@/components/companies/CompanySelectionGate";
 
 export function ProtectedRoute() {
-  const { isAuthenticated, isBootstrapping } = useAuth();
+  const { isAuthenticated, isBootstrapping, user } = useAuth();
   const location = useLocation();
 
   if (isBootstrapping) {
@@ -23,6 +24,10 @@ export function ProtectedRoute() {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  if (user?.requires_company_selection) {
+    return <CompanySelectionGate />;
   }
 
   return <Outlet />;

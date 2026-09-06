@@ -24,6 +24,7 @@ interface AuthContextValue {
   login: (payload: LoginRequest) => Promise<ApiUserDetail>;
   logout: () => Promise<void>;
   hasPermission: (permissionCode: string) => boolean;
+  setActiveCompany: (companyId: number) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -84,6 +85,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const setActiveCompany = useCallback(async (companyId: number) => {
+    const updatedUser = await authService.setActiveCompany(companyId);
+    setUser(updatedUser);
+  }, []);
+
   const isAdmin = user?.role?.name?.toUpperCase() === "ADMIN";
   const isDeveloper = user?.role?.name === "DEVELOP";
 
@@ -106,8 +112,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       logout,
       hasPermission,
+      setActiveCompany,
     }),
-    [user, isBootstrapping, isDeveloper, login, logout, hasPermission]
+    [user, isBootstrapping, isDeveloper, login, logout, hasPermission, setActiveCompany]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
