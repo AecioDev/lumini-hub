@@ -160,12 +160,19 @@ func (s *AuthService) RefreshToken(refreshToken string) (*LoginResponse, error) 
 	}, nil
 }
 
-// ResolveActiveCompany preenche ActiveCompanyID/RequiresCompanySelection na
-// resposta com o valor revalidado (nunca confiar cegamente no que está
-// gravado em users.active_company_id — ver utils.ResolveActiveCompany).
-// Chamado só nos pontos em que a resposta é sobre o PRÓPRIO usuário logado
-// (login/refresh/me) — não faz sentido (nem vale o round-trip extra) pra
-// quando um admin só está consultando o cadastro de outro usuário.
+// ResolveActiveCompany preenche ActiveCompanyID/ActiveCompanyName/
+// RequiresCompanySelection/VisibleCompanies na resposta com o valor
+// revalidado (nunca confiar cegamente no que está gravado em
+// users.active_company_id — ver utils.ResolveActiveCompany). Chamado só nos
+// pontos em que a resposta é sobre o PRÓPRIO usuário logado (login/refresh/
+// me) — não faz sentido (nem vale o round-trip extra) pra quando um admin
+// só está consultando o cadastro de outro usuário.
+//
+// VisibleCompanies/ActiveCompanyName vêm de utils.ResolveCompanyOptions, não
+// de GET /companies — de propósito: saber em qual empresa o usuário está e
+// trocar entre as que ele enxerga é identidade de sessão, não administração
+// do cadastro, então não pode depender de companies.view (a maioria dos
+// perfis operacionais nunca tem essa permission).
 func (s *AuthService) ResolveActiveCompany(userDetail *domain.ApiUserDetail) error {
 	activeID, requiresSelection, err := utils.ResolveActiveCompany(s.db, userDetail.ID, userDetail.ActiveCompanyID)
 	if err != nil {
@@ -173,6 +180,26 @@ func (s *AuthService) ResolveActiveCompany(userDetail *domain.ApiUserDetail) err
 	}
 	userDetail.ActiveCompanyID = activeID
 	userDetail.RequiresCompanySelection = requiresSelection
+
+	visibleIDs, unrestricted, err := utils.ResolveVisibleCompanyIDs(s.db, userDetail.ID)
+	if err != nil {
+		return err
+	}
+	options, err := utils.ResolveCompanyOptions(s.db, visibleIDs, unrestricted)
+	if err != nil {
+		return err
+	}
+	userDetail.VisibleCompanies = options
+
+	if activeID != nil {
+		for _, option := range options {
+			if option.ID == *activeID {
+				userDetail.ActiveCompanyName = option.Name
+				break
+			}
+		}
+	}
+
 	return nil
 }
 

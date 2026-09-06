@@ -103,16 +103,24 @@ type ApiUserDetail struct {
 	IsActive  bool        `json:"is_active"`
 	LastLogin string      `json:"last_login,omitempty"`
 	CompanyID *uint       `json:"company_id"`
-	// ActiveCompanyID/RequiresCompanySelection só vêm com valor "de verdade"
-	// (revalidado) na resposta de login/refresh/me — ver AuthService. Em
-	// outras respostas de ApiUserDetail (ex.: admin olhando outro usuário)
-	// ActiveCompanyID é só o valor bruto salvo, sem repetir a validação.
-	ActiveCompanyID          *uint             `json:"active_company_id"`
-	RequiresCompanySelection bool              `json:"requires_company_selection,omitempty"`
-	Permissions              []ApiPermission   `json:"permissions,omitempty"`
-	MenuItems                []ApiUserMenuItem `json:"menu_items,omitempty"`
-	CreatedAt                string            `json:"created_at"`
-	UpdatedAt                string            `json:"updated_at"`
+	// ActiveCompanyID/ActiveCompanyName/RequiresCompanySelection/
+	// VisibleCompanies só vêm com valor "de verdade" (revalidado) na
+	// resposta de login/refresh/me — ver AuthService. Em outras respostas de
+	// ApiUserDetail (ex.: admin olhando outro usuário) ActiveCompanyID é só
+	// o valor bruto salvo, sem repetir a validação, e os outros três ficam
+	// vazios. VisibleCompanies é proposital e propositalmente "sem
+	// permission" (utils.ResolveCompanyOptions) — mostrar em qual empresa o
+	// próprio usuário está e trocar entre as que ele já enxerga é identidade
+	// de sessão, não administração do cadastro (isso continua exigindo
+	// companies.view, em GET /companies).
+	ActiveCompanyID          *uint                 `json:"active_company_id"`
+	ActiveCompanyName        string                `json:"active_company_name,omitempty"`
+	RequiresCompanySelection bool                  `json:"requires_company_selection,omitempty"`
+	VisibleCompanies         []utils.CompanyOption `json:"visible_companies,omitempty"`
+	Permissions              []ApiPermission       `json:"permissions,omitempty"`
+	MenuItems                []ApiUserMenuItem     `json:"menu_items,omitempty"`
+	CreatedAt                string                `json:"created_at"`
+	UpdatedAt                string                `json:"updated_at"`
 }
 
 // ApiUserListPaginated representa uma lista paginada de usuários

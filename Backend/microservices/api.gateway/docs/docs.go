@@ -2644,8 +2644,11 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "active_company_id": {
-                    "description": "ActiveCompanyID/RequiresCompanySelection só vêm com valor \"de verdade\"\n(revalidado) na resposta de login/refresh/me — ver AuthService. Em\noutras respostas de ApiUserDetail (ex.: admin olhando outro usuário)\nActiveCompanyID é só o valor bruto salvo, sem repetir a validação.",
+                    "description": "ActiveCompanyID/ActiveCompanyName/RequiresCompanySelection/\nVisibleCompanies só vêm com valor \"de verdade\" (revalidado) na\nresposta de login/refresh/me — ver AuthService. Em outras respostas de\nApiUserDetail (ex.: admin olhando outro usuário) ActiveCompanyID é só\no valor bruto salvo, sem repetir a validação, e os outros três ficam\nvazios. VisibleCompanies é proposital e propositalmente \"sem\npermission\" (utils.ResolveCompanyOptions) — mostrar em qual empresa o\npróprio usuário está e trocar entre as que ele já enxerga é identidade\nde sessão, não administração do cadastro (isso continua exigindo\ncompanies.view, em GET /companies).",
                     "type": "integer"
+                },
+                "active_company_name": {
+                    "type": "string"
                 },
                 "company_id": {
                     "type": "integer"
@@ -2697,6 +2700,12 @@ const docTemplate = `{
                 },
                 "username": {
                     "type": "string"
+                },
+                "visible_companies": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/utils.CompanyOption"
+                    }
                 }
             }
         },
@@ -3436,6 +3445,17 @@ const docTemplate = `{
                 },
                 "totalRows": {
                     "type": "integer"
+                }
+            }
+        },
+        "utils.CompanyOption": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },

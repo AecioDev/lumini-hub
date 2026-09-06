@@ -152,3 +152,40 @@ func SetActiveCompany(db *gorm.DB, userID uint, companyID uint) error {
 
 	return db.Table("users").Where("id = ?", userID).Update("active_company_id", companyID).Error
 }
+
+// CompanyOption é uma versão mínima e "sem permission" de uma Company — só
+// o suficiente pra rotular um switcher/dropdown (id + nome de exibição),
+// nunca o registro completo que `GET /companies` expõe (esse sim é gated
+// por companies.view, porque é o cadastro administrativo de Empresas).
+// Saber "em qual empresa eu estou" e trocar entre as que já enxergo é uma
+// questão de identidade da própria sessão, não de administrar o cadastro —
+// por isso não pode depender de companies.view (a maioria dos perfis
+// operacionais, ex. Financeiro/Vendas, nunca vai ter essa permission).
+type CompanyOption struct {
+	ID   uint   `json:"id"`
+	Name string `json:"name"`
+}
+
+// ResolveCompanyOptions resolve {id, nome} das Companies em ids (ou, se
+// unrestricted, de todas as Companies ativas do tenant) — usado por
+// AuthService pra embutir a lista do switcher direto em ApiUserDetail
+// (login/refresh/me), sem round-trip pelo endpoint gated de api.core.
+func ResolveCompanyOptions(db *gorm.DB, ids []uint, unrestricted bool) ([]CompanyOption, error) {
+	if !unrestricted && len(ids) == 0 {
+		return []CompanyOption{}, nil
+	}
+
+	query := db.Table("companies").
+		Select("id, COALESCE(NULLIF(trade_name, ''), legal_name) AS name").
+		Where("deleted_at IS NULL AND is_active = true").
+		Order("name")
+	if !unrestricted {
+		query = query.Where("id IN ?", ids)
+	}
+
+	options := []CompanyOption{}
+	if err := query.Scan(&options).Error; err != nil {
+		return nil, err
+	}
+	return options, nil
+}

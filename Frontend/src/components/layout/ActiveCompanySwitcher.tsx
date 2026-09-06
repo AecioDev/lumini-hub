@@ -1,11 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Icon } from "@iconify/react";
-import { Drawer, List, Skeleton, Typography } from "antd";
+import { Drawer, List, Typography } from "antd";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeedback } from "@/hooks/useFeedback";
-import { companyService } from "@/services/companies/company-service";
 import { getApiErrorMessage } from "@/utils/api-error";
-import type { ApiCompany } from "@/types/company";
 
 const { Text } = Typography;
 
@@ -16,28 +14,27 @@ interface ActiveCompanySwitcherProps {
 // Mostra a Company ativa no topo do sidebar (onde antes ficava a marca
 // Lumini Hub — movida pro rodapé, ver AppLayout.tsx). Sem logo de verdade
 // ainda (CompanyVisualConfig / CFG-4 não existe), usa um ícone genérico no
-// lugar. Só quem enxerga mais de uma Company (master, ou com
-// companies.hierarchy.view — ver ResolveVisibleCompanyIDs no backend) pode
-// clicar pra trocar; pra quem só tem uma, fica só informativo, sem o
-// destaque de "clicável".
+// lugar.
+//
+// Os dados (active_company_name/visible_companies) vêm embutidos em
+// ApiUserDetail (login/refresh/me), NÃO de GET /companies — de propósito:
+// esse endpoint exige companies.view, uma permission de administração do
+// cadastro que a maioria dos perfis operacionais (Financeiro, Vendas etc.)
+// nunca tem. Saber em qual empresa você está e trocar entre as que você
+// enxerga é identidade de sessão, não administração — não pode depender
+// dessa permission (achado testando com a Maria/perfil Financeiro).
+//
+// Só quem enxerga mais de uma Company (master, ou com
+// companies.hierarchy.view) pode clicar pra trocar; pra quem só tem uma,
+// fica só informativo, sem o destaque de "clicável".
 export function ActiveCompanySwitcher({ collapsed }: ActiveCompanySwitcherProps) {
   const { user, setActiveCompany } = useAuth();
   const feedback = useFeedback();
 
-  const [companies, setCompanies] = useState<ApiCompany[]>([]);
-  const [loading, setLoading] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [switching, setSwitching] = useState<number | null>(null);
 
-  useEffect(() => {
-    companyService
-      .list()
-      .then(setCompanies)
-      .catch(() => setCompanies([]))
-      .finally(() => setLoading(false));
-  }, []);
-
-  const activeCompany = companies.find((c) => c.id === user?.active_company_id);
+  const companies = user?.visible_companies ?? [];
   const canSwitch = companies.length > 1;
 
   const handleSelect = async (companyId: number) => {
@@ -56,14 +53,6 @@ export function ActiveCompanySwitcher({ collapsed }: ActiveCompanySwitcherProps)
       setSwitching(null);
     }
   };
-
-  if (loading) {
-    return (
-      <div style={{ padding: collapsed ? "20px 0" : "20px 16px" }}>
-        <Skeleton.Avatar active size={22} />
-      </div>
-    );
-  }
 
   return (
     <>
@@ -91,7 +80,7 @@ export function ActiveCompanySwitcher({ collapsed }: ActiveCompanySwitcherProps)
                 textOverflow: "ellipsis",
               }}
             >
-              {activeCompany?.trade_name || activeCompany?.legal_name || "—"}
+              {user?.active_company_name || "—"}
             </span>
             {canSwitch && (
               <Icon
@@ -127,8 +116,7 @@ export function ActiveCompanySwitcher({ collapsed }: ActiveCompanySwitcherProps)
             >
               <List.Item.Meta
                 avatar={<Icon icon="ph:buildings" width={20} height={20} />}
-                title={company.trade_name || company.legal_name}
-                description={company.legal_name}
+                title={company.name}
               />
               {switching === company.id && <Text type="secondary">Trocando...</Text>}
               {company.id === user?.active_company_id && (

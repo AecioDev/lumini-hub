@@ -291,11 +291,19 @@ definitions:
     properties:
       active_company_id:
         description: |-
-          ActiveCompanyID/RequiresCompanySelection só vêm com valor "de verdade"
-          (revalidado) na resposta de login/refresh/me — ver AuthService. Em
-          outras respostas de ApiUserDetail (ex.: admin olhando outro usuário)
-          ActiveCompanyID é só o valor bruto salvo, sem repetir a validação.
+          ActiveCompanyID/ActiveCompanyName/RequiresCompanySelection/
+          VisibleCompanies só vêm com valor "de verdade" (revalidado) na
+          resposta de login/refresh/me — ver AuthService. Em outras respostas de
+          ApiUserDetail (ex.: admin olhando outro usuário) ActiveCompanyID é só
+          o valor bruto salvo, sem repetir a validação, e os outros três ficam
+          vazios. VisibleCompanies é proposital e propositalmente "sem
+          permission" (utils.ResolveCompanyOptions) — mostrar em qual empresa o
+          próprio usuário está e trocar entre as que ele já enxerga é identidade
+          de sessão, não administração do cadastro (isso continua exigindo
+          companies.view, em GET /companies).
         type: integer
+      active_company_name:
+        type: string
       company_id:
         type: integer
       created_at:
@@ -330,6 +338,10 @@ definitions:
         type: string
       username:
         type: string
+      visible_companies:
+        items:
+          $ref: '#/definitions/utils.CompanyOption'
+        type: array
     type: object
   domain.ApiUserListPaginated:
     properties:
@@ -825,6 +837,13 @@ definitions:
         type: integer
       totalRows:
         type: integer
+    type: object
+  utils.CompanyOption:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
     type: object
   utils.Response:
     properties:
