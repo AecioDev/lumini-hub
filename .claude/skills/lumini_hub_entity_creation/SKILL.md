@@ -30,6 +30,12 @@ Lumini Hub is multi-company **within a single tenant database** (multi-tenant it
 
 If `Company` itself doesn't exist yet in a given codebase snapshot, still ask the scoping question and record the answer in the feature's `plano_*.md` so the `CompanyID` FK/join table is added in the same pass once `Company` lands, instead of being silently forgotten.
 
+## Step 0.5: 1:1 Config Entities Don't Get Delete
+
+Found 2026-09-05 building `CompanyFiscalConfig`: a soft-deleted row plus a plain unique index (e.g. `CompanyID uniqueIndex`) lets the deleted row keep occupying the unique value, blocking recreation later (`ExistsByX` on the app side correctly ignores soft-deleted rows via GORM's default scope, but the raw DB unique *index* doesn't unless it's a partial index with `where:deleted_at IS NULL`). The real fix isn't a smarter index (though that's cheap insurance, add it anyway) — it's recognizing that **a 1:1 configuration record intrinsic to a parent (e.g. `CompanyFiscalConfig`, `CompanyVisualConfig`) has no business meaning for "delete"**: as long as the parent (`Company`) exists, it always has (or should have) that configuration, even if empty. Deleting the row doesn't correspond to anything a user would actually want — "clear the certificate" or "reset the colors" are `Update`s with empty/default values, or a dedicated action, never a row deletion.
+
+**Before Step 6 (Handler), decide**: is this entity a real list (rows genuinely come and go — `Company`, `ChartOfAccounts`, `CompanyDocumentIssuanceConfig`) or a 1:1 config glued to a parent? For the latter, skip Delete entirely: no `Delete<Entity>` in the service, no handler method, no route, and no `<entity>.delete` permission in Step 11 — only `view`/`create`/`edit`. Don't build it "for completeness" and remove it later; ask this before Step 1, same spirit as Step 0.
+
 ---
 
 ## Step-by-Step Entity Creation Process
@@ -98,3 +104,4 @@ Create unit/integration tests in `internal/service/<entity>_service_test.go` or 
     ```
 5.  **Automatic Permission Seeding**: When generating files for a new entity, you **MUST** automatically write/propose the GORM seeder logic (e.g. in `seeder.go`) or the equivalent database migration scripts to seed the new permissions (`view_<entity>`, `create_<entity>`, `edit_<entity>`, `delete_<entity>`) and map them to the `ADMIN` role template immediately.
 6.  **Ask the Company scoping question before Step 1, every time**: hard-scoped (own `CompanyID`), global-with-visibility-relationship (join table), or global-unscoped — see Step 0 above. Do not default to "unscoped" just because `Company` doesn't exist in the codebase yet; record the intended answer in `plano_*.md` regardless.
+7.  **1:1 config entities skip Delete entirely** (service, handler, route, and `.delete` permission) — see Step 0.5. Only real list-shaped entities keep the full CRUD.

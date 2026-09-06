@@ -36,7 +36,7 @@ func main() {
 	// Migração pontual da tabela de empresas (demais tabelas do api.core --
 	// Customer/Supplier -- não usam AutoMigrate hoje; escopo restrito só a
 	// esta struct nova, mesmo padrão já usado em api.auth pro MenuItem)
-	if err := db.AutoMigrate(&domain.Company{}); err != nil {
+	if err := db.AutoMigrate(&domain.Company{}, &domain.CompanyFiscalConfig{}); err != nil {
 		log.Fatalf("Erro ao migrar tabela de empresas: %v", err)
 	}
 

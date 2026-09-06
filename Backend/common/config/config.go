@@ -16,6 +16,7 @@ type Config struct {
 	Database  DatabaseConfig
 	SQLServer SQLServerConfig
 	JWT       JWTConfig
+	Security  SecurityConfig
 	App       AppConfig
 }
 
@@ -59,6 +60,16 @@ type JWTConfig struct {
 	RefreshTokenExp time.Duration
 }
 
+// SecurityConfig armazena chaves usadas pra criptografar dados sensíveis
+// reversíveis (diferente de hash irreversível, ex. senha de usuário/bcrypt).
+type SecurityConfig struct {
+	// CertificateEncryptionKey é uma chave AES-256 em hex (64 caracteres),
+	// usada pra criptografar/decriptografar a senha do certificado digital
+	// A1 de uma empresa (ver utils.EncryptAES/DecryptAES). Gerar com
+	// `openssl rand -hex 32`.
+	CertificateEncryptionKey string
+}
+
 // Load carrega as configurações do ambiente
 func Load() (*Config, error) {
 	// Carregar variáveis de ambiente do arquivo .env se existir
@@ -95,6 +106,9 @@ func Load() (*Config, error) {
 	jwtAccessExp, _ := strconv.Atoi(getEnv("JWT_ACCESS_EXP", "15"))      // 15 minutos
 	jwtRefreshExp, _ := strconv.Atoi(getEnv("JWT_REFRESH_EXP", "10080")) // 7 dias
 
+	// Chave de criptografia de dados sensíveis reversíveis
+	certificateEncryptionKey := getEnv("CERTIFICATE_ENCRYPTION_KEY", "")
+
 	// Configurações gerais da aplicação
 	appEnv := getEnv("APP_ENV", "development")
 
@@ -125,6 +139,9 @@ func Load() (*Config, error) {
 			Secret:          jwtSecret,
 			AccessTokenExp:  time.Duration(jwtAccessExp) * time.Minute,
 			RefreshTokenExp: time.Duration(jwtRefreshExp) * time.Minute,
+		},
+		Security: SecurityConfig{
+			CertificateEncryptionKey: certificateEncryptionKey,
 		},
 		App: AppConfig{
 			Env: appEnv,

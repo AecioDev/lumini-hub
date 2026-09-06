@@ -15,6 +15,7 @@ func SetupRoutes(router *gin.RouterGroup, uow repository.UnitOfWork, cfg *config
 	customerHandler := handlers.NewCustomerHandler(uow)
 	supplierHandler := handlers.NewSupplierHandler(uow)
 	companyHandler := handlers.NewCompanyHandler(uow)
+	companyFiscalConfigHandler := handlers.NewCompanyFiscalConfigHandler(uow, cfg.Security.CertificateEncryptionKey)
 
 	// Rotas de Clientes (todas protegidas)
 	customers := router.Group("/customers")
@@ -49,5 +50,20 @@ func SetupRoutes(router *gin.RouterGroup, uow repository.UnitOfWork, cfg *config
 		companies.POST("", middlewares.RequirePermission("companies.create"), companyHandler.CreateCompany)
 		companies.PUT("/:id", middlewares.RequirePermission("companies.edit"), companyHandler.UpdateCompany)
 		companies.DELETE("/:id", middlewares.RequirePermission("companies.delete"), companyHandler.DeleteCompany)
+	}
+
+	// Rotas de Configuração Fiscal de Empresas (todas protegidas).
+	// GET por empresa fica aqui, não aninhado em /companies/:id/..., porque o
+	// Gin não permite dois nomes de wildcard diferentes (:id vs :companyId)
+	// na mesma posição da árvore de rotas dentro do mesmo grupo.
+	companyFiscalConfigs := router.Group("/company-fiscal-configs")
+	companyFiscalConfigs.Use(middlewares.AuthMiddleware(cfg))
+	{
+		companyFiscalConfigs.GET("/by-company/:companyId", middlewares.RequirePermission("companies.fiscal_config.view"), companyFiscalConfigHandler.GetCompanyFiscalConfigByCompany)
+		companyFiscalConfigs.POST("", middlewares.RequirePermission("companies.fiscal_config.create"), companyFiscalConfigHandler.CreateCompanyFiscalConfig)
+		companyFiscalConfigs.PUT("/:id", middlewares.RequirePermission("companies.fiscal_config.edit"), companyFiscalConfigHandler.UpdateCompanyFiscalConfig)
+		// Sem DELETE de propósito — config 1:1 da empresa, ver comentário em
+		// CompanyFiscalConfigService.
+		companyFiscalConfigs.POST("/:id/certificate", middlewares.RequirePermission("companies.fiscal_config.edit"), companyFiscalConfigHandler.UploadCertificate)
 	}
 }
