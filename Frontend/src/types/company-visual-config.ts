@@ -10,6 +10,7 @@ export interface ApiCompanyVisualConfig {
   primary_color: string;
   secondary_color: string | null;
   accent_color: string | null;
+  text_color: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -21,10 +22,12 @@ export interface CreateCompanyVisualConfigRequest {
   primary_color: string;
   secondary_color?: string;
   accent_color?: string;
+  text_color?: string;
 }
 
 export interface UpdateCompanyVisualConfigRequest {
   primary_color: string;
   secondary_color?: string;
   accent_color?: string;
+  text_color?: string;
 }

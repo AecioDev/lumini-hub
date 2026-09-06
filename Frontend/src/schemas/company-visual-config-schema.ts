@@ -17,6 +17,7 @@ export const companyVisualConfigSchema = z.object({
   primary_color: hexColor,
   secondary_color: optionalHexColor,
   accent_color: optionalHexColor,
+  text_color: optionalHexColor,
 });
 
 export type CompanyVisualConfigFormValues = z.infer<typeof companyVisualConfigSchema>;

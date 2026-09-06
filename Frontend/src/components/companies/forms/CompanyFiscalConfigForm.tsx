@@ -6,6 +6,7 @@ import {
   Button,
   Card,
   Col,
+  Descriptions,
   Divider,
   Input,
   Row,
@@ -26,6 +27,7 @@ import {
 } from "@/schemas/company-fiscal-config-schema";
 import { getApiErrorMessage } from "@/utils/api-error";
 import { useFeedback } from "@/hooks/useFeedback";
+import { maskDocument, onlyDigits } from "@/utils/masks";
 import type { ApiCompanyFiscalConfigDetail } from "@/types/company-fiscal-config";
 
 const { Text } = Typography;
@@ -53,8 +55,6 @@ function certificateStatus(expiry: string | null): { color: string; text: string
   if (days <= 30) return { color: "warning", text: `Vence em ${days} dia${days === 1 ? "" : "s"}` };
   return { color: "success", text: "Válido" };
 }
-
-const onlyDigits = (value: string) => value.replace(/\D/g, "");
 
 // Compara o documento extraído do certificado com o CNPJ da própria
 // Company — só pra exibição (o usuário confere visualmente), nunca bloqueia
@@ -84,6 +84,10 @@ export function CompanyFiscalConfigForm({ companyId, companyCnpj }: CompanyFisca
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
   const [certificatePassword, setCertificatePassword] = useState("");
   const [uploadingCertificate, setUploadingCertificate] = useState(false);
+  // Selecionar arquivo/senha ficam escondidos até o usuário clicar em
+  // "Enviar Certificado" — evita mostrar um formulário de upload cada vez
+  // que a tela abre, já com um certificado válido cadastrado.
+  const [showUploadForm, setShowUploadForm] = useState(false);
 
   const {
     control,
@@ -159,6 +163,7 @@ export function CompanyFiscalConfigForm({ companyId, companyCnpj }: CompanyFisca
       setConfig(updated);
       setCertificateFile(null);
       setCertificatePassword("");
+      setShowUploadForm(false);
       feedback.success("Certificado enviado com sucesso.");
     } catch (error) {
       feedback.error(getApiErrorMessage(error, "Erro ao enviar certificado."));
@@ -180,7 +185,7 @@ export function CompanyFiscalConfigForm({ companyId, companyCnpj }: CompanyFisca
         <Card title="Configuração Fiscal">
           <Row gutter={16}>
             <Col xs={24} sm={12}>
-              <FormField label="Tipo de Tributação" error={errors.tax_regime}>
+              <FormField label="Tipo de Tributação" error={errors.tax_regime} stacked>
                 <Controller
                   name="tax_regime"
                   control={control}
@@ -190,7 +195,7 @@ export function CompanyFiscalConfigForm({ companyId, companyCnpj }: CompanyFisca
             </Col>
 
             <Col xs={24} sm={12}>
-              <FormField label="Nome do Contador" error={errors.accountant_name}>
+              <FormField label="Nome do Contador" error={errors.accountant_name} stacked>
                 <Controller
                   name="accountant_name"
                   control={control}
@@ -200,7 +205,7 @@ export function CompanyFiscalConfigForm({ companyId, companyCnpj }: CompanyFisca
             </Col>
 
             <Col xs={24} sm={12}>
-              <FormField label="CPF/CRC do Contador" error={errors.accountant_document}>
+              <FormField label="CPF/CRC do Contador" error={errors.accountant_document} stacked>
                 <Controller
                   name="accountant_document"
                   control={control}
@@ -210,7 +215,7 @@ export function CompanyFiscalConfigForm({ companyId, companyCnpj }: CompanyFisca
             </Col>
 
             <Col xs={24} sm={12}>
-              <FormField label="Contato do Contador" error={errors.accountant_contact}>
+              <FormField label="Contato do Contador" error={errors.accountant_contact} stacked>
                 <Controller
                   name="accountant_contact"
                   control={control}
@@ -220,50 +225,38 @@ export function CompanyFiscalConfigForm({ companyId, companyCnpj }: CompanyFisca
             </Col>
           </Row>
 
-          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
-            <Button type="primary" htmlType="submit" loading={submitting}>
-              {config ? "Salvar Configuração Fiscal" : "Criar Configuração Fiscal"}
-            </Button>
-          </div>
-
           <Divider>Certificado Digital A1</Divider>
 
           {config ? (
-            <Row gutter={16}>
-              <Col xs={24} sm={12}>
-                <Space direction="vertical" style={{ width: "100%" }} size="small">
-                  <div>
-                    <Text strong>Status: </Text>
-                    {config.has_certificate ? (
-                      <Tag color="blue">Certificado cadastrado</Tag>
-                    ) : (
-                      <Tag>Nenhum certificado enviado</Tag>
-                    )}
-                    {status && (
-                      <Tag color={status.color} style={{ marginLeft: 8 }}>
-                        {status.text}
-                      </Tag>
-                    )}
-                  </div>
-
-                  {config.has_certificate && (
-                    <div>
-                      <Text strong>Titular: </Text>
-                      <Text>{config.certificate_subject_name || "—"}</Text>
-                      <br />
-                      <Text strong>Documento: </Text>
-                      <Text>{config.certificate_subject_document || "—"}</Text>
-                      {documentMatch && (
-                        <>
-                          {" "}
-                          <Tag color={documentMatch.matches ? "success" : "error"}>
-                            {documentMatch.text}
-                          </Tag>
-                        </>
-                      )}
-                    </div>
+            <Space direction="vertical" style={{ width: "100%" }} size="middle">
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: 8,
+                }}
+              >
+                <Space>
+                  <Text strong>Status:</Text>
+                  {config.has_certificate ? (
+                    <Tag color="blue">Certificado cadastrado</Tag>
+                  ) : (
+                    <Tag>Nenhum certificado enviado</Tag>
                   )}
+                  {status && <Tag color={status.color}>{status.text}</Tag>}
+                </Space>
 
+                {!showUploadForm && (
+                  <Button onClick={() => setShowUploadForm(true)}>
+                    {config.has_certificate ? "Enviar Novo Certificado" : "Enviar Certificado"}
+                  </Button>
+                )}
+              </div>
+
+              {showUploadForm ? (
+                <Space direction="vertical" style={{ width: "100%" }} size="small">
                   <Upload
                     beforeUpload={(file) => {
                       setCertificateFile(file);
@@ -275,27 +268,57 @@ export function CompanyFiscalConfigForm({ companyId, companyCnpj }: CompanyFisca
                     <Button icon={<UploadOutlined />}>Selecionar arquivo (.pfx)</Button>
                   </Upload>
                   {certificateFile && <Text type="secondary">{certificateFile.name}</Text>}
-                </Space>
-              </Col>
 
-              <Col xs={24} sm={12}>
-                <Space direction="vertical" style={{ width: "100%" }} size="small">
                   <Input.Password
                     placeholder="Senha do certificado"
                     value={certificatePassword}
                     onChange={(e) => setCertificatePassword(e.target.value)}
                   />
-                  <Button
-                    type="primary"
-                    onClick={() => void handleUploadCertificate()}
-                    loading={uploadingCertificate}
-                    disabled={!certificateFile || !certificatePassword}
-                  >
-                    Enviar Certificado
-                  </Button>
+
+                  <Space>
+                    <Button
+                      type="primary"
+                      onClick={() => void handleUploadCertificate()}
+                      loading={uploadingCertificate}
+                      disabled={!certificateFile || !certificatePassword}
+                    >
+                      Confirmar Envio
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setShowUploadForm(false);
+                        setCertificateFile(null);
+                        setCertificatePassword("");
+                      }}
+                    >
+                      Cancelar
+                    </Button>
+                  </Space>
                 </Space>
-              </Col>
-            </Row>
+              ) : (
+                config.has_certificate && (
+                  <Descriptions column={1} size="small" bordered>
+                    <Descriptions.Item label="Titular">
+                      {config.certificate_subject_name || "—"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Documento">
+                      {config.certificate_subject_document
+                        ? maskDocument(config.certificate_subject_document)
+                        : "—"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Validade">
+                      {config.certificate_expiry
+                        ? dayjs(config.certificate_expiry).format("DD/MM/YYYY")
+                        : "—"}
+                    </Descriptions.Item>
+                  </Descriptions>
+                )
+              )}
+
+              {documentMatch && !documentMatch.matches && (
+                <Alert type="warning" showIcon message={documentMatch.text} />
+              )}
+            </Space>
           ) : (
             <Alert
               type="info"
@@ -303,6 +326,12 @@ export function CompanyFiscalConfigForm({ companyId, companyCnpj }: CompanyFisca
               message="Salve a configuração fiscal primeiro pra poder enviar o certificado digital."
             />
           )}
+
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 24 }}>
+            <Button type="primary" htmlType="submit" loading={submitting}>
+              {config ? "Salvar Configuração Fiscal" : "Criar Configuração Fiscal"}
+            </Button>
+          </div>
         </Card>
       </form>
     </div>
