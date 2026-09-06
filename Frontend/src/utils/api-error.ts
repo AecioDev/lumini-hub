@@ -28,3 +28,11 @@ export function getApiErrorMessage(error: unknown, fallback: string): string {
 export function isForbiddenError(error: unknown): boolean {
   return isAxiosError(error) && error.response?.status === 403;
 }
+
+// 404 = o recurso simplesmente não existe ainda (ex.: empresa sem
+// Configuração Fiscal cadastrada) — não é erro de verdade, é um estado
+// "vazio" que a tela deve tratar como formulário de criação, não mostrar
+// mensagem de erro.
+export function isNotFoundError(error: unknown): boolean {
+  return isAxiosError(error) && error.response?.status === 404;
+}
