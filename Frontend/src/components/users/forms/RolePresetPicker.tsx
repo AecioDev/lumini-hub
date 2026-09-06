@@ -1,6 +1,7 @@
 import { CheckCircleFilled } from "@ant-design/icons";
 import { Button, Typography } from "antd";
 import type { ApiRole } from "@/types/role";
+import { OTHERS_FILTER_ID } from "./ModulePermissionsPanel";
 
 const { Paragraph } = Typography;
 
@@ -9,6 +10,12 @@ interface RolePresetPickerProps {
   selectedRoleId: number | null;
   onSelectRole: (roleId: number) => void;
   rolesWithPermissions?: Set<number>;
+  // Mostra o botão "Outros" ao final da lista — módulos do catálogo sem
+  // nenhum Perfil de nome correspondente (ver getOrphanModules), senão
+  // ficam inalcançáveis por este filtro (achado testando companies.
+  // hierarchy.view, módulo "Empresas", sem Perfil "Empresas").
+  showOthers?: boolean;
+  othersHasPermissions?: boolean;
 }
 
 // Filtro de navegação: escolher um botão só troca o módulo de permissões
@@ -27,6 +34,8 @@ export function RolePresetPicker({
   selectedRoleId,
   onSelectRole,
   rolesWithPermissions,
+  showOthers,
+  othersHasPermissions,
 }: RolePresetPickerProps) {
   return (
     <div>
@@ -60,6 +69,25 @@ export function RolePresetPicker({
             </Button>
           );
         })}
+        {showOthers && (
+          <Button
+            type={selectedRoleId === OTHERS_FILTER_ID ? "primary" : "default"}
+            onClick={() => onSelectRole(OTHERS_FILTER_ID)}
+            style={{
+              textAlign: "left",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <span>Outros</span>
+            {othersHasPermissions && (
+              <CheckCircleFilled
+                style={{ color: selectedRoleId === OTHERS_FILTER_ID ? "#fff" : "#52c41a" }}
+              />
+            )}
+          </Button>
+        )}
       </div>
     </div>
   );

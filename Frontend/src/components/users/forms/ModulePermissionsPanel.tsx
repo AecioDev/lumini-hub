@@ -1,7 +1,32 @@
 import { Checkbox, Typography } from "antd";
 import type { ApiPermission, ApiPermissionsByModule } from "@/types/permission";
+import type { ApiRole } from "@/types/role";
 
 const { Text } = Typography;
+
+// Sentinelas do filtro "Outros" (módulos do catálogo sem nenhum Perfil de
+// nome correspondente — ver getOrphanModules) — não são IDs/nomes reais,
+// só marcadores pra distinguir esse modo dos filtros normais por Perfil.
+// -1 nunca colide com um ID de Perfil de verdade (seriais do banco, sempre
+// positivos).
+export const OTHERS_FILTER_ID = -1;
+export const OTHERS_MODULE_KEY = "__outros__";
+
+// Módulos do catálogo de permissões que não têm nenhum Perfil com nome
+// correspondente (case-insensitive) — hoje inalcançáveis pelo filtro normal
+// de Perfil, porque pickModuleForRole só encontra um módulo quando o nome
+// do Perfil bate exatamente com o nome do módulo. Achado testando: o módulo
+// "Empresas" (com companies.hierarchy.view) não tinha como ser navegado até
+// aqui, porque não existe Perfil chamado "Empresas".
+export function getOrphanModules(
+  roles: ApiRole[],
+  permissionsByModule: ApiPermissionsByModule[]
+): ApiPermissionsByModule[] {
+  const roleNames = new Set(roles.map((r) => r.name.trim().toLowerCase()));
+  return permissionsByModule.filter(
+    (entry) => !roleNames.has(entry.module.trim().toLowerCase())
+  );
+}
 
 const ACTION_LABELS: Record<string, string> = {
   view: "Ver",
@@ -104,6 +129,9 @@ interface ModulePermissionsPanelProps {
   selectedIds: Set<number>;
   onChange: (next: Set<number>) => void;
   activeModule: string | null;
+  // Só usado quando activeModule === OTHERS_MODULE_KEY — módulos sem Perfil
+  // correspondente, ver getOrphanModules.
+  orphanModules?: ApiPermissionsByModule[];
 }
 
 export function ModulePermissionsPanel({
@@ -111,6 +139,7 @@ export function ModulePermissionsPanel({
   selectedIds,
   onChange,
   activeModule,
+  orphanModules = [],
 }: ModulePermissionsPanelProps) {
   const toggle = (permissionId: number) => {
     const next = new Set(selectedIds);
@@ -118,6 +147,44 @@ export function ModulePermissionsPanel({
     else next.add(permissionId);
     onChange(next);
   };
+
+  if (activeModule === OTHERS_MODULE_KEY) {
+    if (orphanModules.length === 0) {
+      return (
+        <Text type="secondary" style={{ fontSize: 13 }}>
+          Nenhuma permissão órfã — todo módulo do catálogo já tem um Perfil correspondente.
+        </Text>
+      );
+    }
+    return (
+      <div>
+        <Text strong style={{ fontSize: 13, display: "block", marginBottom: 14 }}>
+          Outros
+        </Text>
+        {orphanModules.map((entry) => (
+          <div key={entry.module} style={{ marginBottom: 20 }}>
+            <Text
+              type="secondary"
+              style={{ fontSize: 12, display: "block", marginBottom: 8 }}
+            >
+              {moduleLabel(entry.module)}
+            </Text>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "12px 28px" }}>
+              {buildPermissionItems(entry.permissions).map(({ permission, label }) => (
+                <Checkbox
+                  key={permission.id}
+                  checked={selectedIds.has(permission.id)}
+                  onChange={() => toggle(permission.id)}
+                >
+                  {label}
+                </Checkbox>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   const current = permissionsByModule.find((entry) => entry.module === activeModule);
   const items = current ? buildPermissionItems(current.permissions) : [];

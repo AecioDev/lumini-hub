@@ -5,7 +5,13 @@ import { Button, Card, Col, Input, Row, Select, Skeleton, Switch, Tabs } from "a
 import { useNavigate } from "react-router-dom";
 import { FormField } from "@/components/common/FormField";
 import { AccessDeniedResult } from "@/components/common/AccessDeniedResult";
-import { ModulePermissionsPanel, pickModuleForRole } from "./ModulePermissionsPanel";
+import {
+  ModulePermissionsPanel,
+  pickModuleForRole,
+  getOrphanModules,
+  OTHERS_FILTER_ID,
+  OTHERS_MODULE_KEY,
+} from "./ModulePermissionsPanel";
 import { RolePresetPicker } from "./RolePresetPicker";
 import { UserPermissionsSummary } from "./UserPermissionsSummary";
 import { updateUserSchema, type UpdateUserFormValues } from "@/schemas/update-user-schema";
@@ -138,6 +144,10 @@ export function EditUserForm({ userId }: { userId: number }) {
   // marcada (que pode acumular permissões de vários módulos diferentes).
   const handleFilterRole = (newFilterRoleId: number) => {
     setFilterRoleId(newFilterRoleId);
+    if (newFilterRoleId === OTHERS_FILTER_ID) {
+      setActiveModule(OTHERS_MODULE_KEY);
+      return;
+    }
     const role = roles.find((r) => r.id === newFilterRoleId);
     if (role) {
       setActiveModule(pickModuleForRole(role.name, permissionsByModule, selectedPermissionIds));
@@ -148,7 +158,24 @@ export function EditUserForm({ userId }: { userId: number }) {
     setSelectedPermissionIds(next);
   };
 
-  const filterRoleName = roles.find((r) => r.id === filterRoleId)?.name ?? "";
+  const filterRoleName =
+    filterRoleId === OTHERS_FILTER_ID
+      ? "Outros"
+      : roles.find((r) => r.id === filterRoleId)?.name ?? "";
+
+  // Módulos do catálogo sem Perfil correspondente (ex.: "Empresas") —
+  // inalcançáveis pelo filtro normal de Perfil, ver getOrphanModules.
+  const orphanModules = useMemo(
+    () => getOrphanModules(roles, permissionsByModule),
+    [roles, permissionsByModule]
+  );
+  const othersHasPermissions = useMemo(
+    () =>
+      orphanModules.some((entry) =>
+        entry.permissions.some((p) => selectedPermissionIds.has(p.id))
+      ),
+    [orphanModules, selectedPermissionIds]
+  );
 
   // Perfis cujo módulo tem alguma permissão marcada — usado pra destacar,
   // no filtro de perfil, quais perfis "contribuíram" com alguma permissão
@@ -318,6 +345,8 @@ export function EditUserForm({ userId }: { userId: number }) {
                         selectedRoleId={filterRoleId}
                         onSelectRole={handleFilterRole}
                         rolesWithPermissions={rolesWithPermissions}
+                        showOthers={orphanModules.length > 0}
+                        othersHasPermissions={othersHasPermissions}
                       />
                     </Card>
                   </Col>
@@ -329,6 +358,7 @@ export function EditUserForm({ userId }: { userId: number }) {
                         selectedIds={selectedPermissionIds}
                         onChange={handlePermissionsChange}
                         activeModule={activeModule}
+                        orphanModules={orphanModules}
                       />
                     </Card>
                   </Col>
