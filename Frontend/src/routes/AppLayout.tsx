@@ -20,6 +20,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { SidebarMenu } from "@/components/layout/SidebarMenu";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { Logo } from "@/components/layout/Logo";
+import { ActiveCompanySwitcher } from "@/components/layout/ActiveCompanySwitcher";
 import { getAvatarGradient, getInitials } from "@/utils/avatar";
 import type { ApiUserMenuItem } from "@/types/menu";
 
@@ -74,17 +75,7 @@ export function AppLayout() {
         trigger={null}
         style={{ display: "flex", flexDirection: "column" }}
       >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: collapsed ? "center" : "flex-start",
-            padding: collapsed ? "20px 0" : "20px 16px",
-            borderBottom: "1px solid rgba(255,255,255,0.08)",
-          }}
-        >
-          <Logo size={22} showWordmark={!collapsed} />
-        </div>
+        <ActiveCompanySwitcher collapsed={collapsed} />
 
         <div style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
           <SidebarMenu items={menuItems} />
@@ -95,33 +86,11 @@ export function AppLayout() {
             display: "flex",
             alignItems: "center",
             justifyContent: collapsed ? "center" : "flex-start",
-            gap: 10,
             padding: collapsed ? "12px 0" : "12px 16px",
             borderTop: "1px solid rgba(255,255,255,0.08)",
           }}
         >
-          <Avatar style={{ background: getAvatarGradient(user?.name ?? "") }}>
-            {getInitials(user?.name ?? "?")}
-          </Avatar>
-          {!collapsed && (
-            <div style={{ minWidth: 0 }}>
-              <div
-                style={{
-                  fontSize: 13,
-                  fontWeight: 500,
-                  color: "rgba(255,255,255,0.85)",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-              >
-                {user?.name}
-              </div>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)" }}>
-                {user?.role?.name}
-              </div>
-            </div>
-          )}
+          <Logo size={20} showWordmark={!collapsed} />
         </div>
       </Sider>
 
