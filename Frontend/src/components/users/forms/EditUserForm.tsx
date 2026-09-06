@@ -12,16 +12,19 @@ import { updateUserSchema, type UpdateUserFormValues } from "@/schemas/update-us
 import { roleService } from "@/services/roles/role-service";
 import { permissionService } from "@/services/permissions/permission-service";
 import { userService } from "@/services/users/user-service";
+import { companyService } from "@/services/companies/company-service";
 import { useFeedback } from "@/hooks/useFeedback";
 import { isForbiddenError } from "@/utils/api-error";
 import type { ApiRole } from "@/types/role";
 import type { ApiPermissionsByModule } from "@/types/permission";
+import type { ApiCompany } from "@/types/company";
 
 const DADOS_FIELDS: (keyof UpdateUserFormValues)[] = [
   "name",
   "email",
   "phone",
   "role_id",
+  "company_id",
 ];
 
 export function EditUserForm({ userId }: { userId: number }) {
@@ -32,6 +35,7 @@ export function EditUserForm({ userId }: { userId: number }) {
   const [permissionsByModule, setPermissionsByModule] = useState<
     ApiPermissionsByModule[]
   >([]);
+  const [companies, setCompanies] = useState<ApiCompany[]>([]);
   const [loading, setLoading] = useState(true);
   const [forbidden, setForbidden] = useState(false);
   const [username, setUsername] = useState("");
@@ -55,7 +59,14 @@ export function EditUserForm({ userId }: { userId: number }) {
     formState: { errors },
   } = useForm<UpdateUserFormValues>({
     resolver: zodResolver(updateUserSchema),
-    defaultValues: { name: "", email: "", phone: "", role_id: 0, is_active: true },
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      role_id: 0,
+      is_active: true,
+      company_id: null,
+    },
   });
 
   useEffect(() => {
@@ -65,8 +76,9 @@ export function EditUserForm({ userId }: { userId: number }) {
       userService.getById(userId),
       roleService.list(),
       permissionService.byModule(),
+      companyService.list(),
     ])
-      .then(async ([user, rolesResult, permsResult]) => {
+      .then(async ([user, rolesResult, permsResult, companiesResult]) => {
         if (cancelled) return;
 
         setUsername(user.username);
@@ -75,9 +87,11 @@ export function EditUserForm({ userId }: { userId: number }) {
         setValue("phone", user.phone ?? "");
         setValue("role_id", user.role_id, { shouldValidate: true });
         setValue("is_active", user.is_active);
+        setValue("company_id", user.company_id);
 
         setRoles(rolesResult);
         setPermissionsByModule(permsResult);
+        setCompanies(companiesResult);
         setRoleId(user.role_id);
         setFilterRoleId(user.role_id);
 
@@ -244,6 +258,26 @@ export function EditUserForm({ userId }: { userId: number }) {
                           label: role.name,
                         }))}
                         onChange={(id) => void handleChangeUserRole(id)}
+                      />
+                    </FormField>
+                  </Col>
+                  <Col xs={24} sm={12}>
+                    <FormField label="Empresa" error={errors.company_id}>
+                      <Controller
+                        name="company_id"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            allowClear
+                            value={field.value ?? undefined}
+                            placeholder="Nenhuma (usuário master, vê todas as empresas)"
+                            options={companies.map((company) => ({
+                              value: company.id,
+                              label: company.trade_name || company.legal_name,
+                            }))}
+                            onChange={(id) => field.onChange(id ?? null)}
+                          />
+                        )}
                       />
                     </FormField>
                   </Col>

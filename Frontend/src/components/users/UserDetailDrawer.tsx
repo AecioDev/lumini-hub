@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Descriptions, Drawer, Skeleton, Space, Tag } from "antd";
 import { userService } from "@/services/users/user-service";
+import { companyService } from "@/services/companies/company-service";
 import { useFeedback } from "@/hooks/useFeedback";
 import type { ApiUserDetail } from "@/types/auth";
 import { getTagColor } from "@/utils/avatar";
@@ -12,18 +13,28 @@ interface UserDetailDrawerProps {
 
 export function UserDetailDrawer({ userId, onClose }: UserDetailDrawerProps) {
   const [user, setUser] = useState<ApiUserDetail | null>(null);
+  const [companyName, setCompanyName] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const feedback = useFeedback();
 
   useEffect(() => {
     if (userId === null) {
       setUser(null);
+      setCompanyName(null);
       return;
     }
     setLoading(true);
     userService
       .getById(userId)
-      .then(setUser)
+      .then(async (result) => {
+        setUser(result);
+        if (result.company_id) {
+          const company = await companyService.getById(result.company_id);
+          setCompanyName(company.trade_name || company.legal_name);
+        } else {
+          setCompanyName(null);
+        }
+      })
       .catch(() => feedback.error("Erro ao carregar detalhes do usuário."))
       .finally(() => setLoading(false));
   }, [userId, feedback]);
@@ -48,6 +59,9 @@ export function UserDetailDrawer({ userId, onClose }: UserDetailDrawerProps) {
             <Descriptions.Item label="E-mail">{user.email || "—"}</Descriptions.Item>
             <Descriptions.Item label="Telefone">{user.phone || "—"}</Descriptions.Item>
             <Descriptions.Item label="Perfil">{user.role?.name}</Descriptions.Item>
+            <Descriptions.Item label="Empresa">
+              {companyName ?? "Nenhuma (usuário master)"}
+            </Descriptions.Item>
             <Descriptions.Item label="Status">
               <Tag color={user.is_active ? "success" : "default"}>
                 {user.is_active ? "Ativo" : "Inativo"}

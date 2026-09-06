@@ -10,6 +10,7 @@ export interface CreateUserRequest {
   email: string;
   phone?: string;
   role_id: number;
+  company_id?: number | null;
 }
 
 export interface UpdateUserRequest {
@@ -18,6 +19,7 @@ export interface UpdateUserRequest {
   phone?: string;
   role_id?: number;
   is_active?: boolean;
+  company_id?: number | null;
 }
 
 export interface UpdateUserPermissionsRequest {

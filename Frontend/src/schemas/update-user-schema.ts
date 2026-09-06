@@ -11,6 +11,8 @@ export const updateUserSchema = z.object({
     .int()
     .positive("Selecione um perfil"),
   is_active: z.boolean(),
+  // null = usuário "master" (sem empresa vinculada, vê todas a partir da Matriz).
+  company_id: z.number().int().positive().nullable(),
 });
 
 export type UpdateUserFormValues = z.infer<typeof updateUserSchema>;

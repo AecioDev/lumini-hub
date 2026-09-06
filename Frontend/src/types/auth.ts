@@ -11,6 +11,7 @@ export interface ApiUser {
   role_id: number;
   role?: string;
   is_active: boolean;
+  company_id: number | null;
 }
 
 export interface ApiUserRole {
@@ -31,6 +32,7 @@ export interface ApiUserDetail {
   role: ApiUserRole;
   is_active: boolean;
   last_login?: string;
+  company_id: number | null;
   permissions?: ApiPermission[];
   menu_items?: ApiUserMenuItem[];
   created_at: string;

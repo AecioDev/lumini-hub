@@ -12,10 +12,12 @@ import { createUserSchema, type CreateUserFormValues } from "@/schemas/create-us
 import { roleService } from "@/services/roles/role-service";
 import { permissionService } from "@/services/permissions/permission-service";
 import { userService } from "@/services/users/user-service";
+import { companyService } from "@/services/companies/company-service";
 import { useFeedback } from "@/hooks/useFeedback";
 import { isForbiddenError } from "@/utils/api-error";
 import type { ApiRole } from "@/types/role";
 import type { ApiPermissionsByModule } from "@/types/permission";
+import type { ApiCompany } from "@/types/company";
 
 const DADOS_FIELDS: (keyof CreateUserFormValues)[] = [
   "username",
@@ -24,6 +26,7 @@ const DADOS_FIELDS: (keyof CreateUserFormValues)[] = [
   "email",
   "phone",
   "role_id",
+  "company_id",
 ];
 
 export function CreateUserForm() {
@@ -34,6 +37,7 @@ export function CreateUserForm() {
   const [permissionsByModule, setPermissionsByModule] = useState<
     ApiPermissionsByModule[]
   >([]);
+  const [companies, setCompanies] = useState<ApiCompany[]>([]);
   const [loadingPresets, setLoadingPresets] = useState(true);
   const [forbidden, setForbidden] = useState(false);
 
@@ -63,17 +67,19 @@ export function CreateUserForm() {
       email: "",
       phone: "",
       role_id: 0,
+      company_id: null,
     },
   });
 
   useEffect(() => {
     let cancelled = false;
 
-    Promise.all([roleService.list(), permissionService.byModule()])
-      .then(async ([rolesResult, permsResult]) => {
+    Promise.all([roleService.list(), permissionService.byModule(), companyService.list()])
+      .then(async ([rolesResult, permsResult, companiesResult]) => {
         if (cancelled) return;
         setRoles(rolesResult);
         setPermissionsByModule(permsResult);
+        setCompanies(companiesResult);
 
         if (rolesResult.length > 0) {
           const first = rolesResult[0];
@@ -265,6 +271,30 @@ export function CreateUserForm() {
                             label: role.name,
                           }))}
                           onChange={(id) => void handleChangeUserRole(id)}
+                        />
+                      )}
+                    </FormField>
+                  </Col>
+                  <Col xs={24} sm={12}>
+                    <FormField label="Empresa" error={errors.company_id}>
+                      {loadingPresets ? (
+                        <Skeleton.Input active block style={{ width: "100%" }} />
+                      ) : (
+                        <Controller
+                          name="company_id"
+                          control={control}
+                          render={({ field }) => (
+                            <Select
+                              allowClear
+                              value={field.value ?? undefined}
+                              placeholder="Nenhuma (usuário master, vê todas as empresas)"
+                              options={companies.map((company) => ({
+                                value: company.id,
+                                label: company.trade_name || company.legal_name,
+                              }))}
+                              onChange={(id) => field.onChange(id ?? null)}
+                            />
+                          )}
                         />
                       )}
                     </FormField>

@@ -15,6 +15,8 @@ export const createUserSchema = z.object({
     .number({ invalid_type_error: "Selecione um perfil" })
     .int()
     .positive("Selecione um perfil"),
+  // null = usuário "master" (sem empresa vinculada, vê todas a partir da Matriz).
+  company_id: z.number().int().positive().nullable(),
 });
 
 export type CreateUserFormValues = z.infer<typeof createUserSchema>;
