@@ -25,6 +25,14 @@ import type { ApiRole } from "@/types/role";
 import type { ApiPermissionsByModule } from "@/types/permission";
 import type { ApiCompany } from "@/types/company";
 
+// Opção explícita no Select "Empresa" pra virar "master" (sem empresa
+// vinculada) — 0 nunca é um ID de Company de verdade (seriais do banco
+// começam em 1). Antes disso existir só dava pra "limpar" via allowClear,
+// que era pouco descoberto e também expunha um bug real: o backend
+// ignorava `company_id: null` no update (corrigido em UserService.
+// UpdateUser, achado testando).
+const MASTER_OPTION_VALUE = 0;
+
 const DADOS_FIELDS: (keyof CreateUserFormValues)[] = [
   "username",
   "password",
@@ -312,14 +320,20 @@ export function CreateUserForm() {
                           control={control}
                           render={({ field }) => (
                             <Select
-                              allowClear
-                              value={field.value ?? undefined}
-                              placeholder="Nenhuma (usuário master, vê todas as empresas)"
-                              options={companies.map((company) => ({
-                                value: company.id,
-                                label: company.trade_name || company.legal_name,
-                              }))}
-                              onChange={(id) => field.onChange(id ?? null)}
+                              value={field.value ?? MASTER_OPTION_VALUE}
+                              options={[
+                                {
+                                  value: MASTER_OPTION_VALUE,
+                                  label: "Nenhuma (usuário master, vê todas as empresas)",
+                                },
+                                ...companies.map((company) => ({
+                                  value: company.id,
+                                  label: company.trade_name || company.legal_name,
+                                })),
+                              ]}
+                              onChange={(id) =>
+                                field.onChange(id === MASTER_OPTION_VALUE ? null : id)
+                              }
                             />
                           )}
                         />

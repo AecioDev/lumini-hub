@@ -215,9 +215,15 @@ func (s *UserService) UpdateUser(id uint, req domain.UpdateUserRequest, requeste
 		user.IsActive = *req.IsActive
 	}
 
-	if req.CompanyID != nil {
-		user.CompanyID = req.CompanyID
-	}
+	// Sempre atribui (não "if != nil, então mexe") — CompanyID é *uint
+	// porque o valor de negócio nulo é "usuário master, sem empresa
+	// vinculada", não "campo não enviado". O formulário do frontend sempre
+	// manda o estado atual do Select, incluindo null explícito quando o
+	// usuário limpa pra virar master — se essa atribuição fosse condicional
+	// a `!= nil`, nunca daria pra desvincular a empresa de um usuário depois
+	// de vinculada (achado testando: usuário limpava o Select, salvava, e a
+	// empresa continuava lá).
+	user.CompanyID = req.CompanyID
 
 	// Salvar alterações
 	if err := s.userRepo.Update(user); err != nil {
