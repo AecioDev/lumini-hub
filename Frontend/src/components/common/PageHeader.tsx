@@ -21,6 +21,15 @@ interface PageHeaderProps {
 // rolar formulários longos (ex.: Identidade Visual). `background` precisa
 // ser explícito com o token colorBgLayout, senão o conteúdo por trás
 // aparece atravessando o cabeçalho fixo durante o scroll.
+//
+// `top: -24` (não 0) compensa o padding:24 do <Content> (AppLayout.tsx) —
+// o browser calcula o "grudado" do sticky relativo à padding-edge do
+// scrollport, então `top: 0` gruda 24px abaixo do topo visível de verdade
+// (esse padding não é um espaço fixo, ele rola junto com o conteúdo).
+// Sem esse ajuste sobra uma faixa de ~24px onde conteúdo já rolado ainda
+// aparece por trás do cabeçalho (achado pelo revisor-codigo-lumini-hub
+// testando Editar Empresa). Acoplamento numérico com o padding do
+// Content — se aquele valor mudar, ajustar aqui também.
 export function PageHeader({ title, subtitle, backTo }: PageHeaderProps) {
   const navigate = useNavigate();
   const { token } = theme.useToken();
@@ -34,9 +43,10 @@ export function PageHeader({ title, subtitle, backTo }: PageHeaderProps) {
         gap: 16,
         marginBottom: 20,
         position: "sticky",
-        top: 0,
+        top: -24,
         zIndex: 10,
         background: token.colorBgLayout,
+        paddingTop: 24,
         paddingBottom: 12,
       }}
     >
