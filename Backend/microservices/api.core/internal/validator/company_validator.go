@@ -61,23 +61,23 @@ func (v *CompanyValidator) validateParent(parentID *uint, selfID uint) error {
 func (v *CompanyValidator) ValidateForCreation(req domain.CreateCompanyRequest) error {
 	var errors ValidationErrors
 
-	taxID := utils.RemoveMask(req.TaxID)
+	cnpj := utils.RemoveMask(req.CNPJ)
 
 	// CNPJ só é obrigatório pra quem é Matriz (sem parent_id) — uma empresa
 	// vinculada pode não ter CNPJ próprio quando a responsabilidade fiscal
 	// fica com a Matriz (caso real do usuário, decidido 2026-09-05: ela
 	// existe só pra personalizar relatórios, logo/endereço etc.).
-	if req.ParentID == nil && taxID == "" {
-		errors.AddError("tax_id", "CNPJ é obrigatório para a empresa Matriz")
+	if req.ParentID == nil && cnpj == "" {
+		errors.AddError("cnpj", "CNPJ é obrigatório para a empresa Matriz")
 	}
 
-	if taxID != "" {
-		exists, err := v.companyRepo.ExistsByTaxID(taxID)
+	if cnpj != "" {
+		exists, err := v.companyRepo.ExistsByCNPJ(cnpj)
 		if err != nil {
 			return err
 		}
 		if exists {
-			errors.AddError("tax_id", "CNPJ já está em uso")
+			errors.AddError("cnpj", "CNPJ já está em uso")
 		}
 	}
 
@@ -114,26 +114,26 @@ func (v *CompanyValidator) ValidateForUpdate(id uint, req domain.UpdateCompanyRe
 		return errors
 	}
 
-	taxID := utils.RemoveMask(req.TaxID)
+	cnpj := utils.RemoveMask(req.CNPJ)
 
 	// UpdateCompanyRequest é sempre o estado completo desejado (o frontend
-	// manda parent_id/tax_id atuais, não um patch parcial) — mesmo cálculo
+	// manda parent_id/cnpj atuais, não um patch parcial) — mesmo cálculo
 	// de obrigatoriedade do CNPJ que em ValidateForCreation.
-	if req.ParentID == nil && taxID == "" {
-		errors.AddError("tax_id", "CNPJ é obrigatório para a empresa Matriz")
+	if req.ParentID == nil && cnpj == "" {
+		errors.AddError("cnpj", "CNPJ é obrigatório para a empresa Matriz")
 	}
 
-	currentTaxID := ""
-	if company.TaxID != nil {
-		currentTaxID = *company.TaxID
+	currentCNPJ := ""
+	if company.CNPJ != nil {
+		currentCNPJ = *company.CNPJ
 	}
-	if taxID != "" && taxID != currentTaxID {
-		exists, err := v.companyRepo.ExistsByTaxIDExcept(taxID, id)
+	if cnpj != "" && cnpj != currentCNPJ {
+		exists, err := v.companyRepo.ExistsByCNPJExcept(cnpj, id)
 		if err != nil {
 			return err
 		}
 		if exists {
-			errors.AddError("tax_id", "CNPJ já está em uso")
+			errors.AddError("cnpj", "CNPJ já está em uso")
 		}
 	}
 

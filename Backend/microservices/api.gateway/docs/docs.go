@@ -2253,6 +2253,9 @@ const docTemplate = `{
         "domain.ApiCompany": {
             "type": "object",
             "properties": {
+                "cnpj": {
+                    "type": "string"
+                },
                 "created_at": {
                     "type": "string"
                 },
@@ -2268,9 +2271,6 @@ const docTemplate = `{
                 "parent_id": {
                     "type": "integer"
                 },
-                "tax_id": {
-                    "type": "string"
-                },
                 "trade_name": {
                     "type": "string"
                 },
@@ -2282,6 +2282,9 @@ const docTemplate = `{
         "domain.ApiCompanyDetail": {
             "type": "object",
             "properties": {
+                "cnpj": {
+                    "type": "string"
+                },
                 "created_at": {
                     "type": "string"
                 },
@@ -2299,9 +2302,6 @@ const docTemplate = `{
                 },
                 "parent_id": {
                     "type": "integer"
-                },
-                "tax_id": {
-                    "type": "string"
                 },
                 "trade_name": {
                     "type": "string"
@@ -2911,15 +2911,15 @@ const docTemplate = `{
                 "legal_name"
             ],
             "properties": {
+                "cnpj": {
+                    "type": "string"
+                },
                 "legal_name": {
                     "type": "string",
                     "minLength": 3
                 },
                 "parent_id": {
                     "type": "integer"
-                },
-                "tax_id": {
-                    "type": "string"
                 },
                 "trade_name": {
                     "type": "string"
@@ -3186,6 +3186,9 @@ const docTemplate = `{
                 "legal_name"
             ],
             "properties": {
+                "cnpj": {
+                    "type": "string"
+                },
                 "is_active": {
                     "description": "Sem ` + "`" + `binding:\"required\"` + "`" + ` de propósito: num bool, \"required\" exige true\n(zero value é false), o que impediria desativar uma empresa via PUT.",
                     "type": "boolean"
@@ -3196,9 +3199,6 @@ const docTemplate = `{
                 },
                 "parent_id": {
                     "type": "integer"
-                },
-                "tax_id": {
-                    "type": "string"
                 },
                 "trade_name": {
                     "type": "string"

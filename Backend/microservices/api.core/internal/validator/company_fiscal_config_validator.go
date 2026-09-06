@@ -41,7 +41,7 @@ func (v *CompanyFiscalConfigValidator) ValidateForCreation(req domain.CreateComp
 		errors.AddError("company_id", "empresa não encontrada")
 		return errors
 	}
-	if company.TaxID == nil {
+	if company.CNPJ == nil {
 		// Empresa sem CNPJ próprio (vinculada cuja parte fiscal fica a
 		// cargo da Matriz, decidido 2026-09-05) — não faz sentido ter
 		// tributação/contador próprios sem uma identidade fiscal.

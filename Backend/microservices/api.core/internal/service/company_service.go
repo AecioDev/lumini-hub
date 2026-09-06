@@ -21,11 +21,11 @@ func NewCompanyService(uow repository.UnitOfWork) *CompanyService {
 	}
 }
 
-// normalizedTaxID limpa a máscara do CNPJ e devolve nil se ficar vazio —
-// TaxID é *string (nullable), não string vazia, pra várias empresas sem
+// normalizedCNPJ limpa a máscara do CNPJ e devolve nil se ficar vazio —
+// CNPJ é *string (nullable), não string vazia, pra várias empresas sem
 // CNPJ (vinculadas cuja parte fiscal fica com a Matriz) não colidirem no
 // índice único (NULL nunca é igual a NULL pro Postgres).
-func normalizedTaxID(raw string) *string {
+func normalizedCNPJ(raw string) *string {
 	cleaned := utils.RemoveMask(raw)
 	if cleaned == "" {
 		return nil
@@ -96,7 +96,7 @@ func (s *CompanyService) CreateCompany(req domain.CreateCompanyRequest, userID u
 		ParentID:    req.ParentID,
 		LegalName:   req.LegalName,
 		TradeName:   req.TradeName,
-		TaxID:       normalizedTaxID(req.TaxID),
+		CNPJ:        normalizedCNPJ(req.CNPJ),
 		IsActive:    true,
 		CreatedByID: &userID,
 	}
@@ -129,7 +129,7 @@ func (s *CompanyService) UpdateCompany(id uint, req domain.UpdateCompanyRequest,
 	company.ParentID = req.ParentID
 	company.LegalName = req.LegalName
 	company.TradeName = req.TradeName
-	company.TaxID = normalizedTaxID(req.TaxID)
+	company.CNPJ = normalizedCNPJ(req.CNPJ)
 	company.IsActive = req.IsActive
 	company.UpdatedByID = &userID
 

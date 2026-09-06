@@ -119,7 +119,7 @@ func (s *CompanyFiscalConfigService) UpdateCompanyFiscalConfig(id uint, req doma
 // validar a senha e extrair vencimento e identidade (nome/documento) do
 // titular — vencimento nunca é digitado pelo usuário, sempre vem do próprio
 // arquivo. Certificado vencido é aceito normalmente (só informativo, quem
-// avisa é a UI); a comparação do documento extraído com o tax_id da Company
+// avisa é a UI); a comparação do documento extraído com o CNPJ da Company
 // também é só pra exibição, feita no frontend — não bloqueia o upload.
 func (s *CompanyFiscalConfigService) SetCertificate(id uint, fileBytes []byte, password string) (*domain.ApiCompanyFiscalConfig, error) {
 	config, err := s.uow.CompanyFiscalConfigs().FindByID(id)

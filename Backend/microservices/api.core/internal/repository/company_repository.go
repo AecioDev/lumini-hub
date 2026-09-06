@@ -18,9 +18,9 @@ import (
 type CompanyRepository interface {
 	commonrepo.Repository[domain.Company]
 	FindByID(id uint) (*domain.Company, error) // Sobrescreve para incluir preloads
-	FindByTaxID(taxID string) (*domain.Company, error)
-	ExistsByTaxID(taxID string) (bool, error)
-	ExistsByTaxIDExcept(taxID string, id uint) (bool, error)
+	FindByCNPJ(cnpj string) (*domain.Company, error)
+	ExistsByCNPJ(cnpj string) (bool, error)
+	ExistsByCNPJExcept(cnpj string, id uint) (bool, error)
 	CountByParentID(parentID uint) (int64, error)
 }
 
@@ -49,10 +49,10 @@ func (r *GormCompanyRepository) FindByID(id uint) (*domain.Company, error) {
 	return &company, nil
 }
 
-// FindByTaxID busca uma empresa pelo CNPJ
-func (r *GormCompanyRepository) FindByTaxID(taxID string) (*domain.Company, error) {
+// FindByCNPJ busca uma empresa pelo CNPJ
+func (r *GormCompanyRepository) FindByCNPJ(cnpj string) (*domain.Company, error) {
 	var company domain.Company
-	err := r.GetDB().Where("tax_id = ?", taxID).First(&company).Error
+	err := r.GetDB().Where("cnpj = ?", cnpj).First(&company).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -62,17 +62,17 @@ func (r *GormCompanyRepository) FindByTaxID(taxID string) (*domain.Company, erro
 	return &company, nil
 }
 
-// ExistsByTaxID verifica se existe uma empresa com o CNPJ especificado
-func (r *GormCompanyRepository) ExistsByTaxID(taxID string) (bool, error) {
+// ExistsByCNPJ verifica se existe uma empresa com o CNPJ especificado
+func (r *GormCompanyRepository) ExistsByCNPJ(cnpj string) (bool, error) {
 	var count int64
-	err := r.GetDB().Model(&domain.Company{}).Where("tax_id = ?", taxID).Count(&count).Error
+	err := r.GetDB().Model(&domain.Company{}).Where("cnpj = ?", cnpj).Count(&count).Error
 	return count > 0, err
 }
 
-// ExistsByTaxIDExcept verifica se existe uma empresa com o CNPJ especificado, exceto a de ID informado
-func (r *GormCompanyRepository) ExistsByTaxIDExcept(taxID string, id uint) (bool, error) {
+// ExistsByCNPJExcept verifica se existe uma empresa com o CNPJ especificado, exceto a de ID informado
+func (r *GormCompanyRepository) ExistsByCNPJExcept(cnpj string, id uint) (bool, error) {
 	var count int64
-	err := r.GetDB().Model(&domain.Company{}).Where("tax_id = ? AND id != ?", taxID, id).Count(&count).Error
+	err := r.GetDB().Model(&domain.Company{}).Where("cnpj = ? AND id != ?", cnpj, id).Count(&count).Error
 	return count > 0, err
 }
 
