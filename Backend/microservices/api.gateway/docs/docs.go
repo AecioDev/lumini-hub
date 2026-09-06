@@ -899,6 +899,350 @@ const docTemplate = `{
                 }
             }
         },
+        "/company-visual-configs": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Cadastra a paleta de cores de uma empresa. O logo é enviado separadamente via multipart.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CompanyVisualConfig"
+                ],
+                "summary": "Cria configuração visual",
+                "parameters": [
+                    {
+                        "description": "Dados da Configuração Visual",
+                        "name": "config",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.CreateCompanyVisualConfigRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ApiCompanyVisualConfig"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/company-visual-configs/by-company/{companyId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retorna a configuração visual (logo, paleta de cores) de uma empresa pelo ID dela",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CompanyVisualConfig"
+                ],
+                "summary": "Busca configuração visual por empresa",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID da Empresa",
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ApiCompanyVisualConfigDetail"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/company-visual-configs/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Altera a paleta de cores de uma configuração visual pelo ID (não mexe no logo)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CompanyVisualConfig"
+                ],
+                "summary": "Atualiza configuração visual",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID da Configuração Visual",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Novos dados",
+                        "name": "config",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.UpdateCompanyVisualConfigRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ApiCompanyVisualConfig"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/company-visual-configs/{id}/logo": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Devolve o binário do logo (não passa pelo envelope utils.Response — é servido com o Content-Type do próprio arquivo, pra ser usado direto num \u003cimg src\u003e)",
+                "produces": [
+                    "image/png",
+                    "image/jpeg",
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "CompanyVisualConfig"
+                ],
+                "summary": "Serve o arquivo do logo",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID da Configuração Visual",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Upload multipart do logo (PNG, JPEG ou SVG), separado do PUT de cores",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CompanyVisualConfig"
+                ],
+                "summary": "Envia logo da empresa",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID da Configuração Visual",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Arquivo do logo (PNG, JPEG ou SVG)",
+                        "name": "logo",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ApiCompanyVisualConfig"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/customers": {
             "get": {
                 "security": [
@@ -2407,6 +2751,64 @@ const docTemplate = `{
                 }
             }
         },
+        "domain.ApiCompanyVisualConfig": {
+            "type": "object",
+            "properties": {
+                "accent_color": {
+                    "type": "string"
+                },
+                "company_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "has_logo": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "primary_color": {
+                    "type": "string"
+                },
+                "secondary_color": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.ApiCompanyVisualConfigDetail": {
+            "type": "object",
+            "properties": {
+                "accent_color": {
+                    "type": "string"
+                },
+                "company_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "has_logo": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "primary_color": {
+                    "type": "string"
+                },
+                "secondary_color": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "domain.ApiCustomer": {
             "type": "object",
             "properties": {
@@ -2926,6 +3328,27 @@ const docTemplate = `{
                 }
             }
         },
+        "domain.CreateCompanyVisualConfigRequest": {
+            "type": "object",
+            "required": [
+                "company_id",
+                "primary_color"
+            ],
+            "properties": {
+                "accent_color": {
+                    "type": "string"
+                },
+                "company_id": {
+                    "type": "integer"
+                },
+                "primary_color": {
+                    "type": "string"
+                },
+                "secondary_color": {
+                    "type": "string"
+                }
+            }
+        },
         "domain.CreateCustomerRequest": {
             "type": "object",
             "required": [
@@ -3201,6 +3624,23 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "trade_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.UpdateCompanyVisualConfigRequest": {
+            "type": "object",
+            "required": [
+                "primary_color"
+            ],
+            "properties": {
+                "accent_color": {
+                    "type": "string"
+                },
+                "primary_color": {
+                    "type": "string"
+                },
+                "secondary_color": {
                     "type": "string"
                 }
             }

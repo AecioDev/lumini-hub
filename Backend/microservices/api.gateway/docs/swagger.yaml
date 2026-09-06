@@ -134,6 +134,44 @@ definitions:
           $ref: '#/definitions/domain.ApiCompany'
         type: array
     type: object
+  domain.ApiCompanyVisualConfig:
+    properties:
+      accent_color:
+        type: string
+      company_id:
+        type: integer
+      created_at:
+        type: string
+      has_logo:
+        type: boolean
+      id:
+        type: integer
+      primary_color:
+        type: string
+      secondary_color:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  domain.ApiCompanyVisualConfigDetail:
+    properties:
+      accent_color:
+        type: string
+      company_id:
+        type: integer
+      created_at:
+        type: string
+      has_logo:
+        type: boolean
+      id:
+        type: integer
+      primary_color:
+        type: string
+      secondary_color:
+        type: string
+      updated_at:
+        type: string
+    type: object
   domain.ApiCustomer:
     properties:
       addresses:
@@ -487,6 +525,20 @@ definitions:
     required:
     - legal_name
     type: object
+  domain.CreateCompanyVisualConfigRequest:
+    properties:
+      accent_color:
+        type: string
+      company_id:
+        type: integer
+      primary_color:
+        type: string
+      secondary_color:
+        type: string
+    required:
+    - company_id
+    - primary_color
+    type: object
   domain.CreateCustomerRequest:
     properties:
       company_name:
@@ -675,6 +727,17 @@ definitions:
         type: string
     required:
     - legal_name
+    type: object
+  domain.UpdateCompanyVisualConfigRequest:
+    properties:
+      accent_color:
+        type: string
+      primary_color:
+        type: string
+      secondary_color:
+        type: string
+    required:
+    - primary_color
     type: object
   domain.UpdateCustomerRequest:
     properties:
@@ -1410,6 +1473,222 @@ paths:
       summary: Busca configuração fiscal por empresa
       tags:
       - CompanyFiscalConfig
+  /company-visual-configs:
+    post:
+      consumes:
+      - application/json
+      description: Cadastra a paleta de cores de uma empresa. O logo é enviado separadamente
+        via multipart.
+      parameters:
+      - description: Dados da Configuração Visual
+        in: body
+        name: config
+        required: true
+        schema:
+          $ref: '#/definitions/domain.CreateCompanyVisualConfigRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiCompanyVisualConfig'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Cria configuração visual
+      tags:
+      - CompanyVisualConfig
+  /company-visual-configs/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Altera a paleta de cores de uma configuração visual pelo ID (não
+        mexe no logo)
+      parameters:
+      - description: ID da Configuração Visual
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Novos dados
+        in: body
+        name: config
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UpdateCompanyVisualConfigRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiCompanyVisualConfig'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Atualiza configuração visual
+      tags:
+      - CompanyVisualConfig
+  /company-visual-configs/{id}/logo:
+    get:
+      description: Devolve o binário do logo (não passa pelo envelope utils.Response
+        — é servido com o Content-Type do próprio arquivo, pra ser usado direto num
+        <img src>)
+      parameters:
+      - description: ID da Configuração Visual
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - image/png
+      - image/jpeg
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Serve o arquivo do logo
+      tags:
+      - CompanyVisualConfig
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload multipart do logo (PNG, JPEG ou SVG), separado do PUT de
+        cores
+      parameters:
+      - description: ID da Configuração Visual
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Arquivo do logo (PNG, JPEG ou SVG)
+        in: formData
+        name: logo
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiCompanyVisualConfig'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Envia logo da empresa
+      tags:
+      - CompanyVisualConfig
+  /company-visual-configs/by-company/{companyId}:
+    get:
+      consumes:
+      - application/json
+      description: Retorna a configuração visual (logo, paleta de cores) de uma empresa
+        pelo ID dela
+      parameters:
+      - description: ID da Empresa
+        in: path
+        name: companyId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiCompanyVisualConfigDetail'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Busca configuração visual por empresa
+      tags:
+      - CompanyVisualConfig
   /customers:
     get:
       consumes:
