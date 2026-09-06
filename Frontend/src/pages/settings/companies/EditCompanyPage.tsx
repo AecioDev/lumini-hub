@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { PageHeader } from "@/components/common/PageHeader";
 import { CompanyForm } from "@/components/companies/forms/CompanyForm";
 import { CompanyFiscalConfigForm } from "@/components/companies/forms/CompanyFiscalConfigForm";
+import { CompanyVisualConfigForm } from "@/components/companies/forms/CompanyVisualConfigForm";
 import { companyService } from "@/services/companies/company-service";
 import { getApiErrorMessage } from "@/utils/api-error";
 import { useFeedback } from "@/hooks/useFeedback";
@@ -99,6 +100,11 @@ export function EditCompanyPage() {
               children: (
                 <CompanyFiscalConfigForm companyId={company.id} companyCnpj={company.cnpj ?? undefined} />
               ),
+            },
+            {
+              key: "visual",
+              label: "Identidade Visual",
+              children: <CompanyVisualConfigForm companyId={company.id} />,
             },
           ]}
         />
