@@ -46,6 +46,16 @@ func (s *CompanyService) GetCompanies(userID uint) (*domain.ApiCompanyList, erro
 		return nil, err
 	}
 
+	// DÉBITO TÉCNICO (2026-09-06): ResolveVisibleCompanyIDs mora em
+	// common/utils (compartilhada entre microsserviços) e pede um *gorm.DB
+	// cru, não a UnitOfWork deste serviço — por isso o GetDB() aqui, fora do
+	// padrão s.uow.Execute(...) que todo Service deveria seguir. É só leitura,
+	// sem transação, então não tem risco real hoje. NÃO copiar esse padrão
+	// pra escrita de dados — qualquer operação que grave algo tem que passar
+	// por s.uow.Execute(...) pra manter atomicidade. Solução futura: expor um
+	// método próprio na interface UnitOfWork (ex. ResolveVisibleCompanyIDs)
+	// que chama a função compartilhada por dentro, sem vazar *gorm.DB pro
+	// Service.
 	visibleIDs, unrestricted, err := utils.ResolveVisibleCompanyIDs(s.uow.Companies().GetDB(), userID)
 	if err != nil {
 		return nil, err
