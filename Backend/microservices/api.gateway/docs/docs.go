@@ -15,6 +15,81 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/auth/active-company": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Grava qual Company o usuário está operando no momento — só aceita uma que ele realmente enxergue (nunca confia cegamente no ID vindo do cliente)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Autenticação"
+                ],
+                "summary": "Define a empresa ativa do usuário logado",
+                "parameters": [
+                    {
+                        "description": "ID da Empresa",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.SetActiveCompanyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.LoginSuccessResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/login": {
             "post": {
                 "description": "Autentica o usuário no ERP Lumini Hub, definindo cookies seguros HTTP-Only",
@@ -490,6 +565,311 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/company-fiscal-configs": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Cadastra a configuração fiscal (tributação, contador) de uma empresa. O certificado é enviado separadamente via multipart.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CompanyFiscalConfig"
+                ],
+                "summary": "Cria configuração fiscal",
+                "parameters": [
+                    {
+                        "description": "Dados da Configuração Fiscal",
+                        "name": "config",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.CreateCompanyFiscalConfigRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ApiCompanyFiscalConfig"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/company-fiscal-configs/by-company/{companyId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retorna a configuração fiscal (certificado, tributação, contador) de uma empresa pelo ID dela",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CompanyFiscalConfig"
+                ],
+                "summary": "Busca configuração fiscal por empresa",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID da Empresa",
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ApiCompanyFiscalConfigDetail"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/company-fiscal-configs/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Altera tributação/dados do contador de uma configuração fiscal pelo ID (não mexe no certificado)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CompanyFiscalConfig"
+                ],
+                "summary": "Atualiza configuração fiscal",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID da Configuração Fiscal",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Novos dados",
+                        "name": "config",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.UpdateCompanyFiscalConfigRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ApiCompanyFiscalConfig"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/company-fiscal-configs/{id}/certificate": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Upload multipart do certificado A1 (.pfx) e sua senha, separado do PUT de configuração — a senha é criptografada antes de persistir, nunca devolvida em nenhuma resposta",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CompanyFiscalConfig"
+                ],
+                "summary": "Envia certificado digital",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID da Configuração Fiscal",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Arquivo do certificado (.pfx)",
+                        "name": "certificate",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Senha do certificado",
+                        "name": "password",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ApiCompanyFiscalConfig"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -1934,6 +2314,88 @@ const docTemplate = `{
                 }
             }
         },
+        "domain.ApiCompanyFiscalConfig": {
+            "type": "object",
+            "properties": {
+                "accountant_contact": {
+                    "type": "string"
+                },
+                "accountant_document": {
+                    "type": "string"
+                },
+                "accountant_name": {
+                    "type": "string"
+                },
+                "certificate_expiry": {
+                    "type": "string"
+                },
+                "certificate_subject_document": {
+                    "type": "string"
+                },
+                "certificate_subject_name": {
+                    "type": "string"
+                },
+                "company_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "has_certificate": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "tax_regime": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.ApiCompanyFiscalConfigDetail": {
+            "type": "object",
+            "properties": {
+                "accountant_contact": {
+                    "type": "string"
+                },
+                "accountant_document": {
+                    "type": "string"
+                },
+                "accountant_name": {
+                    "type": "string"
+                },
+                "certificate_expiry": {
+                    "type": "string"
+                },
+                "certificate_subject_document": {
+                    "type": "string"
+                },
+                "certificate_subject_name": {
+                    "type": "string"
+                },
+                "company_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "has_certificate": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "tax_regime": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "domain.ApiCompanyList": {
             "type": "object",
             "properties": {
@@ -2181,6 +2643,13 @@ const docTemplate = `{
         "domain.ApiUserDetail": {
             "type": "object",
             "properties": {
+                "active_company_id": {
+                    "description": "ActiveCompanyID/RequiresCompanySelection só vêm com valor \"de verdade\"\n(revalidado) na resposta de login/refresh/me — ver AuthService. Em\noutras respostas de ApiUserDetail (ex.: admin olhando outro usuário)\nActiveCompanyID é só o valor bruto salvo, sem repetir a validação.",
+                    "type": "integer"
+                },
+                "company_id": {
+                    "type": "integer"
+                },
                 "created_at": {
                     "type": "string"
                 },
@@ -2213,6 +2682,9 @@ const docTemplate = `{
                 },
                 "phone": {
                     "type": "string"
+                },
+                "requires_company_selection": {
+                    "type": "boolean"
                 },
                 "role": {
                     "$ref": "#/definitions/domain.ApiUserRole"
@@ -2400,6 +2872,30 @@ const docTemplate = `{
                 }
             }
         },
+        "domain.CreateCompanyFiscalConfigRequest": {
+            "type": "object",
+            "required": [
+                "company_id",
+                "tax_regime"
+            ],
+            "properties": {
+                "accountant_contact": {
+                    "type": "string"
+                },
+                "accountant_document": {
+                    "type": "string"
+                },
+                "accountant_name": {
+                    "type": "string"
+                },
+                "company_id": {
+                    "type": "integer"
+                },
+                "tax_regime": {
+                    "type": "string"
+                }
+            }
+        },
         "domain.CreateCompanyRequest": {
             "type": "object",
             "required": [
@@ -2498,6 +2994,9 @@ const docTemplate = `{
                 "username"
             ],
             "properties": {
+                "company_id": {
+                    "type": "integer"
+                },
                 "email": {
                     "type": "string"
                 },
@@ -2653,6 +3152,26 @@ const docTemplate = `{
                 }
             }
         },
+        "domain.UpdateCompanyFiscalConfigRequest": {
+            "type": "object",
+            "required": [
+                "tax_regime"
+            ],
+            "properties": {
+                "accountant_contact": {
+                    "type": "string"
+                },
+                "accountant_document": {
+                    "type": "string"
+                },
+                "accountant_name": {
+                    "type": "string"
+                },
+                "tax_regime": {
+                    "type": "string"
+                }
+            }
+        },
         "domain.UpdateCompanyRequest": {
             "type": "object",
             "required": [
@@ -2771,6 +3290,9 @@ const docTemplate = `{
         "domain.UpdateUserRequest": {
             "type": "object",
             "properties": {
+                "company_id": {
+                    "type": "integer"
+                },
                 "email": {
                     "type": "string"
                 },
@@ -2815,9 +3337,23 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.SetActiveCompanyRequest": {
+            "type": "object",
+            "required": [
+                "company_id"
+            ],
+            "properties": {
+                "company_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "lumini-hub_api_auth_internal_domain.ApiUser": {
             "type": "object",
             "properties": {
+                "company_id": {
+                    "type": "integer"
+                },
                 "email": {
                     "type": "string"
                 },

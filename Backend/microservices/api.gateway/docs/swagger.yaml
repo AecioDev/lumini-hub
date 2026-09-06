@@ -73,6 +73,60 @@ definitions:
       updated_by:
         $ref: '#/definitions/lumini-hub_api_core_internal_domain.ApiUser'
     type: object
+  domain.ApiCompanyFiscalConfig:
+    properties:
+      accountant_contact:
+        type: string
+      accountant_document:
+        type: string
+      accountant_name:
+        type: string
+      certificate_expiry:
+        type: string
+      certificate_subject_document:
+        type: string
+      certificate_subject_name:
+        type: string
+      company_id:
+        type: integer
+      created_at:
+        type: string
+      has_certificate:
+        type: boolean
+      id:
+        type: integer
+      tax_regime:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  domain.ApiCompanyFiscalConfigDetail:
+    properties:
+      accountant_contact:
+        type: string
+      accountant_document:
+        type: string
+      accountant_name:
+        type: string
+      certificate_expiry:
+        type: string
+      certificate_subject_document:
+        type: string
+      certificate_subject_name:
+        type: string
+      company_id:
+        type: integer
+      created_at:
+        type: string
+      has_certificate:
+        type: boolean
+      id:
+        type: integer
+      tax_regime:
+        type: string
+      updated_at:
+        type: string
+    type: object
   domain.ApiCompanyList:
     properties:
       data:
@@ -235,6 +289,15 @@ definitions:
     type: object
   domain.ApiUserDetail:
     properties:
+      active_company_id:
+        description: |-
+          ActiveCompanyID/RequiresCompanySelection só vêm com valor "de verdade"
+          (revalidado) na resposta de login/refresh/me — ver AuthService. Em
+          outras respostas de ApiUserDetail (ex.: admin olhando outro usuário)
+          ActiveCompanyID é só o valor bruto salvo, sem repetir a validação.
+        type: integer
+      company_id:
+        type: integer
       created_at:
         type: string
       email:
@@ -257,6 +320,8 @@ definitions:
         type: array
       phone:
         type: string
+      requires_company_selection:
+        type: boolean
       role:
         $ref: '#/definitions/domain.ApiUserRole'
       role_id:
@@ -380,6 +445,22 @@ definitions:
       updatedAt:
         type: string
     type: object
+  domain.CreateCompanyFiscalConfigRequest:
+    properties:
+      accountant_contact:
+        type: string
+      accountant_document:
+        type: string
+      accountant_name:
+        type: string
+      company_id:
+        type: integer
+      tax_regime:
+        type: string
+    required:
+    - company_id
+    - tax_regime
+    type: object
   domain.CreateCompanyRequest:
     properties:
       legal_name:
@@ -442,6 +523,8 @@ definitions:
     type: object
   domain.CreateUserRequest:
     properties:
+      company_id:
+        type: integer
       email:
         type: string
       name:
@@ -550,6 +633,19 @@ definitions:
       person_type:
         type: string
     type: object
+  domain.UpdateCompanyFiscalConfigRequest:
+    properties:
+      accountant_contact:
+        type: string
+      accountant_document:
+        type: string
+      accountant_name:
+        type: string
+      tax_regime:
+        type: string
+    required:
+    - tax_regime
+    type: object
   domain.UpdateCompanyRequest:
     properties:
       is_active:
@@ -632,6 +728,8 @@ definitions:
     type: object
   domain.UpdateUserRequest:
     properties:
+      company_id:
+        type: integer
       email:
         type: string
       is_active:
@@ -661,8 +759,17 @@ definitions:
     - password
     - username
     type: object
+  handlers.SetActiveCompanyRequest:
+    properties:
+      company_id:
+        type: integer
+    required:
+    - company_id
+    type: object
   lumini-hub_api_auth_internal_domain.ApiUser:
     properties:
+      company_id:
+        type: integer
       email:
         type: string
       id:
@@ -744,6 +851,52 @@ info:
   title: Lumini Hub ERP - API Gateway
   version: "1.0"
 paths:
+  /auth/active-company:
+    put:
+      consumes:
+      - application/json
+      description: Grava qual Company o usuário está operando no momento — só aceita
+        uma que ele realmente enxergue (nunca confia cegamente no ID vindo do cliente)
+      parameters:
+      - description: ID da Empresa
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.SetActiveCompanyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.LoginSuccessResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Define a empresa ativa do usuário logado
+      tags:
+      - Autenticação
   /auth/login:
     post:
       consumes:
@@ -1050,6 +1203,196 @@ paths:
       summary: Atualiza empresa
       tags:
       - Companies
+  /company-fiscal-configs:
+    post:
+      consumes:
+      - application/json
+      description: Cadastra a configuração fiscal (tributação, contador) de uma empresa.
+        O certificado é enviado separadamente via multipart.
+      parameters:
+      - description: Dados da Configuração Fiscal
+        in: body
+        name: config
+        required: true
+        schema:
+          $ref: '#/definitions/domain.CreateCompanyFiscalConfigRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiCompanyFiscalConfig'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Cria configuração fiscal
+      tags:
+      - CompanyFiscalConfig
+  /company-fiscal-configs/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Altera tributação/dados do contador de uma configuração fiscal
+        pelo ID (não mexe no certificado)
+      parameters:
+      - description: ID da Configuração Fiscal
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Novos dados
+        in: body
+        name: config
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UpdateCompanyFiscalConfigRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiCompanyFiscalConfig'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Atualiza configuração fiscal
+      tags:
+      - CompanyFiscalConfig
+  /company-fiscal-configs/{id}/certificate:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload multipart do certificado A1 (.pfx) e sua senha, separado
+        do PUT de configuração — a senha é criptografada antes de persistir, nunca
+        devolvida em nenhuma resposta
+      parameters:
+      - description: ID da Configuração Fiscal
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Arquivo do certificado (.pfx)
+        in: formData
+        name: certificate
+        required: true
+        type: file
+      - description: Senha do certificado
+        in: formData
+        name: password
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiCompanyFiscalConfig'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Envia certificado digital
+      tags:
+      - CompanyFiscalConfig
+  /company-fiscal-configs/by-company/{companyId}:
+    get:
+      consumes:
+      - application/json
+      description: Retorna a configuração fiscal (certificado, tributação, contador)
+        de uma empresa pelo ID dela
+      parameters:
+      - description: ID da Empresa
+        in: path
+        name: companyId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiCompanyFiscalConfigDetail'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Busca configuração fiscal por empresa
+      tags:
+      - CompanyFiscalConfig
   /customers:
     get:
       consumes:
