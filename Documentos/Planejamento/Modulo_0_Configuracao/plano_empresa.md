@@ -26,7 +26,7 @@ Este módulo cria o cadastro de **Empresa** — a estrutura organizacional de um
 | Campo | Tipo | Observação |
 |---|---|---|
 | `ID` | uint | PK |
-| `ParentID` | *uint (nullable) | self-referencing, mesmo padrão de `MenuItem.ParentID` (`Backend/microservices/api.auth/internal/domain/menu_item.go`). **Definido 2026-07-21**: a Matriz é simplesmente a empresa com `ParentID == nil` — sem flag explícita `IsMatriz`. Validação a garantir: só pode existir uma empresa raiz por tenant (constraint/checagem de negócio, já que fisicamente nada impede duas linhas com `ParentID == nil` numa tabela normal). |
+| `ParentID` | *uint (nullable) | self-referencing, mesmo padrão de `MenuItem.ParentID` (`Backend/microservices/api.auth/internal/domain/menu_item.go`). **Definido 2026-07-21, revisto 2026-09-05**: "Matriz" é simplesmente qualquer empresa com `ParentID == nil` — sem flag explícita `IsMatriz`. **Não é mais única por tenant**: o usuário pode ter vários grupos empresariais de fato independentes (sem holding entre si), cada um com sua própria raiz — removida a validação que bloqueava criar uma segunda empresa sem `parent_id` (`CompanyValidator`/`ExistsRoot`/`ExistsRootExcept`, existiam só até então). Continua validado: ciclo na cadeia de ancestrais (uma empresa não pode acabar sendo pai dela mesma via um vínculo indireto). |
 | `LegalName` (`legal_name`) | string | Razão Social |
 | `TradeName` (`trade_name`) | string | Nome Fantasia |
 | `TaxID` (`tax_id`) | string | CNPJ, único |
@@ -87,14 +87,22 @@ Este módulo cria o cadastro de **Empresa** — a estrutura organizacional de um
 
 ---
 
-## 🔐 Regra de Visibilidade (definida em 2026-07-21)
+## 🚫 Configs 1:1 não têm Delete (definido em 2026-09-05)
+
+Descoberto testando `CompanyFiscalConfig`: um índice único (`company_id`) mais soft delete do GORM permite que uma linha excluída continue "ocupando" o valor único, bloqueando recriar a config da mesma empresa depois. A correção técnica (índice parcial `WHERE deleted_at IS NULL`) resolve o sintoma, mas discutindo com o usuário chegamos numa raiz melhor: **uma configuração 1:1 intrínseca à empresa não tem "excluir" com significado de negócio** — enquanto a empresa existe, ela sempre tem (ou devia ter) aquela configuração associada, nem que seja vazia. Diferente de excluir um registro de uma lista de verdade (`Company`, `ChartOfAccounts`, `CompanyDocumentIssuanceConfig`), onde a linha deixar de existir faz sentido.
+
+**Daqui pra frente**: toda config 1:1 da empresa (`CompanyFiscalConfig`, `CompanyVisualConfig`, e qualquer outra do mesmo formato que surgir) só expõe `view`/`create`/`edit` — sem `delete`, sem botão de excluir na tela, sem permission `.delete` no catálogo. Se um dia for preciso "limpar" um campo específico (ex.: remover o certificado sem apagar o resto da config), isso vira uma ação dedicada (ex.: um endpoint específico) ou um `PUT` que aceita valor vazio — nunca apagar o registro inteiro. Esse princípio também foi registrado na skill `lumini_hub_entity_creation` (Step 0), pra ser considerado antes de modelar qualquer config nova.
+
+---
+
+## 🔐 Regra de Visibilidade (definida em 2026-07-21, ajustada em 2026-09-05)
 
 Dois casos, conforme o cadastro do usuário:
 
 **Caso 1 — usuário SEM Empresa vinculada no cadastro.**
-Automaticamente "master": visão geral de todas as Empresas, sem precisar de nenhuma permission extra. Inicia sempre pela empresa Matriz (a com `ParentID == nil`). Pode trocar de empresa livremente através de um seletor no header (antd `Select`), sem restrição.
+Automaticamente "master": visão geral de todas as Empresas, sem precisar de nenhuma permission extra. Pode trocar de empresa livremente através de um seletor no header (antd `Select`), sem restrição.
 
-Rastreio da empresa ativa (**definido 2026-07-21**, Opção B): fica guardado no backend, fora do JWT — mesma ideia de variável de sessão que o usuário já usa hoje no ScriptCase. Um endpoint dedicado (ex.: `PUT /me/active-company`) grava a escolha; as próximas requisições dessa sessão já sabem qual é a empresa ativa sem o frontend precisar reenviar. Toda leitura desse valor ainda reconfere no backend se o usuário realmente pode ver aquela empresa antes de aplicar como filtro (nunca confiar cegamente no valor guardado). Mecanismo exato de guarda (cookie próprio de sessão vs. tabela) fica pra quando `Company` estiver sendo implementada.
+**Mecanismo de empresa ativa — implementado em 2026-09-05** (Opção B confirmada em 2026-07-21: guardado no backend, fora do JWT): coluna `users.active_company_id` (nullable, FK pra `companies.id`), gravada via `PUT /auth/active-company` (`common/utils.SetActiveCompany` valida que o usuário realmente enxerga aquela empresa antes de gravar — nunca aceita o ID cego vindo do cliente) e resolvida/revalidada a cada login/refresh/`GET /auth/me` (`common/utils.ResolveActiveCompany` — nunca confia cegamente no valor guardado; se ele não for mais válido, some do payload e o frontend volta a pedir escolha). Quem só enxerga UMA empresa (sem `companies.hierarchy.view`, com Company vinculada) nunca precisa escolher — a ativa é sempre a própria. Quem enxerga mais de uma (master, ou com `companies.hierarchy.view`) e ainda não tem uma empresa ativa válida recebe `requires_company_selection: true` no payload de login/me — o frontend (`ProtectedRoute.tsx` + `CompanySelectionGate.tsx`) bloqueia o acesso ao resto do sistema com uma tela de seleção obrigatória até isso ser resolvido, escolha então persiste entre logins (só pede de novo se a empresa salva deixar de ser válida). O seletor de troca no header (`AuthContext`/`ConfigProvider`) ainda não foi implementado (ver `tasks_empresa.md`, EPIC CFG-6).
 
 **Caso 2 — usuário COM Empresa vinculada no cadastro.**
 - Se tiver a permission `companies.hierarchy.view` (nome definido em 2026-07-21, renomeado 2026-07-27 pro padrão `<módulo>.<ação>` em inglês): vê a própria empresa **e** as empresas abaixo dela na hierarquia (filhas, netas, etc.).
