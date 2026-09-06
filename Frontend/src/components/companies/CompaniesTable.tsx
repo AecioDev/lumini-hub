@@ -43,12 +43,21 @@ export function CompaniesTable() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [expandedRowKeys, setExpandedRowKeys] = useState<number[]>([]);
 
   const load = () => {
     setLoading(true);
     companyService
       .list()
-      .then(setCompanies)
+      .then((result) => {
+        setCompanies(result);
+        // Toda vez que a lista é (re)carregada, começa com a árvore inteira
+        // aberta — depois disso o usuário pode colapsar/expandir livremente
+        // (ver Table `expandable` mais abaixo).
+        setExpandedRowKeys(
+          [...new Set(result.map((c) => c.parent_id).filter((id): id is number => id !== null))]
+        );
+      })
       .catch(() => feedback.error("Erro ao carregar empresas."))
       .finally(() => setLoading(false));
   };
@@ -71,15 +80,6 @@ export function CompaniesTable() {
   // ficaria escondido dentro de uma árvore que não teria motivo pra expandir.
   const treeData = useMemo(() => buildCompanyTree(companies), [companies]);
   const dataSource = search.trim() ? filtered : treeData;
-
-  // `defaultExpandAllRows` só decide o estado inicial contra o dataSource
-  // que existe na montagem (vazio, ainda carregando) e nunca reconsidera
-  // quando os dados chegam — por isso controlado aqui, recalculado sempre
-  // que a lista mudar, sempre com toda hierarquia visível.
-  const expandedRowKeys = useMemo(
-    () => [...new Set(companies.map((c) => c.parent_id).filter((id): id is number => id !== null))],
-    [companies]
-  );
 
   const handleDelete = async (company: ApiCompany) => {
     setDeletingId(company.id);
@@ -127,7 +127,11 @@ export function CompaniesTable() {
         loading={loading}
         dataSource={dataSource}
         pagination={false}
-        expandable={{ expandedRowKeys }}
+        expandable={{
+          expandedRowKeys,
+          onExpandedRowsChange: (keys) => setExpandedRowKeys(keys as number[]),
+          expandIconColumnIndex: 1,
+        }}
         columns={[
           { title: "ID", dataIndex: "id", width: 70 },
           { title: "Razão Social", dataIndex: "legal_name" },
