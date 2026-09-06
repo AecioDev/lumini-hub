@@ -194,6 +194,38 @@ func (h *CompanyVisualConfigHandler) UploadLogo(c *gin.Context) {
 	utils.SuccessResponse(c, http.StatusOK, "Logo salvo com sucesso", config, nil)
 }
 
+// ClearLogo remove o logo de uma configuração visual já existente
+// @Summary      Remove o logo da empresa
+// @Description  Limpa o logo de uma configuração visual, mantendo o resto da config (cores) intacto — não é o DELETE do registro inteiro
+// @Tags         CompanyVisualConfig
+// @Accept       json
+// @Produce      json
+// @Param        id  path  int  true  "ID da Configuração Visual"
+// @Success      200 {object}  utils.Response{data=domain.ApiCompanyVisualConfig}
+// @Failure      401 {object}  utils.Response
+// @Failure      404 {object}  utils.Response
+// @Failure      500 {object}  utils.Response
+// @Router       /company-visual-configs/{id}/logo [delete]
+// @Security     ApiKeyAuth
+func (h *CompanyVisualConfigHandler) ClearLogo(c *gin.Context) {
+	id, err := path.IdFromPathParamOrSendError(c)
+	if err != nil {
+		return
+	}
+
+	config, err := h.visualConfigService.ClearLogo(id)
+	if err != nil {
+		if err == utils.ErrNotFound {
+			utils.ErrorResponse(c, http.StatusNotFound, "Configuração visual não encontrada", err.Error())
+		} else {
+			utils.ErrorResponse(c, http.StatusInternalServerError, "Erro ao remover logo", err.Error())
+		}
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "Logo removido com sucesso", config, nil)
+}
+
 // GetLogo serve os bytes crus do logo de uma configuração visual
 // @Summary      Serve o arquivo do logo
 // @Description  Devolve o binário do logo (não passa pelo envelope utils.Response — é servido com o Content-Type do próprio arquivo, pra ser usado direto num <img src>)

@@ -30,9 +30,10 @@ func NewCompanyVisualConfigValidator(
 	}
 }
 
-// validateColors valida o formato hex das cores — SecondaryColor/AccentColor
-// só são validadas se enviadas (campos opcionais).
-func validateColors(errors *ValidationErrors, primaryColor, secondaryColor, accentColor string) {
+// validateColors valida o formato hex das cores — SecondaryColor/AccentColor/
+// TextColor só são validadas se enviadas (campos opcionais). textColor vazio
+// é aceito também por quem não tem esse campo (ex.: CompanyColorPalette).
+func validateColors(errors *ValidationErrors, primaryColor, secondaryColor, accentColor, textColor string) {
 	if !hexColorPattern.MatchString(primaryColor) {
 		errors.AddError("primary_color", "cor primária deve estar no formato hexadecimal #RRGGBB")
 	}
@@ -41,6 +42,9 @@ func validateColors(errors *ValidationErrors, primaryColor, secondaryColor, acce
 	}
 	if accentColor != "" && !hexColorPattern.MatchString(accentColor) {
 		errors.AddError("accent_color", "cor de destaque deve estar no formato hexadecimal #RRGGBB")
+	}
+	if textColor != "" && !hexColorPattern.MatchString(textColor) {
+		errors.AddError("text_color", "cor do texto deve estar no formato hexadecimal #RRGGBB")
 	}
 }
 
@@ -65,7 +69,7 @@ func (v *CompanyVisualConfigValidator) ValidateForCreation(req domain.CreateComp
 		errors.AddError("company_id", "esta empresa já possui configuração visual cadastrada")
 	}
 
-	validateColors(&errors, req.PrimaryColor, req.SecondaryColor, req.AccentColor)
+	validateColors(&errors, req.PrimaryColor, req.SecondaryColor, req.AccentColor, req.TextColor)
 
 	if errors.HasErrors() {
 		return errors
@@ -86,7 +90,7 @@ func (v *CompanyVisualConfigValidator) ValidateForUpdate(id uint, req domain.Upd
 		return errors
 	}
 
-	validateColors(&errors, req.PrimaryColor, req.SecondaryColor, req.AccentColor)
+	validateColors(&errors, req.PrimaryColor, req.SecondaryColor, req.AccentColor, req.TextColor)
 
 	if errors.HasErrors() {
 		return errors

@@ -63,6 +63,7 @@ func (s *CompanyVisualConfigService) CreateCompanyVisualConfig(req domain.Create
 		PrimaryColor:   req.PrimaryColor,
 		SecondaryColor: nilIfEmpty(req.SecondaryColor),
 		AccentColor:    nilIfEmpty(req.AccentColor),
+		TextColor:      nilIfEmpty(req.TextColor),
 	}
 
 	err := s.uow.Execute(func(uow repository.UnitOfWork) error {
@@ -93,6 +94,7 @@ func (s *CompanyVisualConfigService) UpdateCompanyVisualConfig(id uint, req doma
 	config.PrimaryColor = req.PrimaryColor
 	config.SecondaryColor = nilIfEmpty(req.SecondaryColor)
 	config.AccentColor = nilIfEmpty(req.AccentColor)
+	config.TextColor = nilIfEmpty(req.TextColor)
 
 	err = s.uow.Execute(func(uow repository.UnitOfWork) error {
 		return uow.CompanyVisualConfigs().Update(config)
@@ -126,6 +128,35 @@ func (s *CompanyVisualConfigService) SetLogo(id uint, fileBytes []byte, mimeType
 
 	config.LogoFile = fileBytes
 	config.LogoMimeType = mimeType
+
+	err = s.uow.Execute(func(uow repository.UnitOfWork) error {
+		return uow.CompanyVisualConfigs().Update(config)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	dto := domain.ApiCompanyVisualConfigFromModel(*config)
+	return &dto, nil
+}
+
+// ClearLogo remove o logo de uma configuração visual, mantendo o resto da
+// config intacta (cores) — mesmo princípio de "limpar um campo específico
+// em vez de apagar o registro inteiro" já usado pra CompanyID em User (ver
+// Documentos/Planejamento/.../plano_empresa.md § Configs 1:1 não têm
+// Delete). Não é o DELETE do CompanyVisualConfig como um todo — essa
+// operação continua sem existir de propósito.
+func (s *CompanyVisualConfigService) ClearLogo(id uint) (*domain.ApiCompanyVisualConfig, error) {
+	config, err := s.uow.CompanyVisualConfigs().FindByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if config == nil {
+		return nil, utils.ErrNotFound
+	}
+
+	config.LogoFile = nil
+	config.LogoMimeType = ""
 
 	err = s.uow.Execute(func(uow repository.UnitOfWork) error {
 		return uow.CompanyVisualConfigs().Update(config)

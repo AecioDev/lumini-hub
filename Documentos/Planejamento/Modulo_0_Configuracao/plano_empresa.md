@@ -74,6 +74,25 @@ Este módulo cria o cadastro de **Empresa** — a estrutura organizacional de um
 
 > **Aplicação no frontend**: mesmo mecanismo do menu dinâmico (`AuthContext.tsx`) — a config visual da empresa ativa do usuário viaja no bootstrap da sessão (`GET /auth/me`/login/refresh) e substitui os tokens de `src/theme/antd-theme.ts` (`BRAND`) em runtime via `ConfigProvider`. **Fallback**: campos vazios/tabela sem registro para aquela empresa usam a paleta padrão da própria Lumini Hub (não força o cliente a configurar nada pra já ter um visual coerente).
 
+### `CompanyColorPalette` (N:1 com Empresa) — paletas personalizadas
+
+**Definido 2026-09-06**, a partir de feedback do usuário testando a tela de Identidade Visual: além das 6 paletas fixas no código (`PRESET_PALETTES`, frontend), o usuário quer poder salvar combinações próprias de cor pra reaproveitar depois, com um botão "Salvar como paleta personalizada" logo após os 3 color pickers.
+
+- **Escopo por Empresa (Step 0)**: hard-scoped, `CompanyID` próprio — decidido explicitamente pelo usuário ("por empresa, é uma configuração de ADMIN não uma personalização de usuário"). Uma paleta salva editando a Empresa A **não** aparece editando a Empresa B, mesmo dentro do mesmo tenant — cada empresa tem sua própria lista.
+- **É lista de verdade, não config 1:1** (diferente de `CompanyVisualConfig`/`CompanyFiscalConfig`) — uma empresa pode ter zero, uma ou várias paletas salvas. Por isso **tem Delete** (Step 0.5 não se aplica aqui).
+- Sem Update por enquanto — o fluxo é criar uma nova ou apagar uma antiga, não editar uma existente in-place (MVP; revisitar se virar necessidade real).
+
+| Campo | Tipo | Observação |
+|---|---|---|
+| `CompanyID` | uint | FK, hard-scoped |
+| `Name` | string | nome dado pelo usuário pra identificar a paleta na lista (ex: "Campanha de Verão") |
+| `PrimaryColor` | string | hex, obrigatória — mesmo formato de `CompanyVisualConfig.PrimaryColor` |
+| `SecondaryColor` | string (nullable) | hex, opcional — espelha o que estava preenchido no formulário no momento de salvar |
+| `AccentColor` | string (nullable) | hex, opcional |
+
+> **Permissões**: reaproveita `companies.visual_config.create` (criar paleta) e `companies.visual_config.edit` (apagar paleta) em vez de um catálogo `companies.color_palettes.*` dedicado — a feature é um apêndice da mesma tela/permissão de Identidade Visual, não uma tela própria; criar uma permission nova só pra isso infla o catálogo sem necessidade real de granularidade separada.
+> **UI**: lista de paletas salvas exibida ao lado das 6 fixas (mesmo componente de swatch clicável), com uma ação de remover por paleta. Formulário de "nome + salvar" é **inline** (`Input` + `Button` na própria tela), não modal — CLAUDE.md reserva modais pra confirmação de ação destrutiva/usuário, nunca pra entrada de dados.
+
 ### `ChartOfAccounts` (N:1 com Empresa, self-referencing)
 **Definido 2026-07-21**: template global padrão (o mais comumente usado no Brasil), clonado pra cada empresa na criação — facilita a vida do cliente, que já começa operando sem montar plano de contas do zero. Depois de clonado, cada empresa pode customizar o próprio livremente.
 

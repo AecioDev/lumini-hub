@@ -34,6 +34,13 @@ type CompanyVisualConfig struct {
 	PrimaryColor   string  `gorm:"size:9;not null" json:"primary_color"`
 	SecondaryColor *string `gorm:"size:9" json:"secondary_color"`
 	AccentColor    *string `gorm:"size:9" json:"accent_color"`
+
+	// TextColor é opcional — cor do texto sobre elementos na cor primária
+	// (cabeçalho, botões). Achado testando: texto fixo em branco não fica
+	// legível quando a cor primária escolhida é clara (ex.: amarelo).
+	// Nulo = consumidor usa branco como fallback (mesmo espírito do
+	// fallback de paleta padrão da Lumini Hub).
+	TextColor *string `gorm:"size:9" json:"text_color"`
 }
 
 // TableName especifica o nome da tabela
@@ -47,6 +54,7 @@ type CreateCompanyVisualConfigRequest struct {
 	PrimaryColor   string `json:"primary_color" binding:"required"`
 	SecondaryColor string `json:"secondary_color"`
 	AccentColor    string `json:"accent_color"`
+	TextColor      string `json:"text_color"`
 }
 
 // UpdateCompanyVisualConfigRequest representa os dados para atualizar a configuração visual de uma empresa
@@ -54,6 +62,7 @@ type UpdateCompanyVisualConfigRequest struct {
 	PrimaryColor   string `json:"primary_color" binding:"required"`
 	SecondaryColor string `json:"secondary_color"`
 	AccentColor    string `json:"accent_color"`
+	TextColor      string `json:"text_color"`
 }
 
 // ApiCompanyVisualConfig representa os dados de configuração visual para exibição
@@ -64,6 +73,7 @@ type ApiCompanyVisualConfig struct {
 	PrimaryColor   string    `json:"primary_color"`
 	SecondaryColor *string   `json:"secondary_color"`
 	AccentColor    *string   `json:"accent_color"`
+	TextColor      *string   `json:"text_color"`
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`
 }
@@ -80,6 +90,7 @@ func ApiCompanyVisualConfigFromModel(c CompanyVisualConfig) ApiCompanyVisualConf
 		PrimaryColor:   c.PrimaryColor,
 		SecondaryColor: c.SecondaryColor,
 		AccentColor:    c.AccentColor,
+		TextColor:      c.TextColor,
 		CreatedAt:      c.CreatedAt,
 		UpdatedAt:      c.UpdatedAt,
 	}

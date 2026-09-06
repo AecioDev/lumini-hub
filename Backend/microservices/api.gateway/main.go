@@ -105,7 +105,8 @@ func main() {
 			strings.HasPrefix(path, "/api/suppliers") ||
 			strings.HasPrefix(path, "/api/companies") ||
 			strings.HasPrefix(path, "/api/company-fiscal-configs") ||
-			strings.HasPrefix(path, "/api/company-visual-configs") {
+			strings.HasPrefix(path, "/api/company-visual-configs") ||
+			strings.HasPrefix(path, "/api/company-color-palettes") {
 			log.Printf("[Gateway] Proxying %s -> api.core (%s)", path, coreURL.String())
 			coreProxy.ServeHTTP(c.Writer, c.Request)
 			return

@@ -17,6 +17,7 @@ func SetupRoutes(router *gin.RouterGroup, uow repository.UnitOfWork, cfg *config
 	companyHandler := handlers.NewCompanyHandler(uow)
 	companyFiscalConfigHandler := handlers.NewCompanyFiscalConfigHandler(uow, cfg.Security.CertificateEncryptionKey)
 	companyVisualConfigHandler := handlers.NewCompanyVisualConfigHandler(uow)
+	companyColorPaletteHandler := handlers.NewCompanyColorPaletteHandler(uow)
 
 	// Rotas de Clientes (todas protegidas)
 	customers := router.Group("/customers")
@@ -81,5 +82,19 @@ func SetupRoutes(router *gin.RouterGroup, uow repository.UnitOfWork, cfg *config
 		// CompanyVisualConfigService.
 		companyVisualConfigs.POST("/:id/logo", middlewares.RequirePermission("companies.visual_config.edit"), companyVisualConfigHandler.UploadLogo)
 		companyVisualConfigs.GET("/:id/logo", middlewares.RequirePermission("companies.visual_config.view"), companyVisualConfigHandler.GetLogo)
+		companyVisualConfigs.DELETE("/:id/logo", middlewares.RequirePermission("companies.visual_config.edit"), companyVisualConfigHandler.ClearLogo)
+	}
+
+	// Rotas de Paletas de Cores Personalizadas (todas protegidas). Reaproveita
+	// as mesmas permissions de companyVisualConfigs — é um apêndice da mesma
+	// tela/feature, não um catálogo próprio (ver plano_empresa.md §
+	// CompanyColorPalette). DELETE usa .edit, não uma permission .delete
+	// dedicada, mesmo raciocínio.
+	companyColorPalettes := router.Group("/company-color-palettes")
+	companyColorPalettes.Use(middlewares.AuthMiddleware(cfg))
+	{
+		companyColorPalettes.GET("/by-company/:companyId", middlewares.RequirePermission("companies.visual_config.view"), companyColorPaletteHandler.GetCompanyColorPalettesByCompany)
+		companyColorPalettes.POST("", middlewares.RequirePermission("companies.visual_config.create"), companyColorPaletteHandler.CreateCompanyColorPalette)
+		companyColorPalettes.DELETE("/:id", middlewares.RequirePermission("companies.visual_config.edit"), companyColorPaletteHandler.DeleteCompanyColorPalette)
 	}
 }

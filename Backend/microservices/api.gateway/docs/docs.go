@@ -594,6 +594,194 @@ const docTemplate = `{
                 }
             }
         },
+        "/company-color-palettes": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Cria uma nova paleta de cores personalizada (nome + 3 cores) pra uma empresa",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CompanyColorPalette"
+                ],
+                "summary": "Salva paleta de cores personalizada",
+                "parameters": [
+                    {
+                        "description": "Dados da Paleta",
+                        "name": "palette",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.CreateCompanyColorPaletteRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ApiCompanyColorPalette"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/company-color-palettes/by-company/{companyId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retorna as paletas de cores salvas pelo usuário pra uma empresa, mais recentes primeiro",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CompanyColorPalette"
+                ],
+                "summary": "Lista paletas de cores personalizadas por empresa",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID da Empresa",
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/domain.ApiCompanyColorPalette"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/company-color-palettes/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Remove uma paleta de cores personalizada pelo ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CompanyColorPalette"
+                ],
+                "summary": "Exclui paleta de cores personalizada",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID da Paleta",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/company-fiscal-configs": {
             "post": {
                 "security": [
@@ -1220,6 +1408,71 @@ const docTemplate = `{
                         "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Limpa o logo de uma configuração visual, mantendo o resto da config (cores) intacto — não é o DELETE do registro inteiro",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CompanyVisualConfig"
+                ],
+                "summary": "Remove o logo da empresa",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID da Configuração Visual",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ApiCompanyVisualConfig"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "401": {
@@ -2623,6 +2876,32 @@ const docTemplate = `{
                 }
             }
         },
+        "domain.ApiCompanyColorPalette": {
+            "type": "object",
+            "properties": {
+                "accent_color": {
+                    "type": "string"
+                },
+                "company_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "primary_color": {
+                    "type": "string"
+                },
+                "secondary_color": {
+                    "type": "string"
+                }
+            }
+        },
         "domain.ApiCompanyDetail": {
             "type": "object",
             "properties": {
@@ -2775,6 +3054,9 @@ const docTemplate = `{
                 "secondary_color": {
                     "type": "string"
                 },
+                "text_color": {
+                    "type": "string"
+                },
                 "updated_at": {
                     "type": "string"
                 }
@@ -2802,6 +3084,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "secondary_color": {
+                    "type": "string"
+                },
+                "text_color": {
                     "type": "string"
                 },
                 "updated_at": {
@@ -3283,6 +3568,31 @@ const docTemplate = `{
                 }
             }
         },
+        "domain.CreateCompanyColorPaletteRequest": {
+            "type": "object",
+            "required": [
+                "company_id",
+                "name",
+                "primary_color"
+            ],
+            "properties": {
+                "accent_color": {
+                    "type": "string"
+                },
+                "company_id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "primary_color": {
+                    "type": "string"
+                },
+                "secondary_color": {
+                    "type": "string"
+                }
+            }
+        },
         "domain.CreateCompanyFiscalConfigRequest": {
             "type": "object",
             "required": [
@@ -3345,6 +3655,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "secondary_color": {
+                    "type": "string"
+                },
+                "text_color": {
                     "type": "string"
                 }
             }
@@ -3641,6 +3954,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "secondary_color": {
+                    "type": "string"
+                },
+                "text_color": {
                     "type": "string"
                 }
             }

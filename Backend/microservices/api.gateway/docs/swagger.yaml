@@ -50,6 +50,23 @@ definitions:
       updated_at:
         type: string
     type: object
+  domain.ApiCompanyColorPalette:
+    properties:
+      accent_color:
+        type: string
+      company_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      primary_color:
+        type: string
+      secondary_color:
+        type: string
+    type: object
   domain.ApiCompanyDetail:
     properties:
       cnpj:
@@ -150,6 +167,8 @@ definitions:
         type: string
       secondary_color:
         type: string
+      text_color:
+        type: string
       updated_at:
         type: string
     type: object
@@ -168,6 +187,8 @@ definitions:
       primary_color:
         type: string
       secondary_color:
+        type: string
+      text_color:
         type: string
       updated_at:
         type: string
@@ -495,6 +516,23 @@ definitions:
       updatedAt:
         type: string
     type: object
+  domain.CreateCompanyColorPaletteRequest:
+    properties:
+      accent_color:
+        type: string
+      company_id:
+        type: integer
+      name:
+        type: string
+      primary_color:
+        type: string
+      secondary_color:
+        type: string
+    required:
+    - company_id
+    - name
+    - primary_color
+    type: object
   domain.CreateCompanyFiscalConfigRequest:
     properties:
       accountant_contact:
@@ -534,6 +572,8 @@ definitions:
       primary_color:
         type: string
       secondary_color:
+        type: string
+      text_color:
         type: string
     required:
     - company_id
@@ -735,6 +775,8 @@ definitions:
       primary_color:
         type: string
       secondary_color:
+        type: string
+      text_color:
         type: string
     required:
     - primary_color
@@ -1283,6 +1325,122 @@ paths:
       summary: Atualiza empresa
       tags:
       - Companies
+  /company-color-palettes:
+    post:
+      consumes:
+      - application/json
+      description: Cria uma nova paleta de cores personalizada (nome + 3 cores) pra
+        uma empresa
+      parameters:
+      - description: Dados da Paleta
+        in: body
+        name: palette
+        required: true
+        schema:
+          $ref: '#/definitions/domain.CreateCompanyColorPaletteRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiCompanyColorPalette'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Salva paleta de cores personalizada
+      tags:
+      - CompanyColorPalette
+  /company-color-palettes/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove uma paleta de cores personalizada pelo ID
+      parameters:
+      - description: ID da Paleta
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Exclui paleta de cores personalizada
+      tags:
+      - CompanyColorPalette
+  /company-color-palettes/by-company/{companyId}:
+    get:
+      consumes:
+      - application/json
+      description: Retorna as paletas de cores salvas pelo usuário pra uma empresa,
+        mais recentes primeiro
+      parameters:
+      - description: ID da Empresa
+        in: path
+        name: companyId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/domain.ApiCompanyColorPalette'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Lista paletas de cores personalizadas por empresa
+      tags:
+      - CompanyColorPalette
   /company-fiscal-configs:
     post:
       consumes:
@@ -1567,6 +1725,46 @@ paths:
       tags:
       - CompanyVisualConfig
   /company-visual-configs/{id}/logo:
+    delete:
+      consumes:
+      - application/json
+      description: Limpa o logo de uma configuração visual, mantendo o resto da config
+        (cores) intacto — não é o DELETE do registro inteiro
+      parameters:
+      - description: ID da Configuração Visual
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiCompanyVisualConfig'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Remove o logo da empresa
+      tags:
+      - CompanyVisualConfig
     get:
       description: Devolve o binário do logo (não passa pelo envelope utils.Response
         — é servido com o Content-Type do próprio arquivo, pra ser usado direto num
