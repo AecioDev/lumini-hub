@@ -12,16 +12,23 @@ import (
 type User struct {
 	gorm.Model
 
-	Username     string     `gorm:"size:50;not null;unique" json:"username"`
-	PasswordHash string     `gorm:"size:255;not null;column:password_hash" json:"-"`
-	Name         string     `gorm:"size:100;not null" json:"name"`
-	Email        string     `gorm:"size:100;unique" json:"email"`
-	Phone        string     `gorm:"size:20" json:"phone"`
-	IsActive     bool       `gorm:"default:true" json:"is_active"`
+	Username     string       `gorm:"size:50;not null;unique" json:"username"`
+	PasswordHash string       `gorm:"size:255;not null;column:password_hash" json:"-"`
+	Name         string       `gorm:"size:100;not null" json:"name"`
+	Email        string       `gorm:"size:100;unique" json:"email"`
+	Phone        string       `gorm:"size:20" json:"phone"`
+	IsActive     bool         `gorm:"default:true" json:"is_active"`
 	LastLogin    *time.Time   `json:"last_login"`
 	RoleID       uint         `json:"role_id"`
 	Role         *Role        `gorm:"foreignKey:RoleID" json:"role,omitempty"`
 	Permissions  []Permission `gorm:"many2many:user_permissions;" json:"permissions,omitempty"`
+
+	// CompanyID referencia Company (api.core) por ID puro, sem GORM relation
+	// cross-service (mesmo padrão de Customer/User descrito no CLAUDE.md).
+	// Nulo = usuário "master": vê todas as Empresas a partir de qualquer
+	// Matriz (ver regra de visibilidade em plano_empresa.md). Não nulo =
+	// usuário só vê a própria Empresa, exceto com companies.hierarchy.view.
+	CompanyID *uint `json:"company_id"`
 }
 
 // TableName especifica o nome da tabela
@@ -31,21 +38,23 @@ func (User) TableName() string {
 
 // CreateUserRequest representa os dados para criar um novo usuário
 type CreateUserRequest struct {
-	Username string `json:"username" binding:"required,min=3,max=50"`
-	Password string `json:"password" binding:"required,min=6"`
-	Name     string `json:"name" binding:"required"`
-	Email    string `json:"email" binding:"required,email"`
-	Phone    string `json:"phone"`
-	RoleID   uint   `json:"role_id" binding:"required"`
+	Username  string `json:"username" binding:"required,min=3,max=50"`
+	Password  string `json:"password" binding:"required,min=6"`
+	Name      string `json:"name" binding:"required"`
+	Email     string `json:"email" binding:"required,email"`
+	Phone     string `json:"phone"`
+	RoleID    uint   `json:"role_id" binding:"required"`
+	CompanyID *uint  `json:"company_id"`
 }
 
 // UpdateUserRequest representa os dados para atualizar um usuário
 type UpdateUserRequest struct {
-	Name     string `json:"name"`
-	Email    string `json:"email" binding:"omitempty,email"`
-	Phone    string `json:"phone"`
-	RoleID   uint   `json:"role_id"`
-	IsActive *bool  `json:"is_active"`
+	Name      string `json:"name"`
+	Email     string `json:"email" binding:"omitempty,email"`
+	Phone     string `json:"phone"`
+	RoleID    uint   `json:"role_id"`
+	IsActive  *bool  `json:"is_active"`
+	CompanyID *uint  `json:"company_id"`
 }
 
 // ChangePasswordRequest representa os dados para alterar a senha
@@ -56,13 +65,14 @@ type ChangePasswordRequest struct {
 
 // ApiUser representa os dados de um usuário que são seguros para enviar ao frontend
 type ApiUser struct {
-	ID       uint   `json:"id"`
-	Username string `json:"username"`
-	Name     string `json:"name"`
-	Email    string `json:"email,omitempty"`
-	RoleID   uint   `json:"role_id"`
-	Role     string `json:"role,omitempty"`
-	IsActive bool   `json:"is_active"`
+	ID        uint   `json:"id"`
+	Username  string `json:"username"`
+	Name      string `json:"name"`
+	Email     string `json:"email,omitempty"`
+	RoleID    uint   `json:"role_id"`
+	Role      string `json:"role,omitempty"`
+	IsActive  bool   `json:"is_active"`
+	CompanyID *uint  `json:"company_id"`
 }
 
 // ApiUserRole representa os dados básicos do papel do usuário, sem incluir as permissões aninhadas
@@ -76,15 +86,16 @@ type ApiUserRole struct {
 
 // ApiUserDetail representa os dados detalhados de um usuário
 type ApiUserDetail struct {
-	ID          uint            `json:"id"`
-	Username    string          `json:"username"`
-	Name        string          `json:"name"`
-	Email       string          `json:"email,omitempty"`
-	Phone       string          `json:"phone"`
-	RoleID      uint            `json:"role_id"`
-	Role        ApiUserRole     `json:"role"`
-	IsActive    bool            `json:"is_active"`
-	LastLogin   string          `json:"last_login,omitempty"`
+	ID          uint              `json:"id"`
+	Username    string            `json:"username"`
+	Name        string            `json:"name"`
+	Email       string            `json:"email,omitempty"`
+	Phone       string            `json:"phone"`
+	RoleID      uint              `json:"role_id"`
+	Role        ApiUserRole       `json:"role"`
+	IsActive    bool              `json:"is_active"`
+	LastLogin   string            `json:"last_login,omitempty"`
+	CompanyID   *uint             `json:"company_id"`
 	Permissions []ApiPermission   `json:"permissions,omitempty"`
 	MenuItems   []ApiUserMenuItem `json:"menu_items,omitempty"`
 	CreatedAt   string            `json:"created_at"`
@@ -110,12 +121,13 @@ type RefreshTokenSuccessResponse struct {
 // ApiUserFromModel converte um modelo User para ApiUser
 func ApiUserFromModel(u User) ApiUser {
 	dto := ApiUser{
-		ID:       u.ID,
-		Username: u.Username,
-		Name:     u.Name,
-		Email:    u.Email,
-		RoleID:   u.RoleID,
-		IsActive: u.IsActive,
+		ID:        u.ID,
+		Username:  u.Username,
+		Name:      u.Name,
+		Email:     u.Email,
+		RoleID:    u.RoleID,
+		IsActive:  u.IsActive,
+		CompanyID: u.CompanyID,
 	}
 
 	// Adicionar o nome do perfil se estiver carregado
@@ -136,6 +148,7 @@ func ApiUserDetailFromModel(u User) ApiUserDetail {
 		Phone:     u.Phone,
 		RoleID:    u.RoleID,
 		IsActive:  u.IsActive,
+		CompanyID: u.CompanyID,
 		CreatedAt: u.CreatedAt.Format("2006-01-02 15:04:05"),
 		UpdatedAt: u.UpdatedAt.Format("2006-01-02 15:04:05"),
 	}
@@ -172,4 +185,3 @@ func ApiUserDetailFromModel(u User) ApiUserDetail {
 type UpdateUserPermissionsRequest struct {
 	PermissionIDs []uint `json:"permission_ids" binding:"required"`
 }
-

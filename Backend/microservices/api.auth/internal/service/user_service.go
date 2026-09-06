@@ -140,6 +140,7 @@ func (s *UserService) CreateUser(req domain.CreateUserRequest, requesterRole str
 		Phone:        req.Phone,
 		RoleID:       req.RoleID,
 		IsActive:     true, // Por padrão, usuários são criados ativos
+		CompanyID:    req.CompanyID,
 	}
 
 	if err := s.userRepo.Create(&user); err != nil {
@@ -203,15 +204,19 @@ func (s *UserService) UpdateUser(id uint, req domain.UpdateUserRequest, requeste
 	if req.Phone != "" {
 		user.Phone = req.Phone
 	}
-	
+
 	roleChanged := false
 	if req.RoleID != 0 && req.RoleID != user.RoleID {
 		user.RoleID = req.RoleID
 		roleChanged = true
 	}
-	
+
 	if req.IsActive != nil {
 		user.IsActive = *req.IsActive
+	}
+
+	if req.CompanyID != nil {
+		user.CompanyID = req.CompanyID
 	}
 
 	// Salvar alterações
@@ -333,4 +338,3 @@ func (s *UserService) UpdateUserPermissions(id uint, permissionIDs []uint, reque
 	userDetailDTO := domain.ApiUserDetailFromModel(*completeUser)
 	return &userDetailDTO, nil
 }
-
