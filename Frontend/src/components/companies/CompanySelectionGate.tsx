@@ -1,11 +1,9 @@
-import { useEffect, useState } from "react";
-import { Alert, Button, Card, Select, Skeleton, Typography } from "antd";
+import { useState } from "react";
+import { Alert, Button, Card, Select, Typography } from "antd";
 import { CHROME_BG } from "@/theme/antd-theme";
 import { useThemeMode } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Logo } from "@/components/layout/Logo";
-import { companyService } from "@/services/companies/company-service";
-import type { ApiCompany } from "@/types/company";
 
 const { Text } = Typography;
 
@@ -14,23 +12,23 @@ const { Text } = Typography;
 // master, ou com companies.hierarchy.view; ver ResolveActiveCompany no
 // backend). Renderizado pelo ProtectedRoute no lugar do <Outlet/> enquanto
 // user.requires_company_selection for true.
+//
+// Lista vem de user.visible_companies (ApiUserDetail, login/refresh/me),
+// NÃO de GET /companies — de propósito: aquele endpoint exige
+// companies.view, uma permission de administração do cadastro que a
+// maioria dos perfis operacionais nunca tem. Um usuário master sem essa
+// permission ficaria preso aqui pra sempre (esta tela bloqueia qualquer
+// rota até a escolha ser feita, sem saída visível) se dependesse dela —
+// mesmo bug já corrigido no ActiveCompanySwitcher.tsx, replicado aqui.
 export function CompanySelectionGate() {
   const { mode } = useThemeMode();
-  const { setActiveCompany } = useAuth();
+  const { user, setActiveCompany } = useAuth();
 
-  const [companies, setCompanies] = useState<ApiCompany[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    companyService
-      .list()
-      .then(setCompanies)
-      .catch(() => setError("Erro ao carregar a lista de empresas."))
-      .finally(() => setLoading(false));
-  }, []);
+  const companies = user?.visible_companies ?? [];
 
   const handleConfirm = async () => {
     if (!selectedId) return;
@@ -71,36 +69,28 @@ export function CompanySelectionGate() {
           Selecione com qual empresa você deseja trabalhar nesta sessão.
         </Text>
 
-        {loading ? (
-          <Skeleton active paragraph={{ rows: 2 }} />
-        ) : (
-          <>
-            <Select
-              style={{ width: "100%", marginBottom: 16 }}
-              placeholder="Selecione uma empresa"
-              value={selectedId ?? undefined}
-              onChange={setSelectedId}
-              options={companies.map((company) => ({
-                value: company.id,
-                label: company.trade_name || company.legal_name,
-              }))}
-            />
+        <Select
+          style={{ width: "100%", marginBottom: 16 }}
+          placeholder="Selecione uma empresa"
+          value={selectedId ?? undefined}
+          onChange={setSelectedId}
+          options={companies.map((company) => ({
+            value: company.id,
+            label: company.name,
+          }))}
+        />
 
-            {error && (
-              <Alert type="error" message={error} showIcon style={{ marginBottom: 16 }} />
-            )}
+        {error && <Alert type="error" message={error} showIcon style={{ marginBottom: 16 }} />}
 
-            <Button
-              type="primary"
-              block
-              disabled={!selectedId}
-              loading={submitting}
-              onClick={() => void handleConfirm()}
-            >
-              Continuar
-            </Button>
-          </>
-        )}
+        <Button
+          type="primary"
+          block
+          disabled={!selectedId}
+          loading={submitting}
+          onClick={() => void handleConfirm()}
+        >
+          Continuar
+        </Button>
       </Card>
     </div>
   );
