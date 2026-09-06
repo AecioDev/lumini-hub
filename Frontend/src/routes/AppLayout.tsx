@@ -68,29 +68,28 @@ export function AppLayout() {
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <Sider
-        width={240}
-        collapsedWidth={76}
-        collapsed={collapsed}
-        trigger={null}
-        style={{ display: "flex", flexDirection: "column" }}
-      >
-        <ActiveCompanySwitcher collapsed={collapsed} />
+      <Sider width={240} collapsedWidth={76} collapsed={collapsed} trigger={null}>
+        {/* Sider do antd envolve os filhos num .ant-layout-sider-children
+            com display:block — o flex column precisa desse wrapper próprio
+            pra "flex: 1" no menu funcionar e empurrar o rodapé pro fim. */}
+        <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+          <ActiveCompanySwitcher collapsed={collapsed} />
 
-        <div style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
-          <SidebarMenu items={menuItems} />
-        </div>
+          <div style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
+            <SidebarMenu items={menuItems} />
+          </div>
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: collapsed ? "center" : "flex-start",
-            padding: collapsed ? "12px 0" : "12px 16px",
-            borderTop: "1px solid rgba(255,255,255,0.08)",
-          }}
-        >
-          <Logo size={20} showWordmark={!collapsed} />
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: collapsed ? "center" : "flex-start",
+              padding: collapsed ? "12px 0" : "12px 16px",
+              borderTop: "1px solid rgba(255,255,255,0.08)",
+            }}
+          >
+            <Logo size={20} showWordmark={!collapsed} />
+          </div>
         </div>
       </Sider>
 
