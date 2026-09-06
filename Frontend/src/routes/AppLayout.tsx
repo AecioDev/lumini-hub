@@ -67,7 +67,7 @@ export function AppLayout() {
   ];
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
+    <Layout style={{ height: "100vh", overflow: "hidden" }}>
       <Sider width={240} collapsedWidth={76} collapsed={collapsed} trigger={null}>
         {/* Sider do antd envolve os filhos num .ant-layout-sider-children
             com display:block — o flex column precisa desse wrapper próprio
@@ -133,7 +133,7 @@ export function AppLayout() {
           </div>
         </Header>
 
-        <Content style={{ padding: 24, overflowY: "auto" }}>
+        <Content style={{ padding: 24, overflowY: "auto", minHeight: 0 }}>
           <Outlet />
         </Content>
       </Layout>
