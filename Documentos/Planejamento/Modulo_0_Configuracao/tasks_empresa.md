@@ -93,13 +93,50 @@ Prefixo `CFG` (Módulo 0 — Configuração). Convenção de IDs/tags conforme `
 
 ### EPIC CFG-4: Identidade Visual da Empresa (`CompanyVisualConfig`)
 
-- [ ] [BACKLOG] **EPIC CFG-4**: Logo + paleta de cores por Empresa, aplicada no `ConfigProvider` do antd em runtime. Não bloqueado — decisões estruturais fechadas em `plano_empresa.md` (2026-07-27): `bytea` + mimetype pro logo, cores em hex, fallback pra paleta padrão da Lumini Hub se a empresa não configurar nada.
+- [ ] [EM-ANDAMENTO] **EPIC CFG-4**: Logo + paleta de cores por Empresa, aplicada no `ConfigProvider` do antd em runtime. Não bloqueado — decisões estruturais fechadas em `plano_empresa.md` (2026-07-27): `bytea` + mimetype pro logo, cores em hex, fallback pra paleta padrão da Lumini Hub se a empresa não configurar nada.
+  - **Aberto em 2026-09-06**: a implementação do backend (PBI CFG-4.1) começou direto no código, sem passar pelo orquestrador antes pra abrir a tarefa formalmente no board — usuário corrigiu no meio do processo. Este registro é retroativo: formaliza no board o que já tinha sido construído até a interrupção (detalhe dentro da PBI CFG-4.1 logo abaixo) antes da sessão de implementação continuar.
 
-  - [ ] [BACKLOG] **PBI CFG-4.1**: Backend — CRUD de `CompanyVisualConfig` em `api.core`
-    - [ ] [BACKLOG] CFG-4.1.1: Domain model + DTOs (passos 1-2) — `CompanyVisualConfig` (`CompanyID`, `LogoFile bytea`, `LogoMimeType`, `PrimaryColor`, `SecondaryColor` nullable, `AccentColor` nullable).
-    - [ ] [BACKLOG] CFG-4.1.2: Repository + Validator (passos 3-4) — 1:1 com `Company`, validação de formato hex das cores. (depende de CFG-4.1.1)
-    - [ ] [BACKLOG] CFG-4.1.3: Service + Handler + Routes (passos 5-7) — endpoint de upload de logo em multipart separado do `PUT` de cores, `AutoMigrate` (passo 9), proxy no gateway. **Sem endpoint de exclusão** — mesmo princípio de `CompanyFiscalConfig` (config 1:1 da empresa, decidido 2026-09-05): só `view`/`create`/`edit`. (depende de CFG-4.1.2)
-    - [ ] [BACKLOG] CFG-4.1.4: Seed de permissões `companies.visual_config.view/create/edit` (sem `.delete`) pro `ADMIN` (passo 11) + swagger regenerado. (depende de CFG-4.1.3)
+  - [ ] [EM-ANDAMENTO] **PBI CFG-4.1**: Backend — CRUD de `CompanyVisualConfig` em `api.core`
+    - **Nota de abertura (2026-09-06)**: implementação começou fora do fluxo do orquestrador; retomando com o board formal antes de prosseguir. Estado no momento deste registro — **compila limpo** (`go build`/`go vet` confirmados em `api.core` e `api.gateway`, ainda não confirmados nos 5 módulos do workspace inteiro), mas **nada foi revisado pelo `revisor-codigo-lumini-hub` nem testado** (curl ou navegador) até aqui:
+      - Domain+DTOs, Repository+Validator, Service+Handler+Routes escritos por completo — detalhamento dentro de cada tarefa-filha abaixo (CFG-4.1.1/4.1.2/4.1.3).
+      - `UnitOfWork.CompanyVisualConfigs()` adicionado em `repository/repository.go`.
+      - Grupo `/company-visual-configs` registrado em `routes/routes.go` (`GET /by-company/:companyId`, `POST`, `PUT /:id`, `POST /:id/logo`, `GET /:id/logo` — sem `DELETE`, mesmo princípio de config 1:1 já usado em `CompanyFiscalConfig`).
+      - `AutoMigrate` do `api.core` (`main.go`) já inclui `domain.CompanyVisualConfig`.
+      - Proxy do `api.gateway` (`main.go`) já tem o prefixo `/api/company-visual-configs`.
+      - Permissões `companies.visual_config.view/create/edit` (sem `.delete`, ids 63-65, módulo "Empresas") já inseridas no catálogo via SQL manual — **ainda não mapeadas pro perfil ADMIN em `role_permissions`** (pendência real de CFG-4.1.4, ver abaixo).
+      - Ainda faltam: mapear as 3 permissions pro ADMIN, regenerar Swagger, e o frontend inteiro (PBI CFG-4.2).
+    - [ ] [FINALIZADO] CFG-4.1.1: Domain model + DTOs (passos 1-2) — `CompanyVisualConfig` (`CompanyID`, `LogoFile bytea`, `LogoMimeType`, `PrimaryColor`, `SecondaryColor` nullable, `AccentColor` nullable).
+      - Critério de aceite (expandido em 2026-09-06, retroativo ao código já escrito):
+        - [x] `domain/company_visual_config.go` criado, mesmo arquivo-único de `company_fiscal_config.go` (struct + Create/UpdateRequest + DTOs `Api*` + mappers, sem `_dto.go` separado).
+        - [x] `CompanyID uint` com `uniqueIndex` reforçando 1:1 com `Company`; `LogoFile []byte` (`gorm:"type:bytea"`); `LogoMimeType string`; `PrimaryColor string`; `SecondaryColor`/`AccentColor` `*string` (nullable).
+        - [x] `TableName()` explícito.
+        - [x] `Create.../Update...Request` com tags `binding`, sem campo de logo (upload é endpoint multipart separado, CFG-4.1.3).
+        - [x] `go build`/`go vet` limpos em `api.core`/`api.gateway` — **pendente confirmar `go build ./...` a partir de `Backend/` nos 5 módulos do workspace inteiro**.
+      - **Ainda não revisado pelo `revisor-codigo-lumini-hub` nem testado** — não avançar além de `[FINALIZADO]` até isso acontecer.
+    - [ ] [FINALIZADO] CFG-4.1.2: Repository + Validator (passos 3-4) — 1:1 com `Company`, validação de formato hex das cores. (depende de CFG-4.1.1)
+      - Critério de aceite (expandido em 2026-09-06, retroativo):
+        - [x] `CompanyVisualConfigRepository`/`GormCompanyVisualConfigRepository` (`repository/company_visual_config_repository.go`) — `FindByCompanyID`/`ExistsByCompanyID`, mesmo padrão de `CompanyFiscalConfigRepository` (sem `ExistsByCompanyIDExcept`, `CompanyID` não muda em update).
+        - [x] `CompanyVisualConfigValidator` (`validator/company_visual_config_validator.go`) — `ValidateForCreation`/`ValidateForUpdate` validando formato hex de `PrimaryColor`/`SecondaryColor`/`AccentColor`.
+        - [x] `UnitOfWork.CompanyVisualConfigs()` adicionado em `repository/repository.go`.
+        - [x] `go build`/`go vet` limpos em `api.core`.
+      - **Ainda não revisado nem testado.**
+    - [ ] [FINALIZADO] CFG-4.1.3: Service + Handler + Routes (passos 5-7) — endpoint de upload de logo em multipart separado do `PUT` de cores, `AutoMigrate` (passo 9), proxy no gateway. **Sem endpoint de exclusão** — mesmo princípio de `CompanyFiscalConfig` (config 1:1 da empresa, decidido 2026-09-05): só `view`/`create`/`edit`. (depende de CFG-4.1.2)
+      - Critério de aceite (expandido em 2026-09-06, retroativo):
+        - [x] `CompanyVisualConfigService` (`service/company_visual_config_service.go`), escritas sempre via `s.uow.Execute(...)`.
+        - [x] `CompanyVisualConfigHandler` (`handlers/company_visual_configs.go`) — CRUD (sem DELETE) + upload de logo multipart.
+        - [x] Rotas em `routes/routes.go`: `GET /company-visual-configs/by-company/:companyId`, `POST`, `PUT /:id`, `POST /:id/logo`, `GET /:id/logo`.
+        - [x] `AutoMigrate` do `api.core` (`main.go`) migra `domain.CompanyVisualConfig`.
+        - [x] Proxy `/api/company-visual-configs` adicionado em `api.gateway/main.go`.
+        - [x] `go build`/`go vet` limpos em `api.core` e `api.gateway`.
+        - [ ] Swagger ainda **não** regenerado (fica junto com CFG-4.1.4).
+      - **Ainda não revisado nem testado end-to-end** (nem via curl, nem no navegador).
+    - [ ] [EM-ANDAMENTO] CFG-4.1.4: Seed de permissões `companies.visual_config.view/create/edit` (sem `.delete`) pro `ADMIN` (passo 11) + swagger regenerado. (depende de CFG-4.1.3)
+      - Critério de aceite (expandido em 2026-09-06):
+        - [x] Permissões `companies.visual_config.view/create/edit` inseridas no catálogo (`permissions`, módulo "Empresas", ids 63-65) via SQL manual, mesmo padrão do resto do projeto.
+        - [ ] Mapeamento em `role_permissions` pro perfil `ADMIN` — **pendente**, interrompido no meio do processo.
+        - [ ] Swagger regenerado (`swag init` a partir de `api.gateway/`) — **pendente**.
+        - [ ] `go build ./...` a partir de `Backend/` confirmado nos 5 módulos do workspace inteiro (só `api.core`/`api.gateway` checados até aqui).
+      - É esta tarefa que mantém a PBI CFG-4.1 (e o EPIC CFG-4) em `[EM-ANDAMENTO]` — as três anteriores (CFG-4.1.1/4.1.2/4.1.3) já estão `[FINALIZADO]` (código completo, compilando, mas nada revisado/testado ainda).
 
   - [ ] [BACKLOG] **PBI CFG-4.2**: Frontend — aba "Identidade Visual" na tela de Empresa
     - [ ] [BACKLOG] CFG-4.2.1: Types + `company-visual-config-service.ts` + schema Zod. (depende de CFG-4.1.4)
