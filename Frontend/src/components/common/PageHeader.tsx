@@ -31,13 +31,11 @@ interface PageHeaderProps {
 // testando Editar Empresa). Acoplamento numérico com o padding do
 // Content — se aquele valor mudar, ajustar aqui também.
 //
-// Sem paddingTop de propósito (2ª rodada de review): um `paddingTop`
-// igual ao `top` negativo resolveria a folga visual só quando o
-// cabeçalho já está "grudado", mas CSS não distingue esse estado do
-// estado normal — o padding valeria sempre, dobrando o espaço acima do
-// título em toda tela (mesmo as que nunca rolam, ex. Criar Usuário).
-// Prefiro o cabeçalho ficar rente ao topo quando grudado (comum em
-// headers fixos) a um espaço extra permanente em repouso.
+// paddingTop:24 acompanha o top:-24 pra dar um respiro visual ao
+// cabeçalho quando ele está de fato grudado — sem isso ele fica colado
+// rente ao topo, sem folga nenhuma, o que o usuário achou pior
+// visualmente do que ter um pouco de espaço (mesmo que esse espaço
+// também apareça, um pouco redundante, quando a tela nem chega a rolar).
 export function PageHeader({ title, subtitle, backTo }: PageHeaderProps) {
   const navigate = useNavigate();
   const { token } = theme.useToken();
@@ -54,6 +52,7 @@ export function PageHeader({ title, subtitle, backTo }: PageHeaderProps) {
         top: -24,
         zIndex: 10,
         background: token.colorBgLayout,
+        paddingTop: 24,
         paddingBottom: 12,
       }}
     >
