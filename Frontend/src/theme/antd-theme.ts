@@ -80,16 +80,27 @@ function hexToRgb(hex: string): [number, number, number] {
 // mantendo a paleta padrão sem diferença visual (ver plano_empresa.md §
 // CompanyVisualConfig, "Fallback").
 //
-// accent_color não é mapeado aqui de propósito — não existe token antd
-// correspondente definido em lugar nenhum do projeto hoje, só aparece no
-// preview isolado de CompanyVisualConfigForm.tsx.
+// accent_color e text_color não são mapeados aqui de propósito. accent_color
+// não tem token antd correspondente em lugar nenhum do projeto hoje, só
+// aparece no preview isolado de CompanyVisualConfigForm.tsx. text_color
+// CHEGOU a ser mapeado pra colorTextLightSolid, mas foi revertido: esse é um
+// token de alias global do antd consumido por Menu (cor do item NÃO
+// selecionado no tema dark — ver darkItemColor em antd/es/menu/style/index.js),
+// além de Button, Tag, Switch, Tooltip, Badge, Avatar etc. — não é um token
+// "texto sobre botão primário" isolado como o nome sugere. Como o valor
+// cadastrado é pensado pra contrastar com primary_color (ex.: quase-preto
+// pra combinar com um dourado), sobrepor esse token globalmente deixou o
+// texto do menu lateral quase ilegível (texto escuro sobre o navy escuro do
+// Sider). Sem um token antd que isole "texto sobre a cor primária" sem
+// vazar pro resto do app, text_color fica de fora do override global por
+// enquanto — só aparece no preview isolado do form, igual accent_color.
 export function buildCompanyThemeOverride(
   visualConfig: ApiCompanyVisualConfigOption | null | undefined,
   mode: ThemeMode
 ): ThemeConfig | null {
   if (!visualConfig) return null;
 
-  const { primary_color, secondary_color, text_color } = visualConfig;
+  const { primary_color, secondary_color } = visualConfig;
   const [r, g, b] = hexToRgb(primary_color);
   const isDark = mode === "dark";
 
@@ -98,7 +109,6 @@ export function buildCompanyThemeOverride(
       colorPrimary: primary_color,
       colorLink: primary_color,
       ...(secondary_color ? { colorInfo: secondary_color } : {}),
-      ...(text_color ? { colorTextLightSolid: text_color } : {}),
     },
     components: {
       // itemSelectedColor/itemHoverBg/itemSelectedBg de buildAntdTheme são
