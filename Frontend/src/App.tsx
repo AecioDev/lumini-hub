@@ -4,6 +4,7 @@ import { RouterProvider } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider, useThemeMode } from "@/contexts/ThemeContext";
 import { buildAntdTheme } from "@/theme/antd-theme";
+import { CompanyThemeProvider } from "@/theme/CompanyThemeProvider";
 import { router } from "@/routes/router";
 
 function ThemedApp() {
@@ -13,7 +14,9 @@ function ThemedApp() {
     <ConfigProvider theme={buildAntdTheme(mode)} locale={ptBR}>
       <AntdApp notification={{ placement: "topRight" }}>
         <AuthProvider>
-          <RouterProvider router={router} future={{ v7_startTransition: true }} />
+          <CompanyThemeProvider>
+            <RouterProvider router={router} future={{ v7_startTransition: true }} />
+          </CompanyThemeProvider>
         </AuthProvider>
       </AntdApp>
     </ConfigProvider>
