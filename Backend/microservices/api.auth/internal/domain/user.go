@@ -117,6 +117,12 @@ type ApiUserDetail struct {
 	ActiveCompanyName        string                `json:"active_company_name,omitempty"`
 	RequiresCompanySelection bool                  `json:"requires_company_selection,omitempty"`
 	VisibleCompanies         []utils.CompanyOption `json:"visible_companies,omitempty"`
+	// ActiveCompanyVisualConfig é a identidade visual (logo + paleta) da
+	// empresa ativa — mesmo raciocínio de VisibleCompanies (sem depender de
+	// companies.visual_config.view), pra CFG-6.1.2 aplicar no ConfigProvider
+	// do frontend. nil quando a empresa não tem CompanyVisualConfig
+	// cadastrada (fallback pra paleta padrão é responsabilidade do frontend).
+	ActiveCompanyVisualConfig *utils.CompanyVisualConfigOption `json:"active_company_visual_config,omitempty"`
 	Permissions              []ApiPermission       `json:"permissions,omitempty"`
 	MenuItems                []ApiUserMenuItem     `json:"menu_items,omitempty"`
 	CreatedAt                string                `json:"created_at"`

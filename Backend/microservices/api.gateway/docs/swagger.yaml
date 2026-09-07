@@ -363,6 +363,15 @@ definitions:
         type: integer
       active_company_name:
         type: string
+      active_company_visual_config:
+        allOf:
+        - $ref: '#/definitions/utils.CompanyVisualConfigOption'
+        description: |-
+          ActiveCompanyVisualConfig é a identidade visual (logo + paleta) da
+          empresa ativa — mesmo raciocínio de VisibleCompanies (sem depender de
+          companies.visual_config.view), pra CFG-6.1.2 aplicar no ConfigProvider
+          do frontend. nil quando a empresa não tem CompanyVisualConfig
+          cadastrada (fallback pra paleta padrão é responsabilidade do frontend).
       company_id:
         type: integer
       created_at:
@@ -946,6 +955,21 @@ definitions:
       id:
         type: integer
       name:
+        type: string
+    type: object
+  utils.CompanyVisualConfigOption:
+    properties:
+      accent_color:
+        type: string
+      has_logo:
+        type: boolean
+      id:
+        type: integer
+      primary_color:
+        type: string
+      secondary_color:
+        type: string
+      text_color:
         type: string
     type: object
   utils.Response:

@@ -81,7 +81,13 @@ func SetupRoutes(router *gin.RouterGroup, uow repository.UnitOfWork, cfg *config
 		// Sem DELETE de propósito — config 1:1 da empresa, ver comentário em
 		// CompanyVisualConfigService.
 		companyVisualConfigs.POST("/:id/logo", middlewares.RequirePermission("companies.visual_config.edit"), companyVisualConfigHandler.UploadLogo)
-		companyVisualConfigs.GET("/:id/logo", middlewares.RequirePermission("companies.visual_config.view"), companyVisualConfigHandler.GetLogo)
+		// Sem RequirePermission de propósito (CFG-6.1.1): servir o logo da
+		// empresa ativa pra exibição (sidebar, tema) é identidade de sessão
+		// de qualquer usuário autenticado, não administração da configuração
+		// — mesma classe de bug já corrigida antes pra companies.view (ver
+		// VisibleCompanies/CompanyOption). AuthMiddleware do grupo já exige
+		// login; a permission continua valendo pra criar/editar/remover.
+		companyVisualConfigs.GET("/:id/logo", companyVisualConfigHandler.GetLogo)
 		companyVisualConfigs.DELETE("/:id/logo", middlewares.RequirePermission("companies.visual_config.edit"), companyVisualConfigHandler.ClearLogo)
 	}
 

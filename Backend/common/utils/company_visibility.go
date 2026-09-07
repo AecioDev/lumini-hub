@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"errors"
 	"slices"
 
 	"gorm.io/gorm"
@@ -188,4 +189,56 @@ func ResolveCompanyOptions(db *gorm.DB, ids []uint, unrestricted bool) ([]Compan
 		return nil, err
 	}
 	return options, nil
+}
+
+// CompanyVisualConfigOption é a identidade visual (logo + paleta) da
+// empresa ativa, resolvida sem depender de companies.visual_config.view —
+// aplicar o tema pra quem já está "dentro" daquela empresa é identidade de
+// sessão (mesmo raciocínio de CompanyOption acima), não administração da
+// configuração em si (isso continua exigindo a permission, via
+// GET /company-visual-configs/by-company/:id, tela de Configurações).
+type CompanyVisualConfigOption struct {
+	ID             uint    `json:"id"`
+	HasLogo        bool    `json:"has_logo"`
+	PrimaryColor   string  `json:"primary_color"`
+	SecondaryColor *string `json:"secondary_color"`
+	AccentColor    *string `json:"accent_color"`
+	TextColor      *string `json:"text_color"`
+}
+
+// ResolveActiveCompanyVisualConfig busca a identidade visual (se existir)
+// da Company informada, pra embutir em ApiUserDetail junto da empresa
+// ativa. nil, nil quando a empresa não tem CompanyVisualConfig cadastrada
+// — fallback pra paleta padrão da Lumini Hub é responsabilidade do
+// consumidor/frontend (ver plano_empresa.md § CompanyVisualConfig). Não
+// seleciona logo_file (bytea) — só se tem logo ou não, o binário em si
+// continua servido por GET /company-visual-configs/:id/logo.
+func ResolveActiveCompanyVisualConfig(db *gorm.DB, companyID uint) (*CompanyVisualConfigOption, error) {
+	var row struct {
+		ID             uint
+		HasLogo        bool `gorm:"column:has_logo"`
+		PrimaryColor   string
+		SecondaryColor *string
+		AccentColor    *string
+		TextColor      *string
+	}
+	err := db.Table("company_visual_configs").
+		Select("id, (length(logo_file) > 0) AS has_logo, primary_color, secondary_color, accent_color, text_color").
+		Where("company_id = ? AND deleted_at IS NULL", companyID).
+		Take(&row).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &CompanyVisualConfigOption{
+		ID:             row.ID,
+		HasLogo:        row.HasLogo,
+		PrimaryColor:   row.PrimaryColor,
+		SecondaryColor: row.SecondaryColor,
+		AccentColor:    row.AccentColor,
+		TextColor:      row.TextColor,
+	}, nil
 }

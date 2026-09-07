@@ -3337,6 +3337,14 @@ const docTemplate = `{
                 "active_company_name": {
                     "type": "string"
                 },
+                "active_company_visual_config": {
+                    "description": "ActiveCompanyVisualConfig é a identidade visual (logo + paleta) da\nempresa ativa — mesmo raciocínio de VisibleCompanies (sem depender de\ncompanies.visual_config.view), pra CFG-6.1.2 aplicar no ConfigProvider\ndo frontend. nil quando a empresa não tem CompanyVisualConfig\ncadastrada (fallback pra paleta padrão é responsabilidade do frontend).",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/utils.CompanyVisualConfigOption"
+                        }
+                    ]
+                },
                 "company_id": {
                     "type": "integer"
                 },
@@ -4209,6 +4217,29 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "utils.CompanyVisualConfigOption": {
+            "type": "object",
+            "properties": {
+                "accent_color": {
+                    "type": "string"
+                },
+                "has_logo": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "primary_color": {
+                    "type": "string"
+                },
+                "secondary_color": {
+                    "type": "string"
+                },
+                "text_color": {
                     "type": "string"
                 }
             }
