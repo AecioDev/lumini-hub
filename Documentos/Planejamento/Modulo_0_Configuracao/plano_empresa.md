@@ -14,7 +14,7 @@ Este módulo cria o cadastro de **Empresa** — a estrutura organizacional de um
 2. **Configuração Fiscal por Empresa** — certificado digital A1, tipo de tributação (Simples/Presumido/Real), dados do contador responsável, contadores/séries de numeração de notas fiscais.
 3. **Plano de Contas por Empresa** — estrutura hierárquica de contas contábeis pra lançamentos em partida dobrada (base do Módulo 7 — CMV, DRE, Balancete).
 4. **Escopo por empresa em todo o resto do sistema** — regra de visibilidade de dados (usuário só vê o que é da(s) empresa(s) dele) e a decisão de escopo obrigatória em toda entidade nova (já reforçada em `.claude/skills/lumini_hub_entity_creation/SKILL.md`, Step 0).
-5. **Configuração Visual por Empresa** — logo e paleta de cores próprias, aplicadas no frontend pra personalizar a experiência de cada cliente que usa a Lumini Hub (ver `CompanyVisualConfig` abaixo).
+5. **Logo da Empresa** — arquivo de logo próprio, guardado como campo do próprio cadastro básico (`Company.LogoFile`/`LogoMimeType`). **Revisado 2026-09-07**: chegou a existir uma feature maior de "Identidade Visual" completa (logo + paleta de cores personalizada aplicada em runtime no `ConfigProvider` do antd) — foi implementada, entregue e testada, mas depois **revertida** por decisão do usuário (a customização de cores não trouxe valor prático suficiente). Ver seção **"🔄 Reversão (2026-09-07)"** logo abaixo de `CompanyColorPalette` pro histórico completo e o novo escopo, bem menor.
 
 ---
 
@@ -60,7 +60,10 @@ Este módulo cria o cadastro de **Empresa** — a estrutura organizacional de um
 
 > **Config geral, não só fiscal**: como você apontou, `Company` vai precisar de uma "gaveta" de configurações que cresce com o sistema (não só fiscal) — outros módulos vão pedir suas próprias configs por empresa conforme forem sendo construídos. Não vou tentar prever isso tudo agora; cada módulo novo pede sua própria tabela de configuração quando chegar a vez dele (mesma lógica do Step 0 de escopo por empresa — perguntar antes de modelar, não assumir).
 
-### `CompanyVisualConfig` (1:1 com Empresa)
+### `CompanyVisualConfig` (1:1 com Empresa) — **REMOVIDA em 2026-09-07, ver seção "🔄 Reversão" logo abaixo**
+
+> Esta seção fica mantida como está (histórico) por rastreabilidade — a tabela/entidade descrita aqui **não existe mais**. Não a use como referência do estado atual, só como registro de "o que foi decidido e por que, na época".
+
 **Definido 2026-07-27**: personalização visual por cliente (a Lumini Hub é usada por várias empresas diferentes, cada uma podendo querer sua própria marca aparecendo no sistema). Tabela própria, não uma coluna solta em `Company` nem misturada nas outras configs (fiscal/emissão de nota) — é um conceito totalmente diferente (visual, não fiscal/contábil) e mais uma "gaveta" que só cresce (pode ganhar campos como tema dark/light forçado, fonte, etc. no futuro).
 
 | Campo | Tipo | Observação |
@@ -74,7 +77,9 @@ Este módulo cria o cadastro de **Empresa** — a estrutura organizacional de um
 
 > **Aplicação no frontend**: mesmo mecanismo do menu dinâmico (`AuthContext.tsx`) — a config visual da empresa ativa do usuário viaja no bootstrap da sessão (`GET /auth/me`/login/refresh) e substitui os tokens de `src/theme/antd-theme.ts` (`BRAND`) em runtime via `ConfigProvider`. **Fallback**: campos vazios/tabela sem registro para aquela empresa usam a paleta padrão da própria Lumini Hub (não força o cliente a configurar nada pra já ter um visual coerente).
 
-### `CompanyColorPalette` (N:1 com Empresa) — paletas personalizadas
+### `CompanyColorPalette` (N:1 com Empresa) — paletas personalizadas — **REMOVIDA em 2026-09-07, ver seção "🔄 Reversão" logo abaixo**
+
+> Mesma nota da seção anterior: mantida como histórico, a entidade **não existe mais**.
 
 **Definido 2026-09-06**, a partir de feedback do usuário testando a tela de Identidade Visual: além das 6 paletas fixas no código (`PRESET_PALETTES`, frontend), o usuário quer poder salvar combinações próprias de cor pra reaproveitar depois, com um botão "Salvar como paleta personalizada" logo após os 3 color pickers.
 
@@ -93,6 +98,88 @@ Este módulo cria o cadastro de **Empresa** — a estrutura organizacional de um
 > **Permissões**: reaproveita `companies.visual_config.create` (criar paleta) e `companies.visual_config.edit` (apagar paleta) em vez de um catálogo `companies.color_palettes.*` dedicado — a feature é um apêndice da mesma tela/permissão de Identidade Visual, não uma tela própria; criar uma permission nova só pra isso infla o catálogo sem necessidade real de granularidade separada.
 > **UI**: lista de paletas salvas exibida ao lado das 6 fixas (mesmo componente de swatch clicável), com uma ação de remover por paleta. Formulário de "nome + salvar" é **inline** (`Input` + `Button` na própria tela), não modal — CLAUDE.md reserva modais pra confirmação de ação destrutiva/usuário, nunca pra entrada de dados.
 
+---
+
+## 🔄 Reversão (2026-09-07): remoção da customização de cores, logo migra pro cadastro básico
+
+### O que existia antes
+
+O EPIC CFG-4 (backend + frontend, `tasks_empresa.md`) tinha sido **entregue e testado pessoalmente pelo usuário**: `CompanyVisualConfig` (1:1 com `Company`, logo em `bytea` + 3-4 cores em hex) e sua extensão `CompanyColorPalette` (N:1, paletas personalizadas salváveis por empresa). Em cima disso, o EPIC CFG-6.1.1/6.1.2 também tinha sido entregue e **testado pelo usuário** (`[TESTADO-USUARIO]`): a identidade visual da empresa ativa passava a viajar em `ApiUserDetail` (login/refresh/`GET /auth/me`) e era aplicada em runtime sobre o `ConfigProvider` do antd via um provider aninhado (`CompanyThemeProvider.tsx`), sobrepondo `colorPrimary`/`colorLink`/`colorInfo`/tokens do `Menu` com a cor da empresa ativa.
+
+### Por que reverter
+
+Testando a aplicação já com a feature funcionando de ponta a ponta, o usuário concluiu que o valor prático da customização de cores por empresa ficou abaixo do esperado — não é uma feature que ele quer manter disponível por ora. Nas palavras dele:
+
+> "eu estava navegando no sistema e olhando a utilidade prática da customização e cores, e achei meio fraca. No geral, acho q não é uma boa feature liberar isso."
+>
+> "Vamos remover a aba identidade visual e adicionar a logo no cadastro básico. A parte de cores acho q não fez o efeito q eu imaginava e o q eu imagino acho q é bem complicado de fazer..."
+
+Ao ser perguntado se preferia manter uma tabela separada só pra logo (mantendo `CompanyVisualConfig`, só sem as colunas de cor) ou reaproveitar a tabela `companies`:
+
+> "acho q a princípio não precisa de uma tabela separada pra isso, podemos remover tudo, endpoints, e tabela. Adicionar a logo na tabela principal da empresa."
+
+**Decisão**: reverter completamente a parte de cores (`CompanyColorPalette` inteira + os 4 campos de cor de `CompanyVisualConfig` + a aplicação de tema em runtime do CFG-6.1.2) e descontinuar `CompanyVisualConfig` como tabela própria — o logo migra pra dentro da própria `Company`. O trabalho de código da feature de cores/identidade visual **não foi perdido**: preservado na branch de arquivo `archive/identidade-visual-cores` (aponta pro commit `8e894c0`), recuperável se um dia o assunto voltar à mesa.
+
+### O que passa a existir
+
+**Removido por completo** (backend + frontend + rotas + AutoMigrate + proxy + permissões associadas):
+- Entidade `CompanyColorPalette` inteira: domain, repository, validator, service, handlers, rotas (`/company-color-palettes`), tabela `company_color_palettes`.
+- Entidade `CompanyVisualConfig` inteira (não só as colunas de cor — a tabela toda, incluindo o que hoje é o logo): domain, repository, validator, service, handlers, rotas (`/company-visual-configs`), tabela `company_visual_configs`.
+- Campos de cor: `PrimaryColor`, `SecondaryColor`, `AccentColor`, `TextColor` — não migram pra lugar nenhum, deixam de existir.
+- Aba "Identidade Visual" da tela de Edição de Empresa (`EditCompanyPage.tsx`) e o componente `CompanyVisualConfigForm.tsx` inteiro.
+- Aplicação de tema em runtime do CFG-6.1.2: `Frontend/src/theme/CompanyThemeProvider.tsx` (arquivo inteiro), a função `buildCompanyThemeOverride` em `Frontend/src/theme/antd-theme.ts` (mantém o resto do arquivo — `BRAND`, `buildAntdTheme`, `CHROME_BG`), e a montagem de `<CompanyThemeProvider>` em `App.tsx` (volta a ser só `<AuthProvider>{children}</AuthProvider>`, sem provider aninhado).
+- Exposição de identidade visual na sessão do usuário: `ApiUserDetail.ActiveCompanyVisualConfig` (`api.auth/internal/domain/user.go`), a chamada em `auth_service.go` que a popula, e `CompanyVisualConfigOption`/`ResolveActiveCompanyVisualConfig` em `common/utils/company_visibility.go`. **Decisão** (engenharia, não de negócio — documentada aqui, não é pergunta pro usuário): descontinuar por completo, não "virar só resolução do logo" como uma das duas opções cogitadas no briefing desta tarefa. Motivo: hoje nenhum consumidor do frontend usa esse campo pra exibir o logo em lugar nenhum da UI (o `Logo.tsx` do sidebar é a marca fixa da própria Lumini Hub, não a da empresa cliente) — o único consumidor era exatamente o `CompanyThemeProvider` que está sendo removido. Manter uma versão "só logo" sem consumidor real seria abrir uma gaveta especulativa, contra o princípio já registrado neste plano ("cada módulo pede sua própria config quando chegar a vez dele"). Se uma tela futura precisar mostrar o logo da empresa ativa (ex.: sidebar), ela já tem `ActiveCompanyID` disponível em `ApiUserDetail` pra montar a URL `GET /companies/{id}/logo` diretamente, sem precisar desse campo dedicado.
+- Frontend: `src/types/company-visual-config.ts`, `company-color-palette.ts`; `src/schemas/company-visual-config-schema.ts`, `company-color-palette-schema.ts`; `src/services/companies/company-visual-config-service.ts`, `company-color-palette-service.ts`; o tipo `ApiCompanyVisualConfigOption` em `src/types/auth.ts` e o campo `active_company_visual_config` de `AuthUser`.
+- Permissões `companies.visual_config.*` — ver "Pendência" abaixo, não é uma decisão que tomo sozinho.
+
+**Novo modelo de dados** — `Company` (`Backend/microservices/api.core/internal/domain/company.go`) ganha dois campos novos, mesmo raciocínio de `CertificateFile` em `CompanyFiscalConfig` (arquivo pequeno, guardado na própria linha, viaja junto do backup):
+
+| Campo | Tipo | Observação |
+|---|---|---|
+| `LogoFile` | bytea | `gorm:"type:bytea" json:"-"` — nunca exposto direto em JSON, mesmo padrão de antes |
+| `LogoMimeType` | string | `gorm:"size:50" json:"-"` — `image/png`, `image/svg+xml`, `image/jpeg` |
+
+`ApiCompany`/`ApiCompanyDetail` ganham `HasLogo bool` (derivado de `len(LogoFile) > 0`, mesmo padrão de `ApiCompanyVisualConfig.HasLogo` antes). `CreateCompanyRequest`/`UpdateCompanyRequest` **não** ganham campo de logo — segue o mesmo padrão já usado pro certificado A1: upload é endpoint multipart separado do `POST`/`PUT` principal, e só faz sentido depois que a empresa já existe (tem um ID).
+
+**Novos endpoints**, dentro do grupo `/companies` já existente (não é mais um grupo próprio como `/company-visual-configs` era):
+- `POST /companies/:id/logo` (multipart, campo `logo`, PNG/JPEG/SVG) — grava `LogoFile`/`LogoMimeType`. Gate: `companies.edit` (reaproveitada, não é permission nova — ver justificativa abaixo).
+- `DELETE /companies/:id/logo` — limpa só os dois campos (`LogoFile = nil`, `LogoMimeType = ""`), não é um DELETE da empresa. Gate: `companies.edit`.
+- `GET /companies/:id/logo` — serve o binário cru (`c.Data`, `Content-Type` = `LogoMimeType`), pra uso direto num `<img src>`. **Sem `RequirePermission`** (só `AuthMiddleware` do grupo) — mesmo raciocínio já usado antes pro logo da `CompanyVisualConfig` e pro `CompanyOption`/`VisibleCompanies`: mostrar/exibir a identidade visual de uma empresa que o usuário já enxerga é identidade de sessão, não administração do cadastro (que seguiria exigindo `companies.view`).
+
+**Permissão do logo**: reaproveita o catálogo já existente de `Company` (`companies.view`/`companies.create`/`companies.edit`/`companies.delete`) em vez de um código `companies.visual_config.*` ou qualquer coisa nova — decisão de engenharia, não de negócio: agora que o logo é literalmente um campo do cadastro básico da empresa (não mais uma config separada), não há mais um conceito "visual" distinto o bastante pra justificar uma permission própria. Quem já pode editar uma empresa (`companies.edit`) já pode trocar o logo dela.
+
+**UI**: a aba "Identidade Visual" deixa de existir. O upload/preview/remoção de logo passa a viver dentro da aba "Dados da Empresa" (`CompanyForm.tsx`), como uma seção nova dentro do mesmo Card — condicionada a `editingId` (mesmo padrão já usado ali pro `Switch` de "Ativa": só aparece em modo edição, nunca no Cadastro/`CreateCompanyPage.tsx`, porque o upload depende de a empresa já ter um ID). Preview de imagem + botão de trocar/remover.
+
+> **Atualização (2026-09-07, depois do teste pessoal do usuário)**: o parágrafo acima descrevia o design original — upload/remoção como "ação isolada e imediata" (chamada de rede na hora do clique, sem esperar o "Salvar Empresa"). O usuário testou e encontrou um bug real: salvar os dados básicos da empresa ("Salvar Empresa") limpava o logo que tinha acabado de ser salvo isoladamente — não foi possível reproduzir a causa raiz apesar de várias tentativas (curl sequencial, corrida deliberada, fluxo real na UI, clique rápido simulado). O usuário optou por não continuar a investigação e mudar de design pra **"rascunho"**: upload/remoção de logo viram estado local (`logoFile: File | null` staged + `logoMarkedForRemoval: boolean`, preview via blob URL) até o clique em "Salvar Empresa", que persiste dados da empresa e logo juntos — a mesma abordagem que a antiga `CompanyVisualConfigForm.tsx` já usava, e que este próprio documento tinha descartado como design pra esta tela quando a reversão foi decidida. Detalhe completo (relato do usuário, tentativas de reprodução, novo critério de aceite) em `tasks_empresa.md` § CFG-7.4.1.
+
+### Migração de dados
+
+A empresa FOCCO ILUMINAÇÃO (id 2) tem hoje um logo real cadastrado em `company_visual_configs.logo_file`. Como a branch `feature/modulo-empresa` nunca foi mergeada e cada dev roda `AutoMigrate` localmente (não existe ambiente compartilhado/produção com esse dado), não é necessário escrever uma migration de dados formal. Ainda assim, como é trivial e evita retrabalho manual, a recomendação (decisão pequena, meu call, documentada — não bloqueante) é copiar o dado antes de derrubar a tabela antiga, em vez de pedir pro usuário re-subir a logo da FOCCO manualmente:
+
+```sql
+-- 1. Copiar o logo existente pra dentro de companies (rodar ANTES do
+--    AutoMigrate criar as colunas novas seria um erro — rodar DEPOIS que
+--    LogoFile/LogoMimeType já existirem em companies, ANTES de dropar as
+--    tabelas antigas)
+UPDATE companies c
+SET logo_file = cvc.logo_file, logo_mime_type = cvc.logo_mime_type
+FROM company_visual_configs cvc
+WHERE cvc.company_id = c.id AND cvc.deleted_at IS NULL AND length(cvc.logo_file) > 0;
+
+-- 2. Derrubar as tabelas órfãs (diferente do caso da antiga tabela `empresas`,
+--    que ficou órfã sem dropar por não ter motivo prático de limpar — aqui,
+--    como as duas tabelas guardam bytea potencialmente pesado (logo) e a
+--    entidade não existe mais em lugar nenhum do código, vale limpar)
+DROP TABLE IF EXISTS company_color_palettes;
+DROP TABLE IF EXISTS company_visual_configs;
+```
+
+### Decisão — catálogo de permissões `companies.visual_config.*`
+
+**Decidido pelo usuário em 2026-09-07: Opção A — purgar do catálogo.** Remover `companies.visual_config.view/create/edit` (e a extensão de `CompanyColorPalette`, que reaproveitava os mesmos códigos) do catálogo de permissões e de qualquer `role_permissions`/`user_permissions` que os referencie (hoje atribuídas ao `ADMIN`). Justificativa que motivou a recomendação seguida: diferente da tabela `empresas` (renomeada e deixada órfã sem custo), uma permission órfã aparece na tela de gestão de Perfis/Permissões (`/settings/roles`) e pode confundir quem for editar um Perfil depois — vale a limpeza completa.
+
+---
+
 ### `ChartOfAccounts` (N:1 com Empresa, self-referencing)
 **Definido 2026-07-21**: template global padrão (o mais comumente usado no Brasil), clonado pra cada empresa na criação — facilita a vida do cliente, que já começa operando sem montar plano de contas do zero. Depois de clonado, cada empresa pode customizar o próprio livremente.
 
@@ -110,7 +197,7 @@ Este módulo cria o cadastro de **Empresa** — a estrutura organizacional de um
 
 Descoberto testando `CompanyFiscalConfig`: um índice único (`company_id`) mais soft delete do GORM permite que uma linha excluída continue "ocupando" o valor único, bloqueando recriar a config da mesma empresa depois. A correção técnica (índice parcial `WHERE deleted_at IS NULL`) resolve o sintoma, mas discutindo com o usuário chegamos numa raiz melhor: **uma configuração 1:1 intrínseca à empresa não tem "excluir" com significado de negócio** — enquanto a empresa existe, ela sempre tem (ou devia ter) aquela configuração associada, nem que seja vazia. Diferente de excluir um registro de uma lista de verdade (`Company`, `ChartOfAccounts`, `CompanyDocumentIssuanceConfig`), onde a linha deixar de existir faz sentido.
 
-**Daqui pra frente**: toda config 1:1 da empresa (`CompanyFiscalConfig`, `CompanyVisualConfig`, e qualquer outra do mesmo formato que surgir) só expõe `view`/`create`/`edit` — sem `delete`, sem botão de excluir na tela, sem permission `.delete` no catálogo. Se um dia for preciso "limpar" um campo específico (ex.: remover o certificado sem apagar o resto da config), isso vira uma ação dedicada (ex.: um endpoint específico) ou um `PUT` que aceita valor vazio — nunca apagar o registro inteiro. Esse princípio também foi registrado na skill `lumini_hub_entity_creation` (Step 0), pra ser considerado antes de modelar qualquer config nova.
+**Daqui pra frente**: toda config 1:1 da empresa (`CompanyFiscalConfig` e qualquer outra do mesmo formato que surgir — `CompanyVisualConfig` foi um exemplo real disso até ser descontinuada na reversão de 2026-09-07, ver seção acima) só expõe `view`/`create`/`edit` — sem `delete`, sem botão de excluir na tela, sem permission `.delete` no catálogo. Se um dia for preciso "limpar" um campo específico (ex.: remover o certificado sem apagar o resto da config), isso vira uma ação dedicada (ex.: um endpoint específico) ou um `PUT` que aceita valor vazio — nunca apagar o registro inteiro. Esse princípio também foi registrado na skill `lumini_hub_entity_creation` (Step 0), pra ser considerado antes de modelar qualquer config nova.
 
 ---
 
@@ -121,7 +208,7 @@ Dois casos, conforme o cadastro do usuário:
 **Caso 1 — usuário SEM Empresa vinculada no cadastro.**
 Automaticamente "master": visão geral de todas as Empresas, sem precisar de nenhuma permission extra. Pode trocar de empresa livremente através de um seletor no header (antd `Select`), sem restrição.
 
-**Mecanismo de empresa ativa — implementado em 2026-09-05** (Opção B confirmada em 2026-07-21: guardado no backend, fora do JWT): coluna `users.active_company_id` (nullable, FK pra `companies.id`), gravada via `PUT /auth/active-company` (`common/utils.SetActiveCompany` valida que o usuário realmente enxerga aquela empresa antes de gravar — nunca aceita o ID cego vindo do cliente) e resolvida/revalidada a cada login/refresh/`GET /auth/me` (`common/utils.ResolveActiveCompany` — nunca confia cegamente no valor guardado; se ele não for mais válido, some do payload e o frontend volta a pedir escolha). Quem só enxerga UMA empresa (sem `companies.hierarchy.view`, com Company vinculada) nunca precisa escolher — a ativa é sempre a própria. Quem enxerga mais de uma (master, ou com `companies.hierarchy.view`) e ainda não tem uma empresa ativa válida recebe `requires_company_selection: true` no payload de login/me — o frontend (`ProtectedRoute.tsx` + `CompanySelectionGate.tsx`) bloqueia o acesso ao resto do sistema com uma tela de seleção obrigatória até isso ser resolvido, escolha então persiste entre logins (só pede de novo se a empresa salva deixar de ser válida). O seletor de troca no header (`AuthContext`/`ConfigProvider`) ainda não foi implementado (ver `tasks_empresa.md`, EPIC CFG-6).
+**Mecanismo de empresa ativa — implementado em 2026-09-05** (Opção B confirmada em 2026-07-21: guardado no backend, fora do JWT): coluna `users.active_company_id` (nullable, FK pra `companies.id`), gravada via `PUT /auth/active-company` (`common/utils.SetActiveCompany` valida que o usuário realmente enxerga aquela empresa antes de gravar — nunca aceita o ID cego vindo do cliente) e resolvida/revalidada a cada login/refresh/`GET /auth/me` (`common/utils.ResolveActiveCompany` — nunca confia cegamente no valor guardado; se ele não for mais válido, some do payload e o frontend volta a pedir escolha). Quem só enxerga UMA empresa (sem `companies.hierarchy.view`, com Company vinculada) nunca precisa escolher — a ativa é sempre a própria. Quem enxerga mais de uma (master, ou com `companies.hierarchy.view`) e ainda não tem uma empresa ativa válida recebe `requires_company_selection: true` no payload de login/me — o frontend (`ProtectedRoute.tsx` + `CompanySelectionGate.tsx`) bloqueia o acesso ao resto do sistema com uma tela de seleção obrigatória até isso ser resolvido, escolha então persiste entre logins (só pede de novo se a empresa salva deixar de ser válida). O seletor de troca no header **já está implementado** (`Frontend/src/components/layout/ActiveCompanySwitcher.tsx`, confirmado no código em 2026-09-07 — texto anterior deste parágrafo dizia "ainda não foi implementado", desatualizado; ver `tasks_empresa.md`, EPIC CFG-6, pro status exato de cada sub-tarefa).
 
 **Caso 2 — usuário COM Empresa vinculada no cadastro.**
 - Se tiver a permission `companies.hierarchy.view` (nome definido em 2026-07-21, renomeado 2026-07-27 pro padrão `<módulo>.<ação>` em inglês): vê a própria empresa **e** as empresas abaixo dela na hierarquia (filhas, netas, etc.).
