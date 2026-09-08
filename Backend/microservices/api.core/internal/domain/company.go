@@ -30,6 +30,14 @@ type Company struct {
 	CNPJ     *string `gorm:"column:cnpj;size:20" json:"cnpj"`
 	IsActive bool    `gorm:"default:true" json:"is_active"`
 
+	// Logo da empresa (CFG-7.1, ex-CompanyVisualConfig — a identidade visual
+	// por cores foi revertida, mas o logo continua útil pra cabeçalhos/
+	// relatórios). Mesmo padrão de CertificateFile em CompanyFiscalConfig:
+	// arquivo pequeno guardado direto na linha, nunca exposto em JSON
+	// (upload/leitura via endpoint multipart dedicado, não pelo Create/Update).
+	LogoFile     []byte `gorm:"type:bytea" json:"-"`
+	LogoMimeType string `gorm:"size:50" json:"-"`
+
 	CreatedByID *uint `gorm:"column:created_by" json:"created_by_id"`
 	UpdatedByID *uint `gorm:"column:updated_by" json:"updated_by_id"`
 }
@@ -69,6 +77,7 @@ type ApiCompany struct {
 	TradeName string    `json:"trade_name"`
 	CNPJ      *string   `json:"cnpj"`
 	IsActive  bool      `json:"is_active"`
+	HasLogo   bool      `json:"has_logo"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
@@ -81,6 +90,7 @@ type ApiCompanyDetail struct {
 	TradeName string    `json:"trade_name"`
 	CNPJ      *string   `json:"cnpj"`
 	IsActive  bool      `json:"is_active"`
+	HasLogo   bool      `json:"has_logo"`
 	CreatedAt time.Time `json:"created_at"`
 	CreatedBy *ApiUser  `json:"created_by,omitempty"`
 	UpdatedAt time.Time `json:"updated_at"`
@@ -101,6 +111,7 @@ func ApiCompanyFromModel(e Company) ApiCompany {
 		TradeName: e.TradeName,
 		CNPJ:      e.CNPJ,
 		IsActive:  e.IsActive,
+		HasLogo:   len(e.LogoFile) > 0,
 		CreatedAt: e.CreatedAt,
 		UpdatedAt: e.UpdatedAt,
 	}
@@ -115,6 +126,7 @@ func ApiCompanyDetailFromModel(e Company) ApiCompanyDetail {
 		TradeName: e.TradeName,
 		CNPJ:      e.CNPJ,
 		IsActive:  e.IsActive,
+		HasLogo:   len(e.LogoFile) > 0,
 		CreatedAt: e.CreatedAt,
 		UpdatedAt: e.UpdatedAt,
 	}
