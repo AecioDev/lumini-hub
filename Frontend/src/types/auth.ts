@@ -19,17 +19,6 @@ export interface ApiCompanyOption {
   name: string;
 }
 
-// Espelha utils.CompanyVisualConfigOption (Backend/common/utils/company_visibility.go)
-// — identidade visual da empresa ativa, sem depender de companies.visual_config.view.
-export interface ApiCompanyVisualConfigOption {
-  id: number;
-  has_logo: boolean;
-  primary_color: string;
-  secondary_color: string | null;
-  accent_color: string | null;
-  text_color: string | null;
-}
-
 export interface ApiUserRole {
   id: number;
   name: string;
@@ -58,7 +47,6 @@ export interface ApiUserDetail {
   active_company_name?: string;
   requires_company_selection?: boolean;
   visible_companies?: ApiCompanyOption[];
-  active_company_visual_config?: ApiCompanyVisualConfigOption;
   permissions?: ApiPermission[];
   menu_items?: ApiUserMenuItem[];
   created_at: string;
