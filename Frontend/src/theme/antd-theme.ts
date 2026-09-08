@@ -1,6 +1,5 @@
 import { theme as antdTheme, type ThemeConfig } from "antd";
 import type { ThemeMode } from "@/contexts/ThemeContext";
-import type { ApiCompanyVisualConfigOption } from "@/types/auth";
 
 // Identidade visual Lumini Hub (Documentos/Imagens/Base da identidade visual.jpeg):
 // Azul Royal (confiança/tecnologia), Azul Ciano (inovação) e Roxo (inteligência/
@@ -57,68 +56,6 @@ export function buildAntdTheme(mode: ThemeMode): ThemeConfig {
         itemHoverBg: isDark ? "rgba(37,99,235,0.14)" : "rgba(37,99,235,0.06)",
         itemSelectedBg: isDark ? "rgba(37,99,235,0.20)" : "#EFF4FF",
         itemSelectedColor: BRAND.royal,
-      },
-    },
-  };
-}
-
-function hexToRgb(hex: string): [number, number, number] {
-  const clean = hex.replace("#", "");
-  return [
-    parseInt(clean.slice(0, 2), 16),
-    parseInt(clean.slice(2, 4), 16),
-    parseInt(clean.slice(4, 6), 16),
-  ];
-}
-
-// Sobrepõe a identidade visual (logo + paleta) da empresa ativa por cima do
-// tema padrão da Lumini Hub — usado num <ConfigProvider> aninhado (ver
-// CompanyThemeProvider.tsx), que o antd mescla automaticamente com o tema
-// do provider pai (algoritmo dark/light e demais tokens continuam vindo
-// de buildAntdTheme). null quando a empresa não tem CompanyVisualConfig
-// cadastrada — nesse caso o chamador nem monta o ConfigProvider extra,
-// mantendo a paleta padrão sem diferença visual (ver plano_empresa.md §
-// CompanyVisualConfig, "Fallback").
-//
-// accent_color e text_color não são mapeados aqui de propósito. accent_color
-// não tem token antd correspondente em lugar nenhum do projeto hoje, só
-// aparece no preview isolado de CompanyVisualConfigForm.tsx. text_color
-// CHEGOU a ser mapeado pra colorTextLightSolid, mas foi revertido: esse é um
-// token de alias global do antd consumido por Menu (cor do item NÃO
-// selecionado no tema dark — ver darkItemColor em antd/es/menu/style/index.js),
-// além de Button, Tag, Switch, Tooltip, Badge, Avatar etc. — não é um token
-// "texto sobre botão primário" isolado como o nome sugere. Como o valor
-// cadastrado é pensado pra contrastar com primary_color (ex.: quase-preto
-// pra combinar com um dourado), sobrepor esse token globalmente deixou o
-// texto do menu lateral quase ilegível (texto escuro sobre o navy escuro do
-// Sider). Sem um token antd que isole "texto sobre a cor primária" sem
-// vazar pro resto do app, text_color fica de fora do override global por
-// enquanto — só aparece no preview isolado do form, igual accent_color.
-export function buildCompanyThemeOverride(
-  visualConfig: ApiCompanyVisualConfigOption | null | undefined,
-  mode: ThemeMode
-): ThemeConfig | null {
-  if (!visualConfig) return null;
-
-  const { primary_color, secondary_color } = visualConfig;
-  const [r, g, b] = hexToRgb(primary_color);
-  const isDark = mode === "dark";
-
-  return {
-    token: {
-      colorPrimary: primary_color,
-      colorLink: primary_color,
-      ...(secondary_color ? { colorInfo: secondary_color } : {}),
-    },
-    components: {
-      // itemSelectedColor/itemHoverBg/itemSelectedBg de buildAntdTheme são
-      // fixos em BRAND.royal — sem essa sobreposição, o menu do sidebar
-      // continuaria azul mesmo com uma cor primária diferente aplicada em
-      // botões/links.
-      Menu: {
-        itemHoverBg: `rgba(${r}, ${g}, ${b}, ${isDark ? 0.14 : 0.06})`,
-        itemSelectedBg: `rgba(${r}, ${g}, ${b}, ${isDark ? 0.2 : 0.1})`,
-        itemSelectedColor: primary_color,
       },
     },
   };
