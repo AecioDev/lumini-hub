@@ -594,6 +594,197 @@ const docTemplate = `{
                 }
             }
         },
+        "/companies/{id}/logo": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Devolve o binário do logo (não passa pelo envelope utils.Response — é servido com o Content-Type do próprio arquivo, pra ser usado direto num \u003cimg src\u003e)",
+                "produces": [
+                    "image/png",
+                    "image/jpeg",
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "Companies"
+                ],
+                "summary": "Serve o arquivo do logo",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID da Empresa",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Upload multipart do logo (PNG, JPEG ou SVG, até 2MB), separado do PUT de dados cadastrais",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Companies"
+                ],
+                "summary": "Envia logo da empresa",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID da Empresa",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Arquivo do logo (PNG, JPEG ou SVG, até 2MB)",
+                        "name": "logo",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ApiCompany"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Limpa o logo de uma empresa, mantendo o resto do cadastro intacto — não é o DELETE da empresa",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Companies"
+                ],
+                "summary": "Remove o logo da empresa",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID da Empresa",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ApiCompany"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/company-color-palettes": {
             "post": {
                 "security": [
@@ -2856,6 +3047,9 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
+                "has_logo": {
+                    "type": "boolean"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -2913,6 +3107,9 @@ const docTemplate = `{
                 },
                 "created_by": {
                     "$ref": "#/definitions/lumini-hub_api_core_internal_domain.ApiUser"
+                },
+                "has_logo": {
+                    "type": "boolean"
                 },
                 "id": {
                     "type": "integer"
@@ -3336,14 +3533,6 @@ const docTemplate = `{
                 },
                 "active_company_name": {
                     "type": "string"
-                },
-                "active_company_visual_config": {
-                    "description": "ActiveCompanyVisualConfig é a identidade visual (logo + paleta) da\nempresa ativa — mesmo raciocínio de VisibleCompanies (sem depender de\ncompanies.visual_config.view), pra CFG-6.1.2 aplicar no ConfigProvider\ndo frontend. nil quando a empresa não tem CompanyVisualConfig\ncadastrada (fallback pra paleta padrão é responsabilidade do frontend).",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/utils.CompanyVisualConfigOption"
-                        }
-                    ]
                 },
                 "company_id": {
                     "type": "integer"
@@ -4217,29 +4406,6 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "utils.CompanyVisualConfigOption": {
-            "type": "object",
-            "properties": {
-                "accent_color": {
-                    "type": "string"
-                },
-                "has_logo": {
-                    "type": "boolean"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "primary_color": {
-                    "type": "string"
-                },
-                "secondary_color": {
-                    "type": "string"
-                },
-                "text_color": {
                     "type": "string"
                 }
             }

@@ -7,6 +7,26 @@ import (
 	"lumini-hub/common/utils"
 )
 
+// allowedCompanyLogoMimeTypes restringe o upload do logo da empresa aos
+// formatos que fazem sentido pra exibir num cabeçalho/relatório — mesmo
+// espírito do allowedLogoMimeTypes que existia em CompanyVisualConfig antes
+// da reversão (CFG-7, ver plano_empresa.md § Reversão). Nome próprio (não
+// reaproveita o de CompanyVisualConfigService) porque esse arquivo é
+// removido em CFG-7.2.2 e este aqui precisa sobreviver sozinho.
+var allowedCompanyLogoMimeTypes = map[string]bool{
+	"image/png":     true,
+	"image/svg+xml": true,
+	"image/jpeg":    true,
+}
+
+// MaxCompanyLogoFileSize limita o upload a 2MB — decisão do usuário em
+// 2026-09-07 (CFG-7.1.2), resolvendo o débito técnico sinalizado na revisão
+// da CFG-1.2.2 (upload de certificado A1 sem limite de tamanho, "revisitar
+// se o padrão for reaplicado em algo como o logo"). Exportada porque a
+// checagem roda no handler (via fileHeader.Size, antes de ler os bytes pra
+// memória — rejeitar cedo sem gastar I/O num arquivo grande demais).
+const MaxCompanyLogoFileSize = 2 * 1024 * 1024 // 2MB
+
 // CompanyService gerencia operações de negócio relacionadas a empresas
 type CompanyService struct {
 	uow       repository.UnitOfWork
@@ -171,4 +191,79 @@ func (s *CompanyService) DeleteCompany(id uint) error {
 	return s.uow.Execute(func(uow repository.UnitOfWork) error {
 		return uow.Companies().Delete(id)
 	})
+}
+
+// SetLogo grava o logo (arquivo + mimetype) de uma empresa já existente.
+// Pensado pra ser chamado pelo endpoint de upload multipart, separado do
+// CRUD principal — mesmo padrão de SetCertificate em
+// CompanyFiscalConfigService e do antigo SetLogo de CompanyVisualConfig
+// (CFG-7.1, ver plano_empresa.md § Reversão). Validação de tamanho máximo
+// fica no handler (fileHeader.Size, antes de ler os bytes) — aqui só
+// mimetype, igual o padrão antigo.
+func (s *CompanyService) SetLogo(id uint, fileBytes []byte, mimeType string) (*domain.ApiCompany, error) {
+	company, err := s.uow.Companies().FindByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if company == nil {
+		return nil, utils.ErrNotFound
+	}
+
+	if !allowedCompanyLogoMimeTypes[mimeType] {
+		var validationErrors validator.ValidationErrors
+		validationErrors.AddError("logo", "formato de arquivo não suportado — envie PNG, JPEG ou SVG")
+		return nil, validationErrors
+	}
+
+	company.LogoFile = fileBytes
+	company.LogoMimeType = mimeType
+
+	err = s.uow.Execute(func(uow repository.UnitOfWork) error {
+		return uow.Companies().Update(company)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	dto := domain.ApiCompanyFromModel(*company)
+	return &dto, nil
+}
+
+// ClearLogo remove o logo de uma empresa, mantendo o resto do cadastro
+// intacto — não é o DELETE da empresa como um todo.
+func (s *CompanyService) ClearLogo(id uint) (*domain.ApiCompany, error) {
+	company, err := s.uow.Companies().FindByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if company == nil {
+		return nil, utils.ErrNotFound
+	}
+
+	company.LogoFile = nil
+	company.LogoMimeType = ""
+
+	err = s.uow.Execute(func(uow repository.UnitOfWork) error {
+		return uow.Companies().Update(company)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	dto := domain.ApiCompanyFromModel(*company)
+	return &dto, nil
+}
+
+// GetLogo devolve os bytes crus do logo + mimetype de uma empresa, pra o
+// handler servir a imagem diretamente (fora do envelope utils.Response
+// padrão — é um binário, não JSON).
+func (s *CompanyService) GetLogo(id uint) (fileBytes []byte, mimeType string, err error) {
+	company, err := s.uow.Companies().FindByID(id)
+	if err != nil {
+		return nil, "", err
+	}
+	if company == nil || len(company.LogoFile) == 0 {
+		return nil, "", utils.ErrNotFound
+	}
+	return company.LogoFile, company.LogoMimeType, nil
 }

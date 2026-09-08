@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"fmt"
+	"io"
 	"net/http"
 
 	"lumini-hub/api.core/internal/domain"
@@ -203,4 +205,128 @@ func (h *CompanyHandler) DeleteCompany(c *gin.Context) {
 	}
 
 	utils.SuccessResponse(c, http.StatusOK, "Empresa excluída com sucesso", nil, nil)
+}
+
+// UploadLogo grava o logo de uma empresa já existente
+// @Summary      Envia logo da empresa
+// @Description  Upload multipart do logo (PNG, JPEG ou SVG, até 2MB), separado do PUT de dados cadastrais
+// @Tags         Companies
+// @Accept       multipart/form-data
+// @Produce      json
+// @Param        id    path      int   true  "ID da Empresa"
+// @Param        logo  formData  file  true  "Arquivo do logo (PNG, JPEG ou SVG, até 2MB)"
+// @Success      200   {object}  utils.Response{data=domain.ApiCompany}
+// @Failure      400   {object}  utils.Response
+// @Failure      401   {object}  utils.Response
+// @Failure      404   {object}  utils.Response
+// @Failure      500   {object}  utils.Response
+// @Router       /companies/{id}/logo [post]
+// @Security     ApiKeyAuth
+func (h *CompanyHandler) UploadLogo(c *gin.Context) {
+	id, err := path.IdFromPathParamOrSendError(c)
+	if err != nil {
+		return
+	}
+
+	fileHeader, err := c.FormFile("logo")
+	if err != nil {
+		utils.ValidationErrorResponse(c, "Dados inválidos", "arquivo do logo (\"logo\") é obrigatório")
+		return
+	}
+
+	if fileHeader.Size > service.MaxCompanyLogoFileSize {
+		utils.ValidationErrorResponse(c, "Arquivo muito grande", fmt.Sprintf("o logo não pode ultrapassar %dMB", service.MaxCompanyLogoFileSize/(1024*1024)))
+		return
+	}
+
+	file, err := fileHeader.Open()
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Erro ao ler logo", err.Error())
+		return
+	}
+	defer file.Close()
+
+	fileBytes, err := io.ReadAll(file)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Erro ao ler logo", err.Error())
+		return
+	}
+
+	mimeType := fileHeader.Header.Get("Content-Type")
+
+	company, err := h.companyService.SetLogo(id, fileBytes, mimeType)
+	if err != nil {
+		if err == utils.ErrNotFound {
+			utils.ErrorResponse(c, http.StatusNotFound, "Empresa não encontrada", err.Error())
+		} else if validator.IsValidationError(err) {
+			utils.ValidationErrorResponse(c, "Não foi possível processar o logo", err.Error())
+		} else {
+			utils.ErrorResponse(c, http.StatusBadRequest, "Erro ao salvar logo", err.Error())
+		}
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "Logo salvo com sucesso", company, nil)
+}
+
+// ClearLogo remove o logo de uma empresa já existente
+// @Summary      Remove o logo da empresa
+// @Description  Limpa o logo de uma empresa, mantendo o resto do cadastro intacto — não é o DELETE da empresa
+// @Tags         Companies
+// @Accept       json
+// @Produce      json
+// @Param        id  path  int  true  "ID da Empresa"
+// @Success      200 {object}  utils.Response{data=domain.ApiCompany}
+// @Failure      401 {object}  utils.Response
+// @Failure      404 {object}  utils.Response
+// @Failure      500 {object}  utils.Response
+// @Router       /companies/{id}/logo [delete]
+// @Security     ApiKeyAuth
+func (h *CompanyHandler) ClearLogo(c *gin.Context) {
+	id, err := path.IdFromPathParamOrSendError(c)
+	if err != nil {
+		return
+	}
+
+	company, err := h.companyService.ClearLogo(id)
+	if err != nil {
+		if err == utils.ErrNotFound {
+			utils.ErrorResponse(c, http.StatusNotFound, "Empresa não encontrada", err.Error())
+		} else {
+			utils.ErrorResponse(c, http.StatusInternalServerError, "Erro ao remover logo", err.Error())
+		}
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "Logo removido com sucesso", company, nil)
+}
+
+// GetLogo serve os bytes crus do logo de uma empresa
+// @Summary      Serve o arquivo do logo
+// @Description  Devolve o binário do logo (não passa pelo envelope utils.Response — é servido com o Content-Type do próprio arquivo, pra ser usado direto num <img src>)
+// @Tags         Companies
+// @Produce      png,jpeg,octet-stream
+// @Param        id  path  int  true  "ID da Empresa"
+// @Success      200 {file}  binary
+// @Failure      401 {object}  utils.Response
+// @Failure      404 {object}  utils.Response
+// @Router       /companies/{id}/logo [get]
+// @Security     ApiKeyAuth
+func (h *CompanyHandler) GetLogo(c *gin.Context) {
+	id, err := path.IdFromPathParamOrSendError(c)
+	if err != nil {
+		return
+	}
+
+	fileBytes, mimeType, err := h.companyService.GetLogo(id)
+	if err != nil {
+		if err == utils.ErrNotFound {
+			utils.ErrorResponse(c, http.StatusNotFound, "Logo não encontrado", err.Error())
+		} else {
+			utils.ErrorResponse(c, http.StatusInternalServerError, "Erro ao buscar logo", err.Error())
+		}
+		return
+	}
+
+	c.Data(http.StatusOK, mimeType, fileBytes)
 }

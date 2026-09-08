@@ -52,6 +52,15 @@ func SetupRoutes(router *gin.RouterGroup, uow repository.UnitOfWork, cfg *config
 		companies.POST("", middlewares.RequirePermission("companies.create"), companyHandler.CreateCompany)
 		companies.PUT("/:id", middlewares.RequirePermission("companies.edit"), companyHandler.UpdateCompany)
 		companies.DELETE("/:id", middlewares.RequirePermission("companies.delete"), companyHandler.DeleteCompany)
+		companies.POST("/:id/logo", middlewares.RequirePermission("companies.edit"), companyHandler.UploadLogo)
+		companies.DELETE("/:id/logo", middlewares.RequirePermission("companies.edit"), companyHandler.ClearLogo)
+		// Sem RequirePermission de propósito (mesmo raciocínio já usado antes
+		// pro logo da CompanyVisualConfig e pro CompanyOption/VisibleCompanies,
+		// ver CFG-6.1.1/CFG-7): exibir o logo de uma empresa que o usuário já
+		// enxerga é identidade de sessão, não administração do cadastro (que
+		// segue exigindo companies.edit pra criar/trocar/remover). AuthMiddleware
+		// do grupo já exige login.
+		companies.GET("/:id/logo", companyHandler.GetLogo)
 	}
 
 	// Rotas de Configuração Fiscal de Empresas (todas protegidas).
