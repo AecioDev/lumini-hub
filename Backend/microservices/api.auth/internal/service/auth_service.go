@@ -198,12 +198,6 @@ func (s *AuthService) ResolveActiveCompany(userDetail *domain.ApiUserDetail) err
 				break
 			}
 		}
-
-		visualConfig, err := utils.ResolveActiveCompanyVisualConfig(s.db, *activeID)
-		if err != nil {
-			return err
-		}
-		userDetail.ActiveCompanyVisualConfig = visualConfig
 	}
 
 	return nil
