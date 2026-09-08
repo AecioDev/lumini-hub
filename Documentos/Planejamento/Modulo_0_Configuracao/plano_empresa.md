@@ -178,6 +178,17 @@ DROP TABLE IF EXISTS company_visual_configs;
 
 **Decidido pelo usuário em 2026-09-07: Opção A — purgar do catálogo.** Remover `companies.visual_config.view/create/edit` (e a extensão de `CompanyColorPalette`, que reaproveitava os mesmos códigos) do catálogo de permissões e de qualquer `role_permissions`/`user_permissions` que os referencie (hoje atribuídas ao `ADMIN`). Justificativa que motivou a recomendação seguida: diferente da tabela `empresas` (renomeada e deixada órfã sem custo), uma permission órfã aparece na tela de gestão de Perfis/Permissões (`/settings/roles`) e pode confundir quem for editar um Perfil depois — vale a limpeza completa.
 
+### ✅ Fechamento (2026-09-08)
+
+EPIC CFG-7 concluído por completo (`[ENTREGUE]`) — ver `tasks_empresa.md` § EPIC CFG-7 pro detalhamento tarefa a tarefa. Resumo do estado final:
+
+- **Backend**: `CompanyColorPalette` e `CompanyVisualConfig` removidas por inteiro (domain, repository, validator, service, handler, rotas, `UnitOfWork`, `AutoMigrate`, proxy do gateway). Exposição de identidade visual na sessão (`ApiUserDetail.ActiveCompanyVisualConfig`, `CompanyVisualConfigOption`/`ResolveActiveCompanyVisualConfig`) removida de `api.auth`/`common`. Tabelas `company_color_palettes`/`company_visual_configs` dropadas do Postgres; catálogo de permissões `companies.visual_config.*` purgado (`permissions`/`role_permissions`/`user_permissions`).
+- **Frontend**: aba "Identidade Visual" (`CompanyVisualConfigForm.tsx` e todo o types/schemas/services associado) removida de `EditCompanyPage.tsx`. Aplicação de tema em runtime da empresa ativa (`CompanyThemeProvider.tsx`, `buildCompanyThemeOverride`) removida — `App.tsx` volta a montar só `<AuthProvider>`, sem `ConfigProvider` aninhado.
+- **O que sobreviveu da feature original**: o logo da empresa, migrado da antiga `CompanyVisualConfig.LogoFile` pra `Company.LogoFile`/`LogoMimeType` (EPIC CFG-7.1), com endpoints próprios (`POST`/`DELETE`/`GET /companies/:id/logo`, limite de 2MB) e UI de upload/preview/remoção dentro da aba "Dados da Empresa" (`CompanyForm.tsx`, padrão de rascunho/staged — persiste só no clique de "Salvar Empresa"). O logo real da FOCCO ILUMINAÇÃO (id 2) foi migrado e confirmado por hash idêntico (CFG-7.1.3).
+- **Reversibilidade**: o código removido (cores + tema em runtime) continua disponível na branch `archive/identidade-visual-cores` (ponteiro no commit `8e894c0`, antes de qualquer remoção), caso o assunto volte à mesa no futuro.
+
+Código antigo de `CompanyVisualConfig`/`CompanyColorPalette` documentado abaixo mantido só como referência histórica — ver marcações "REMOVIDA" nas seções seguintes.
+
 ---
 
 ### `ChartOfAccounts` (N:1 com Empresa, self-referencing)
