@@ -42,6 +42,12 @@ export function EditCompanyPage() {
     return <Result status="404" title="Empresa não encontrada" />;
   }
 
+  // Não mostra o toast de sucesso aqui — CompanyForm.tsx é quem decide o
+  // momento certo (depois de também persistir o logo pendente, se houver;
+  // ver comentário em handleFormSubmit lá). Precisa relançar o erro (não só
+  // exibir o feedback) pra CompanyForm saber que este passo falhou e não
+  // deve seguir tentando salvar um logo pendente em cima de dados que não
+  // foram salvos.
   const handleSubmit = async (values: CompanyFormValues) => {
     setSubmitting(true);
     try {
@@ -53,9 +59,9 @@ export function EditCompanyPage() {
         is_active: values.is_active,
       });
       setCompany((prev) => (prev ? { ...prev, ...updated } : prev));
-      feedback.success("Empresa atualizada com sucesso.");
     } catch (error) {
       feedback.error(getApiErrorMessage(error, "Erro ao atualizar empresa."));
+      throw error;
     } finally {
       setSubmitting(false);
     }
@@ -80,6 +86,10 @@ export function EditCompanyPage() {
               children: (
                 <CompanyForm
                   editingId={company.id}
+                  hasLogo={company.has_logo}
+                  onLogoChange={(hasLogo) =>
+                    setCompany((prev) => (prev ? { ...prev, has_logo: hasLogo } : prev))
+                  }
                   initialValues={{
                     parent_id: company.parent_id,
                     legal_name: company.legal_name,
@@ -89,7 +99,7 @@ export function EditCompanyPage() {
                   }}
                   submitting={submitting}
                   submitLabel="Salvar Empresa"
-                  onSubmit={(values) => void handleSubmit(values)}
+                  onSubmit={(values) => handleSubmit(values)}
                   onCancel={() => navigate("/settings/companies")}
                 />
               ),

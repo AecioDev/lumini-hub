@@ -9,6 +9,7 @@ export interface ApiCompany {
   // != null) cuja parte fiscal fica a cargo da Matriz (decidido 2026-09-05).
   cnpj: string | null;
   is_active: boolean;
+  has_logo: boolean;
   created_at: string;
   updated_at: string;
 }
