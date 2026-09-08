@@ -31,8 +31,7 @@ func NewCompanyVisualConfigValidator(
 }
 
 // validateColors valida o formato hex das cores — SecondaryColor/AccentColor/
-// TextColor só são validadas se enviadas (campos opcionais). textColor vazio
-// é aceito também por quem não tem esse campo (ex.: CompanyColorPalette).
+// TextColor só são validadas se enviadas (campos opcionais).
 func validateColors(errors *ValidationErrors, primaryColor, secondaryColor, accentColor, textColor string) {
 	if !hexColorPattern.MatchString(primaryColor) {
 		errors.AddError("primary_color", "cor primária deve estar no formato hexadecimal #RRGGBB")

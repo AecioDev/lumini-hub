@@ -11,7 +11,6 @@ type UnitOfWork interface {
 	Companies() CompanyRepository
 	CompanyFiscalConfigs() CompanyFiscalConfigRepository
 	CompanyVisualConfigs() CompanyVisualConfigRepository
-	CompanyColorPalettes() CompanyColorPaletteRepository
 	Execute(fn func(uow UnitOfWork) error) error
 	GetDB() *gorm.DB
 }
@@ -49,11 +48,6 @@ func (u *GormUnitOfWork) CompanyFiscalConfigs() CompanyFiscalConfigRepository {
 // CompanyVisualConfigs fornece acesso ao repositório de configuração visual de empresas sob o escopo atual (banco ou transação ativa)
 func (u *GormUnitOfWork) CompanyVisualConfigs() CompanyVisualConfigRepository {
 	return NewCompanyVisualConfigRepository(u.db)
-}
-
-// CompanyColorPalettes fornece acesso ao repositório de paletas de cores personalizadas sob o escopo atual (banco ou transação ativa)
-func (u *GormUnitOfWork) CompanyColorPalettes() CompanyColorPaletteRepository {
-	return NewCompanyColorPaletteRepository(u.db)
 }
 
 // GetDB expõe a conexão ativa com o banco de dados GORM
