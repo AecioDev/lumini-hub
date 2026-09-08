@@ -16,7 +16,6 @@ func SetupRoutes(router *gin.RouterGroup, uow repository.UnitOfWork, cfg *config
 	supplierHandler := handlers.NewSupplierHandler(uow)
 	companyHandler := handlers.NewCompanyHandler(uow)
 	companyFiscalConfigHandler := handlers.NewCompanyFiscalConfigHandler(uow, cfg.Security.CertificateEncryptionKey)
-	companyVisualConfigHandler := handlers.NewCompanyVisualConfigHandler(uow)
 
 	// Rotas de Clientes (todas protegidas)
 	customers := router.Group("/customers")
@@ -75,27 +74,5 @@ func SetupRoutes(router *gin.RouterGroup, uow repository.UnitOfWork, cfg *config
 		// Sem DELETE de propósito — config 1:1 da empresa, ver comentário em
 		// CompanyFiscalConfigService.
 		companyFiscalConfigs.POST("/:id/certificate", middlewares.RequirePermission("companies.fiscal_config.edit"), companyFiscalConfigHandler.UploadCertificate)
-	}
-
-	// Rotas de Configuração Visual de Empresas (todas protegidas). Mesmo
-	// motivo de /by-company/:companyId ficar num grupo próprio, ver
-	// comentário acima em companyFiscalConfigs.
-	companyVisualConfigs := router.Group("/company-visual-configs")
-	companyVisualConfigs.Use(middlewares.AuthMiddleware(cfg))
-	{
-		companyVisualConfigs.GET("/by-company/:companyId", middlewares.RequirePermission("companies.visual_config.view"), companyVisualConfigHandler.GetCompanyVisualConfigByCompany)
-		companyVisualConfigs.POST("", middlewares.RequirePermission("companies.visual_config.create"), companyVisualConfigHandler.CreateCompanyVisualConfig)
-		companyVisualConfigs.PUT("/:id", middlewares.RequirePermission("companies.visual_config.edit"), companyVisualConfigHandler.UpdateCompanyVisualConfig)
-		// Sem DELETE de propósito — config 1:1 da empresa, ver comentário em
-		// CompanyVisualConfigService.
-		companyVisualConfigs.POST("/:id/logo", middlewares.RequirePermission("companies.visual_config.edit"), companyVisualConfigHandler.UploadLogo)
-		// Sem RequirePermission de propósito (CFG-6.1.1): servir o logo da
-		// empresa ativa pra exibição (sidebar, tema) é identidade de sessão
-		// de qualquer usuário autenticado, não administração da configuração
-		// — mesma classe de bug já corrigida antes pra companies.view (ver
-		// VisibleCompanies/CompanyOption). AuthMiddleware do grupo já exige
-		// login; a permission continua valendo pra criar/editar/remover.
-		companyVisualConfigs.GET("/:id/logo", companyVisualConfigHandler.GetLogo)
-		companyVisualConfigs.DELETE("/:id/logo", middlewares.RequirePermission("companies.visual_config.edit"), companyVisualConfigHandler.ClearLogo)
 	}
 }
