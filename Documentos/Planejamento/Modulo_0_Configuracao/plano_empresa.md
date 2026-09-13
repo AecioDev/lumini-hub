@@ -1,8 +1,8 @@
-# Módulo Empresa - Cadastro Multi-Empresa e Fundação Fiscal/Contábil
+# Módulo Empresa - Cadastro Multi-Empresa e Fundação Fiscal
 
 > **Onde este arquivo mora**: coloquei dentro de `Modulo_0_Configuracao/` porque é fundação (todo o resto do sistema depende disso), não um módulo de negócio isolado como CRM/Compras/Vendas. Se preferir uma pasta própria (`Modulo_0B_Empresa/` ou renumerar), me avisa — não tem custo trocar agora que ainda é só planejamento.
 
-Este módulo cria o cadastro de **Empresa** — a estrutura organizacional de um único cliente (tenant) da Lumini Hub, que pode ter uma empresa Matriz com outras empresas vinculadas embaixo dela (filial por CNPJ ou não, mas geridas pelo mesmo gestor geral). Junto dele, criamos a base de duas coisas que os Módulos 6 (Fiscal) e 7 (Contabilidade) já pressupõem sem ela existir: **Configuração Fiscal** por empresa (certificados, tributação, numeração de notas) e **Plano de Contas** por empresa.
+Este módulo cria o cadastro de **Empresa** — a estrutura organizacional de um único cliente (tenant) da Lumini Hub, que pode ter uma empresa Matriz com outras empresas vinculadas embaixo dela (filial por CNPJ ou não, mas geridas pelo mesmo gestor geral). Junto dele, criamos a base de uma coisa que o Módulo 6 (Fiscal) já pressupõe sem ela existir: **Configuração Fiscal** por empresa (certificados, tributação, numeração de notas).
 
 **Importante**: isso não é multi-tenant. Multi-tenant (cliente A da Lumini vs. cliente B) é banco de dados físico separado, resolvido fora deste módulo. Aqui é a estrutura **dentro** do banco de um único cliente.
 
@@ -12,9 +12,8 @@ Este módulo cria o cadastro de **Empresa** — a estrutura organizacional de um
 
 1. **Cadastro de Empresa** — self-referencing (Matriz → Filiais/Empresas vinculadas), CNPJ, razão social, nome fantasia, dados básicos.
 2. **Configuração Fiscal por Empresa** — certificado digital A1, tipo de tributação (Simples/Presumido/Real), dados do contador responsável, contadores/séries de numeração de notas fiscais.
-3. **Plano de Contas por Empresa** — estrutura hierárquica de contas contábeis pra lançamentos em partida dobrada (base do Módulo 7 — CMV, DRE, Balancete).
-4. **Escopo por empresa em todo o resto do sistema** — regra de visibilidade de dados (usuário só vê o que é da(s) empresa(s) dele) e a decisão de escopo obrigatória em toda entidade nova (já reforçada em `.claude/skills/lumini_hub_entity_creation/SKILL.md`, Step 0).
-5. **Logo da Empresa** — arquivo de logo próprio, guardado como campo do próprio cadastro básico (`Company.LogoFile`/`LogoMimeType`). **Revisado 2026-09-07**: chegou a existir uma feature maior de "Identidade Visual" completa (logo + paleta de cores personalizada aplicada em runtime no `ConfigProvider` do antd) — foi implementada, entregue e testada, mas depois **revertida** por decisão do usuário (a customização de cores não trouxe valor prático suficiente). Ver seção **"🔄 Reversão (2026-09-07)"** logo abaixo de `CompanyColorPalette` pro histórico completo e o novo escopo, bem menor. **Escopado 2026-09-13**: a logo sobrevivente da reversão nunca chegou a ser aplicada em nenhum lugar visível da aplicação — ver seção **"🖼️ Logo da empresa ativa em runtime no sidebar (EPIC CFG-6, continuação)"** logo após o fechamento do EPIC CFG-7.
+3. **Escopo por empresa em todo o resto do sistema** — regra de visibilidade de dados (usuário só vê o que é da(s) empresa(s) dele) e a decisão de escopo obrigatória em toda entidade nova (já reforçada em `.claude/skills/lumini_hub_entity_creation/SKILL.md`, Step 0).
+4. **Logo da Empresa** — arquivo de logo próprio, guardado como campo do próprio cadastro básico (`Company.LogoFile`/`LogoMimeType`). **Revisado 2026-09-07**: chegou a existir uma feature maior de "Identidade Visual" completa (logo + paleta de cores personalizada aplicada em runtime no `ConfigProvider` do antd) — foi implementada, entregue e testada, mas depois **revertida** por decisão do usuário (a customização de cores não trouxe valor prático suficiente). Ver seção **"🔄 Reversão (2026-09-07)"** logo abaixo de `CompanyColorPalette` pro histórico completo e o novo escopo, bem menor. **Escopado 2026-09-13**: a logo sobrevivente da reversão nunca chegou a ser aplicada em nenhum lugar visível da aplicação — ver seção **"🖼️ Logo da empresa ativa em runtime no sidebar (EPIC CFG-6, continuação)"** logo após o fechamento do EPIC CFG-7.
 
 ---
 
@@ -47,7 +46,9 @@ Este módulo cria o cadastro de **Empresa** — a estrutura organizacional de um
 > **Por que bytea**: certificado A1 costuma ser um arquivo pequeno (poucos KB), então o overhead do bytea é irrelevante. Guardar na própria linha significa que o certificado sempre viaja junto do backup do banco (nosso modelo de tenant = banco separado já trata isso automaticamente), sem precisar gerenciar uma pasta/volume compartilhado à parte nem se preocupar com arquivo órfão se a empresa for excluída.
 
 ### `CompanyDocumentIssuanceConfig` (1 Empresa : N séries/tipos de documento)
-**Novo, a partir do que você descreveu em 2026-07-21** — separado da config fiscal genérica porque numeração de nota é um conceito específico que cresce (múltiplos tipos de documento, séries, CFOPs). Estrutura ainda em esboço, campos a refinar conforme o Módulo 6 (Fiscal) for sendo desenhado de verdade:
+**Novo, a partir do que você descreveu em 2026-07-21** — separado da config fiscal genérica porque numeração de nota é um conceito específico que cresce (múltiplos tipos de documento, séries, CFOPs). Estrutura ainda em esboço, campos a refinar conforme o Módulo 6 (Fiscal) for sendo desenhado de verdade.
+
+> **Nota (2026-09-13)**: o item de backlog correspondente (EPIC CFG-2, `tasks_empresa.md`) foi removido a pedido do usuário — não é esquecimento nem inconsistência entre os dois arquivos. A modelagem abaixo continua valendo como referência; quando o Módulo 6 (Fiscal) for escopado de verdade pelo `cocriador-lumini-hub`, o item de backlog renasce lá, no módulo certo, não aqui.
 
 | Campo | Tipo | Observação |
 |---|---|---|
@@ -273,19 +274,6 @@ Nenhuma. Escopo, tratamento visual e fallback foram todos fechados diretamente c
 
 ---
 
-### `ChartOfAccounts` (N:1 com Empresa, self-referencing)
-**Definido 2026-07-21**: template global padrão (o mais comumente usado no Brasil), clonado pra cada empresa na criação — facilita a vida do cliente, que já começa operando sem montar plano de contas do zero. Depois de clonado, cada empresa pode customizar o próprio livremente.
-
-| Campo | Tipo | Observação |
-|---|---|---|
-| `CompanyID` | uint | FK — cada empresa tem sua própria cópia, clonada do template padrão na criação |
-| `ParentID` | *uint (nullable) | self-referencing — hierarquia tipo "3.1.01.001 Receita de Vendas" sob "3.1 Receitas Operacionais" sob "3 Contas de Resultado" |
-| `Code` | string | ex: `3.1.01.001` |
-| `Name` | string | |
-| `Type` | enum | Ativo / Passivo / Receita / Despesa / Resultado (a validar terminologia contábil exata) |
-
----
-
 ## 🚫 Configs 1:1 não têm Delete (definido em 2026-09-05)
 
 Descoberto testando `CompanyFiscalConfig`: um índice único (`company_id`) mais soft delete do GORM permite que uma linha excluída continue "ocupando" o valor único, bloqueando recriar a config da mesma empresa depois. A correção técnica (índice parcial `WHERE deleted_at IS NULL`) resolve o sintoma, mas discutindo com o usuário chegamos numa raiz melhor: **uma configuração 1:1 intrínseca à empresa não tem "excluir" com significado de negócio** — enquanto a empresa existe, ela sempre tem (ou devia ter) aquela configuração associada, nem que seja vazia. Diferente de excluir um registro de uma lista de verdade (`Company`, `ChartOfAccounts`, `CompanyDocumentIssuanceConfig`), onde a linha deixar de existir faz sentido.
@@ -323,11 +311,10 @@ Baldes definidos no Step 0 de `lumini_hub_entity_creation/SKILL.md` — pergunta
 
 ## ❓ Decisões em Aberto
 
-Todas as decisões estruturais de arquitetura foram fechadas em 2026-07-21: `IsMatriz` (é `ParentID == nil`), nome da permission (`companies.hierarchy.view`), Plano de Contas (template global clonável por empresa), certificado (bytea na própria linha, senha criptografada, campo de vencimento), rastreio de empresa ativa (Opção B, fora do JWT, estilo variável de sessão) e **local do microsserviço: `api.core`** (mesmo serviço de Customers/Suppliers/Addresses/Contacts hoje — não justifica um serviço dedicado só pra isso, sem necessidade de escala própria). `api.auth` referencia `CompanyID` por ID puro em `User`, sem GORM relation cross-service, mesmo padrão já usado com `Customer`.
+Todas as decisões estruturais de arquitetura foram fechadas em 2026-07-21: `IsMatriz` (é `ParentID == nil`), nome da permission (`companies.hierarchy.view`), certificado (bytea na própria linha, senha criptografada, campo de vencimento), rastreio de empresa ativa (Opção B, fora do JWT, estilo variável de sessão) e **local do microsserviço: `api.core`** (mesmo serviço de Customers/Suppliers/Addresses/Contacts hoje — não justifica um serviço dedicado só pra isso, sem necessidade de escala própria). `api.auth` referencia `CompanyID` por ID puro em `User`, sem GORM relation cross-service, mesmo padrão já usado com `Customer`.
 
-Só ficam pendências de **conteúdo**, não de arquitetura — não bloqueiam começar a modelar `Company`/`CompanyFiscalConfig`, mas bloqueiam `ChartOfAccounts` funcionar de verdade:
+Só fica uma pendência de **conteúdo**, não de arquitetura — não bloqueia começar a modelar `Company`/`CompanyFiscalConfig`, nem nada deste módulo agora:
 
-- [ ] **O conteúdo real do Plano de Contas padrão.** Preciso da lista de contas em si (código + nome + tipo, hierarquia completa) pra ter o que clonar em cada empresa nova. Isso é dado contábil/de negócio, não uma decisão de engenharia — o usuário tem um plano de contas de referência (do contador, de outro sistema, etc.) pra eu usar como seed, ou monto uma sugestão padrão simplificada pra começar e ajustamos depois?
 - [ ] Campos exatos de `CompanyDocumentIssuanceConfig` (`OperationType`, estrutura de `CFOP`) — fica pra quando o Módulo 6 (Fiscal) for desenhado de verdade, não bloqueia nada agora.
 
 ---
@@ -336,4 +323,4 @@ Só ficam pendências de **conteúdo**, não de arquitetura — não bloqueiam c
 
 1. Fechar as decisões em aberto acima (ou seguir com os defaults sugeridos e ajustar depois).
 2. Criar `tasks_empresa.md` decompondo isso em tarefas (seguindo o protocolo de bloqueio do `lumini_hub_dev_flow`).
-3. Seguir o checklist de 12 passos da skill `lumini_hub_entity_creation` pra `Company` primeiro (é a base de tudo o resto aqui), depois `CompanyFiscalConfig`/`ChartOfAccounts`.
+3. Seguir o checklist de 12 passos da skill `lumini_hub_entity_creation` pra `Company` primeiro (é a base de tudo o resto aqui), depois `CompanyFiscalConfig`.
