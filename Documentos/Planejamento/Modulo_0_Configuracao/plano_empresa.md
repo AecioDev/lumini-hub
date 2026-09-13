@@ -14,7 +14,7 @@ Este módulo cria o cadastro de **Empresa** — a estrutura organizacional de um
 2. **Configuração Fiscal por Empresa** — certificado digital A1, tipo de tributação (Simples/Presumido/Real), dados do contador responsável, contadores/séries de numeração de notas fiscais.
 3. **Plano de Contas por Empresa** — estrutura hierárquica de contas contábeis pra lançamentos em partida dobrada (base do Módulo 7 — CMV, DRE, Balancete).
 4. **Escopo por empresa em todo o resto do sistema** — regra de visibilidade de dados (usuário só vê o que é da(s) empresa(s) dele) e a decisão de escopo obrigatória em toda entidade nova (já reforçada em `.claude/skills/lumini_hub_entity_creation/SKILL.md`, Step 0).
-5. **Logo da Empresa** — arquivo de logo próprio, guardado como campo do próprio cadastro básico (`Company.LogoFile`/`LogoMimeType`). **Revisado 2026-09-07**: chegou a existir uma feature maior de "Identidade Visual" completa (logo + paleta de cores personalizada aplicada em runtime no `ConfigProvider` do antd) — foi implementada, entregue e testada, mas depois **revertida** por decisão do usuário (a customização de cores não trouxe valor prático suficiente). Ver seção **"🔄 Reversão (2026-09-07)"** logo abaixo de `CompanyColorPalette` pro histórico completo e o novo escopo, bem menor.
+5. **Logo da Empresa** — arquivo de logo próprio, guardado como campo do próprio cadastro básico (`Company.LogoFile`/`LogoMimeType`). **Revisado 2026-09-07**: chegou a existir uma feature maior de "Identidade Visual" completa (logo + paleta de cores personalizada aplicada em runtime no `ConfigProvider` do antd) — foi implementada, entregue e testada, mas depois **revertida** por decisão do usuário (a customização de cores não trouxe valor prático suficiente). Ver seção **"🔄 Reversão (2026-09-07)"** logo abaixo de `CompanyColorPalette` pro histórico completo e o novo escopo, bem menor. **Escopado 2026-09-13**: a logo sobrevivente da reversão nunca chegou a ser aplicada em nenhum lugar visível da aplicação — ver seção **"🖼️ Logo da empresa ativa em runtime no sidebar (EPIC CFG-6, continuação)"** logo após o fechamento do EPIC CFG-7.
 
 ---
 
@@ -188,6 +188,88 @@ EPIC CFG-7 concluído por completo (`[ENTREGUE]`) — ver `tasks_empresa.md` § 
 - **Reversibilidade**: o código removido (cores + tema em runtime) continua disponível na branch `archive/identidade-visual-cores` (ponteiro no commit `8e894c0`, antes de qualquer remoção), caso o assunto volte à mesa no futuro.
 
 Código antigo de `CompanyVisualConfig`/`CompanyColorPalette` documentado abaixo mantido só como referência histórica — ver marcações "REMOVIDA" nas seções seguintes.
+
+---
+
+## 🎨 Cor de fundo padrão do modo escuro (EPIC CFG-6, continuação — escopado 2026-09-13)
+
+Formaliza o **item 1** dos "Dois itens novos de backlog" registrados no cabeçalho do EPIC CFG-6 (`tasks_empresa.md`): o usuário achou o tom azulado do fundo/bordas do tema escuro padrão da própria Lumini Hub "estranho" e pediu algo mais próximo do tom neutro do tema escuro do Claude Desktop. **Importante — não é a mesma coisa que `CompanyVisualConfig`/identidade visual por empresa** (essa parte foi revertida, ver seção "🔄 Reversão" acima): isso aqui é a paleta *padrão* de toda a aplicação, em `Frontend/src/theme/antd-theme.ts` (`CHROME_BG`, tokens de `buildAntdTheme`). Escopo fechado direto com o usuário nesta sessão, a partir de um print real do Claude Desktop em modo escuro (hex extraídos via Canva) — sem decisão de negócio pendente.
+
+### Escopo
+
+Trocar só os valores de fundo/borda do **modo escuro** em `antd-theme.ts` por um tom cinza neutro, sem tingimento azulado — mantendo intocada a cor de marca (Azul Royal) usada em botões, links e no destaque de hover/seleção do menu lateral. O usuário foi explícito sobre isso: *"exato, eu não quero mais o azul, quero tons de cinza, esse azulado no fundo q não gosto. Mas eu gosto do azul dos botões, e outros detalhes."*
+
+Fora de escopo aqui (continuam como backlog não formalizado, mesmo bloco do EPIC CFG-6, ver `tasks_empresa.md`): a reformulação do header do topo. A logo da empresa ativa (item 2 do mesmo bloco) já foi escopada e entregue à parte (ver seção "🖼️ Logo..." abaixo).
+
+### Regra de negócio / tratamento visual
+
+Não há regra de negócio — é preferência estética de tema, sem dado de banco nem lógica condicional envolvida. Duas decisões de design foram tomadas nesta sessão:
+
+1. **O que muda**: só os tokens de fundo/borda do modo escuro. **O que não muda**: modo claro (permanece exatamente como está — `CHROME_BG.light: "#ffffff"` e os tokens `colorBgLayout`/`colorBgContainer`/`colorBorder` do light não são tocados), `SHARED_TOKENS` (`colorPrimary`, `colorInfo`, `colorLink`, `colorSuccess`, `colorWarning`, `colorError`, `borderRadius`, `fontFamily`) e os tokens de `Menu` (`itemHoverBg`/`itemSelectedBg`/`itemSelectedColor`, que usam `BRAND.royal` e variações de `rgba(37,99,235,...)`) — são a identidade de marca que o usuário disse gostar e quer manter.
+2. **Progressão de tons**: perguntado diretamente se preferia uma progressão neutra (fundo do layout mais escuro que o dos Cards/Inputs, pra eles se destacarem visualmente do fundo, mesma relação que já existe hoje) ou outra abordagem, o usuário confirmou explicitamente a opção **"Progressão neutra (Recomendado)"** — os três tons novos de fundo (`CHROME_BG.dark` / `colorBgLayout` / `colorBgContainer`) seguem essa mesma relatividade de hoje, só recalibrados pra cinza neutro em vez de navy.
+
+### Novos valores (só modo escuro)
+
+Extraídos pelo usuário do print real do Claude Desktop (Canva) — não são estimativa/aproximação minha, à exceção dos dois marcados "(recomendação)" abaixo, que são progressão neutra derivada dos dois valores reais, confirmada explicitamente pelo usuário.
+
+| Token | Valor atual | Valor novo | Origem |
+|---|---|---|---|
+| `CHROME_BG.dark` (usa em `Layout.siderBg`/`headerBg`, a barra lateral) | `#0A0E1A` | `#111111` | Valor real do Claude Desktop — "parte esquerda mais escura" (nav/sidebar) |
+| `token.colorBgLayout` no dark (fundo da área de conteúdo) | `#0F172A` | `#151515` | Valor real do Claude Desktop — "parte corpo mais clara" (área de conteúdo) |
+| `token.colorBgContainer` no dark (fundo de Cards/Inputs) | `#1E293B` | `#1C1C1C` | Recomendação (progressão neutra, um pouco mais claro que `colorBgLayout` pra Cards/Inputs se destacarem do fundo), confirmada pelo usuário |
+| `token.colorBorder` e `token.colorBorderSecondary` no dark | `#263449` | `#2A2A2A` | Recomendação, mesma lógica/confirmação acima |
+
+### Arquivo afetado
+
+Só `Frontend/src/theme/antd-theme.ts` — dentro de `CHROME_BG` (campo `dark`) e dentro do objeto `token` retornado por `buildAntdTheme` no branch `isDark` (`colorBgLayout`, `colorBgContainer`, `colorBorder`, `colorBorderSecondary`). Nenhuma tabela, endpoint ou tela nova — é troca de valor de constante, sem impacto em nenhum outro arquivo do projeto.
+
+### Pendências em aberto
+
+Nenhuma. Valores, escopo e o que fica de fora foram todos fechados diretamente com o usuário nesta sessão.
+
+---
+
+## 🖼️ Logo da empresa ativa em runtime no sidebar (EPIC CFG-6, continuação — escopado 2026-09-13)
+
+Formaliza o **item 2** dos "Dois itens novos de backlog" registrados no cabeçalho do EPIC CFG-6 (`tasks_empresa.md`): a logo da empresa (existente desde o EPIC CFG-7 — `Company.LogoFile`/`LogoMimeType`, endpoint `GET /companies/:id/logo`, ver seção "🔄 Reversão" acima) nunca foi de fato aplicada em nenhum lugar da interface. `ActiveCompanySwitcher.tsx` ainda usa hoje o ícone genérico `ph:buildings` como placeholder — herdado de quando essa tela foi construída (CFG-6.1.3, 2026-09-05/06) e a logo real ainda não existia (dependia do EPIC CFG-4, revertido depois). Escopo fechado direto com o usuário nesta sessão; sem decisão de negócio pendente.
+
+### Escopo
+
+Aplicar a logo da empresa ativa nos dois pontos de `ActiveCompanySwitcher.tsx` que hoje usam o ícone genérico:
+1. **Badge fixa no topo do sidebar** (empresa ativa) — hoje `<Icon icon="ph:buildings">` solto antes do nome.
+2. **Cada item da lista dentro do `Drawer` de troca** (`List.Item.Meta`'s `avatar`) — não só a badge; o usuário foi explícito que quer os dois lugares, não só o principal.
+
+Fora de escopo aqui (continuam como backlog não formalizado, mesmo bloco do EPIC CFG-6): a reformulação do header do topo (item 1 do mesmo bloco de backlog) e a cor de fundo padrão do modo escuro (outro item do mesmo bloco) — nenhum dos dois é tocado por esta feature.
+
+### Regra de negócio / tratamento visual
+
+Perguntado explicitamente sobre o contraste entre o fundo claro do logo real da FOCCO ILUMINAÇÃO e o fundo escuro do sidebar, o usuário decidiu **não** adicionar nenhum card/fundo artificial atrás da logo. Frase literal: *"Acho q o fundo tem q manter o background normal, a logo q enviar vai aparecer lá, acho q o ideal é logo sem fundo pra o background preencher..."*. Ou seja:
+- A imagem fica solta, renderizada direto sobre o fundo normal do sidebar — sem wrapper branco/arredondado, sem `padding`/`background` compensando contraste, sem nenhum tratamento especial.
+- É responsabilidade de quem faz o upload escolher um arquivo que funcione visualmente ali (ex. PNG/SVG com fundo transparente) — o sistema não tenta compensar contraste algum. Isso não muda nada do fluxo de upload em si (CFG-7.1/7.4, já entregue) — é só sobre como a UI passa a *exibir* o que já está salvo.
+
+**Fallback** (empresa com `has_logo === false`): mantém o ícone genérico `ph:buildings` atual, nos dois pontos — comportamento já existente, sem mudança.
+
+### Dado / DB
+
+Necessidade técnica confirmada nesta sessão (engenharia, não decisão de negócio nova): `CompanyOption` (`Backend/common/utils/company_visibility.go`) hoje só tem `{ID uint; Name string}` — sem indicação de logo. É essa struct que `ResolveCompanyOptions` popula e que vira `user.visible_companies` (`ApiCompanyOption` em `Frontend/src/types/auth.ts`, hoje só `{id, name}`), consumido por `ActiveCompanySwitcher.tsx` tanto pra badge (cruza `user.active_company_id` com `visible_companies`) quanto pra lista do Drawer (itera `visible_companies` direto).
+
+Mudanças de dado necessárias — nenhuma tabela nova, nenhuma migration (`Company.LogoFile`/`LogoMimeType` já existem desde CFG-7.1.1; isso só propaga `has_logo`, já calculado em outros lugares, a mais um consumidor):
+- `CompanyOption` (Go) ganha `HasLogo bool` `json:"has_logo"` — mesmo padrão já usado em `ApiCompany`/`ApiCompanyDetail.HasLogo` (`Backend/microservices/api.core/internal/domain/company.go`).
+- `ResolveCompanyOptions` — o `SELECT` ganha a coluna calculada `(length(logo_file) > 0) AS has_logo`, mesmo cálculo já usado em `ApiCompanyFromModel`/`ApiCompanyDetailFromModel` (`len(e.LogoFile) > 0`), só que em SQL puro porque a leitura aqui já é direto na tabela (mesmo padrão de `ResolveVisibleCompanyIDs`/`ResolveActiveCompany` no mesmo arquivo — sem round-trip HTTP entre serviços).
+- `ApiCompanyOption` (TS, `Frontend/src/types/auth.ts`) ganha `has_logo: boolean`.
+- URL do logo reaproveita `companyLogoUrl(id)` (`Frontend/src/services/companies/company-service.ts`, já existente) — sem endpoint novo, sem gate de permission novo: `GET /companies/:id/logo` já não exige `RequirePermission` (só `AuthMiddleware`), pelo mesmo raciocínio de identidade de sessão já registrado na seção CFG-7 acima.
+
+### Telas envolvidas
+
+- `Frontend/src/components/layout/ActiveCompanySwitcher.tsx` — badge do topo do sidebar (renderização condicional: `<img src={companyLogoUrl(id)}>` se a empresa ativa tem `has_logo` dentro de `visible_companies`, senão `<Icon icon="ph:buildings">` como hoje) e o `avatar` de cada `List.Item.Meta` dentro do `Drawer` (mesma lógica condicional, por item da lista).
+- `Frontend/src/types/auth.ts` (`ApiCompanyOption`).
+- `Backend/common/utils/company_visibility.go` (`CompanyOption`, `ResolveCompanyOptions`).
+
+Nenhuma outra tela é tocada — nem o header do topo nem a paleta padrão do modo escuro (os outros dois itens do mesmo bloco de backlog do EPIC CFG-6) fazem parte deste escopo.
+
+### Pendências em aberto
+
+Nenhuma. Escopo, tratamento visual e fallback foram todos fechados diretamente com o usuário nesta sessão; a necessidade técnica de `has_logo` em `CompanyOption` é decisão de engenharia (não de negócio), documentada acima pra rastreabilidade.
 
 ---
 
