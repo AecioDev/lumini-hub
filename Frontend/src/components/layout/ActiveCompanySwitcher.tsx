@@ -4,6 +4,7 @@ import { Drawer, List, Typography } from "antd";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeedback } from "@/hooks/useFeedback";
 import { getApiErrorMessage } from "@/utils/api-error";
+import { companyLogoUrl } from "@/services/companies/company-service";
 
 const { Text } = Typography;
 
@@ -12,9 +13,12 @@ interface ActiveCompanySwitcherProps {
 }
 
 // Mostra a Company ativa no topo do sidebar (onde antes ficava a marca
-// Lumini Hub — movida pro rodapé, ver AppLayout.tsx). Sem logo de verdade
-// ainda (CompanyVisualConfig / CFG-4 não existe), usa um ícone genérico no
-// lugar.
+// Lumini Hub — movida pro rodapé, ver AppLayout.tsx). Usa a logo real da
+// empresa (Company.LogoFile, CFG-7) quando ela tem uma cadastrada — via
+// has_logo em visible_companies (CFG-6.2.1) — e cai pro ícone genérico
+// ph:buildings quando não tem. A logo é renderizada sem nenhum card/fundo
+// por trás (decisão do usuário, ver plano_empresa.md § "Logo da empresa
+// ativa em runtime no sidebar") — solta sobre o fundo normal do sidebar.
 //
 // Os dados (active_company_name/visible_companies) vêm embutidos em
 // ApiUserDetail (login/refresh/me), NÃO de GET /companies — de propósito:
@@ -36,6 +40,7 @@ export function ActiveCompanySwitcher({ collapsed }: ActiveCompanySwitcherProps)
 
   const companies = user?.visible_companies ?? [];
   const canSwitch = companies.length > 1;
+  const activeCompany = companies.find((c) => c.id === user?.active_company_id);
 
   const handleSelect = async (companyId: number) => {
     if (companyId === user?.active_company_id) {
@@ -68,7 +73,15 @@ export function ActiveCompanySwitcher({ collapsed }: ActiveCompanySwitcherProps)
           cursor: canSwitch ? "pointer" : "default",
         }}
       >
-        <Icon icon="ph:buildings" width={22} height={22} style={{ flexShrink: 0, opacity: 0.85 }} />
+        {activeCompany?.has_logo ? (
+          <img
+            src={companyLogoUrl(activeCompany.id)}
+            alt=""
+            style={{ width: 22, height: 22, objectFit: "contain", flexShrink: 0 }}
+          />
+        ) : (
+          <Icon icon="ph:buildings" width={22} height={22} style={{ flexShrink: 0, opacity: 0.85 }} />
+        )}
         {!collapsed && (
           <>
             <span
@@ -115,7 +128,17 @@ export function ActiveCompanySwitcher({ collapsed }: ActiveCompanySwitcherProps)
               }}
             >
               <List.Item.Meta
-                avatar={<Icon icon="ph:buildings" width={20} height={20} />}
+                avatar={
+                  company.has_logo ? (
+                    <img
+                      src={companyLogoUrl(company.id)}
+                      alt=""
+                      style={{ width: 20, height: 20, objectFit: "contain" }}
+                    />
+                  ) : (
+                    <Icon icon="ph:buildings" width={20} height={20} />
+                  )
+                }
                 title={company.name}
               />
               {switching === company.id && <Text type="secondary">Trocando...</Text>}

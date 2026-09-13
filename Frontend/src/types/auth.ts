@@ -17,6 +17,7 @@ export interface ApiUser {
 export interface ApiCompanyOption {
   id: number;
   name: string;
+  has_logo: boolean;
 }
 
 export interface ApiUserRole {
