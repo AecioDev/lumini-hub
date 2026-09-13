@@ -93,7 +93,7 @@ var menuItemSeedTree = []menuItemSeed{
 		},
 	},
 	{
-		Name: "Configurações", Icon: "ph:user-gear",
+		Name: "Configurações", Icon: "ph:gear-six",
 		Children: []menuItemSeed{
 			{Name: "Empresas", Icon: "ph:buildings", Href: "/settings/companies", PermissionCode: "companies.view"},
 			{Name: "Usuários", Icon: "ph:user-circle", Href: "/settings/users", PermissionCode: "users.view"},

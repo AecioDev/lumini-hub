@@ -24,3 +24,36 @@ body {
   background: rgba(128, 128, 128, 0.4);
   border-radius: 4px;
 }
+
+/* Sidebar (SidebarMenu.tsx): quando o item ativo está dentro de um submenu
+   FECHADO, o antd por padrão só muda a cor do texto do grupo-pai (nenhum
+   fundo, nem no claro nem no escuro) — sem abrir o submenu não dá pra saber
+   que a página ativa está lá dentro. Marca o próprio título do grupo com o
+   mesmo azul translúcido do hover de cada tema (itemHoverBg/darkItemHoverBg
+   em antd-theme.ts), pedido explícito do usuário depois de testar
+   CFG-6.3.1 (primeiro só no escuro, depois confirmou querer o mesmo
+   tratamento no claro). Não existe token de componente do antd pra este
+   estado composto (submenu contém item selecionado) — confirmado
+   conferindo node_modules/antd/es/menu/style/index.d.ts, por isso é CSS
+   direto em vez de components.Menu. O !important é salvaguarda deliberada
+   contra o CSS-in-JS do antd (injetado/reordenado em runtime, fora do
+   nosso controle) — não confirmado como estritamente necessário em todo
+   estado (revisão de código não achou regra do antd de maior especificidade
+   competindo pelo background em repouso), mas mantido por segurança: sem
+   ele, um teste anterior não refletiu a mudança de forma confiável.
+
+   O `color` na regra do modo claro corrige um efeito colateral do ajuste
+   seguinte (item selecionado ficou sólido/texto branco nos dois temas,
+   pedido do usuário): esse mesmo `itemSelectedColor: "#fff"` também é
+   aplicado pelo antd neste título de grupo-pai (que só tem o fundo pálido
+   deste marcador, não o azul sólido do item de fato selecionado) — texto
+   branco ficava ilegível contra um fundo quase branco. No modo escuro o
+   fundo do marcador já é escuro o bastante pro branco continuar legível,
+   por isso não precisou do mesmo ajuste. */
+.ant-menu-dark .ant-menu-submenu-selected > .ant-menu-submenu-title {
+  background: rgba(37, 99, 235, 0.14) !important;
+}
+.ant-menu-light .ant-menu-submenu-selected > .ant-menu-submenu-title {
+  background: rgba(37, 99, 235, 0.06) !important;
+  color: #2563eb !important;
+}
