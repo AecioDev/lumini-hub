@@ -3646,6 +3646,9 @@ const docTemplate = `{
         "utils.CompanyOption": {
             "type": "object",
             "properties": {
+                "has_logo": {
+                    "type": "boolean"
+                },
                 "id": {
                     "type": "integer"
                 },

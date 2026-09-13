@@ -842,6 +842,8 @@ definitions:
     type: object
   utils.CompanyOption:
     properties:
+      has_logo:
+        type: boolean
       id:
         type: integer
       name:

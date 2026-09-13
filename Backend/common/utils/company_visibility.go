@@ -162,21 +162,25 @@ func SetActiveCompany(db *gorm.DB, userID uint, companyID uint) error {
 // por isso não pode depender de companies.view (a maioria dos perfis
 // operacionais, ex. Financeiro/Vendas, nunca vai ter essa permission).
 type CompanyOption struct {
-	ID   uint   `json:"id"`
-	Name string `json:"name"`
+	ID      uint   `json:"id"`
+	Name    string `json:"name"`
+	HasLogo bool   `json:"has_logo"`
 }
 
-// ResolveCompanyOptions resolve {id, nome} das Companies em ids (ou, se
-// unrestricted, de todas as Companies ativas do tenant) — usado por
+// ResolveCompanyOptions resolve {id, nome, has_logo} das Companies em ids
+// (ou, se unrestricted, de todas as Companies ativas do tenant) — usado por
 // AuthService pra embutir a lista do switcher direto em ApiUserDetail
 // (login/refresh/me), sem round-trip pelo endpoint gated de api.core.
+// HasLogo permite ao frontend decidir entre pedir GET /companies/:id/logo
+// (também sem gate de permission, mesmo raciocínio) ou cair no ícone
+// genérico, sem precisar tentar-e-falhar a requisição da imagem.
 func ResolveCompanyOptions(db *gorm.DB, ids []uint, unrestricted bool) ([]CompanyOption, error) {
 	if !unrestricted && len(ids) == 0 {
 		return []CompanyOption{}, nil
 	}
 
 	query := db.Table("companies").
-		Select("id, COALESCE(NULLIF(trade_name, ''), legal_name) AS name").
+		Select("id, COALESCE(NULLIF(trade_name, ''), legal_name) AS name, (length(logo_file) > 0) AS has_logo").
 		Where("deleted_at IS NULL AND is_active = true").
 		Order("name")
 	if !unrestricted {
