@@ -200,7 +200,7 @@ Formaliza o **item 1** dos "Dois itens novos de backlog" registrados no cabeçal
 
 Trocar só os valores de fundo/borda do **modo escuro** em `antd-theme.ts` por um tom cinza neutro, sem tingimento azulado — mantendo intocada a cor de marca (Azul Royal) usada em botões, links e no destaque de hover/seleção do menu lateral. O usuário foi explícito sobre isso: *"exato, eu não quero mais o azul, quero tons de cinza, esse azulado no fundo q não gosto. Mas eu gosto do azul dos botões, e outros detalhes."*
 
-Fora de escopo aqui (continuam como backlog não formalizado, mesmo bloco do EPIC CFG-6, ver `tasks_empresa.md`): a reformulação do header do topo. A logo da empresa ativa (item 2 do mesmo bloco) já foi escopada e entregue à parte (ver seção "🖼️ Logo..." abaixo).
+Fora de escopo aqui (continua como backlog solto, ver seção "📌 Backlog solto" no topo de `tasks_empresa.md`): a reformulação do header do topo. A logo da empresa ativa (item 2 do mesmo bloco original) já foi escopada e entregue à parte (ver seção "🖼️ Logo..." abaixo).
 
 ### Regra de negócio / tratamento visual
 
@@ -240,7 +240,7 @@ Aplicar a logo da empresa ativa nos dois pontos de `ActiveCompanySwitcher.tsx` q
 1. **Badge fixa no topo do sidebar** (empresa ativa) — hoje `<Icon icon="ph:buildings">` solto antes do nome.
 2. **Cada item da lista dentro do `Drawer` de troca** (`List.Item.Meta`'s `avatar`) — não só a badge; o usuário foi explícito que quer os dois lugares, não só o principal.
 
-Fora de escopo aqui (continuam como backlog não formalizado, mesmo bloco do EPIC CFG-6): a reformulação do header do topo (item 1 do mesmo bloco de backlog) e a cor de fundo padrão do modo escuro (outro item do mesmo bloco) — nenhum dos dois é tocado por esta feature.
+Fora de escopo aqui (continua como backlog solto, ver seção "📌 Backlog solto" no topo de `tasks_empresa.md`): a reformulação do header do topo. A cor de fundo padrão do modo escuro (outro item do bloco original) já foi escopada à parte (ver seção acima) — nenhum dos dois é tocado por esta feature.
 
 ### Regra de negócio / tratamento visual
 
