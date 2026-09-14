@@ -13,7 +13,7 @@ Esta Skill descreve as regras obrigatórias de leitura e escrita do planejamento
 
 Antes de iniciar qualquer alteração no código fonte ou na infraestrutura, o agente **deve obrigatoriamente**:
 1. Ler o arquivo explicativo geral em [Documentos/Planejamento/README.md](file:///c:/Projetos/lumini-hub/Documentos/Planejamento/README.md).
-2. Localizar a pasta do módulo em que irá atuar (ex: `Modulo_1_CRM_Integracoes/`).
+2. Localizar a pasta do módulo em que irá atuar (ex: `Modulo_1_CRM/`).
 3. Ler o arquivo de planejamento técnico `plano_*.md` da feature correspondente para entender o escopo do banco de dados, regras de negócio e arquivos afetados.
 4. Ler o arquivo de controle de tarefas `tasks_*.md` correspondente ao módulo para verificar o andamento e o status atual.
 

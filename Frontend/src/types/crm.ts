@@ -1,5 +1,5 @@
 // Tipos do Dashboard CRM. Ainda NÃO existe um backend para isso (api.crm,
-// porta 4009, está apenas planejado — ver Documentos/Planejamento/Modulo_1_CRM_Integracoes).
+// porta 4009, está apenas planejado — ver Documentos/Planejamento/Modulo_1_CRM/plano_crm.md).
 // Estes tipos alimentam o mock isolado em services/crm/crm-dashboard-service.ts
 // e devem ser trocados pelos DTOs reais assim que o microsserviço existir.
 

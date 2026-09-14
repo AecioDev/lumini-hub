@@ -5,7 +5,7 @@ import type { CrmDashboardData } from "@/types/crm";
 // O Dashboard CRM (estatísticas, pipeline de vendas, tarefas da equipe e
 // clientes recentes) não tem backend hoje: o microsserviço `api.crm`
 // (porta 4009) está apenas planejado, ver
-// Documentos/Planejamento/Modulo_1_CRM_Integracoes/plano_crm.md.
+// Documentos/Planejamento/Modulo_1_CRM/plano_crm.md.
 //
 // Este service fica isolado de propósito para ser fácil de trocar depois:
 // quando o api.crm existir, basta reescrever `getDashboardData` para chamar

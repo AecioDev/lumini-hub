@@ -66,7 +66,7 @@ escope o primeiro pedaço por completo antes dos outros.
   adivinhe característica de sistema de terceiro. Cite a fonte quando
   relevante. Se a pesquisa não resolver (ex.: depende de política interna do
   cliente, tipo a prioridade de estoque loja física vs. virtual que ainda
-  está pendente de confirmação com a diretoria no `plano_crm.md`), registre
+  está pendente de confirmação com a diretoria no `plano_integrations.md`), registre
   como pendência explícita no `plano_*.md` em vez de inventar uma resposta.
 
 ## Aprovação por seções

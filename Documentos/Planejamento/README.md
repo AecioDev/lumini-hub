@@ -7,7 +7,7 @@ Aqui estruturamos as tarefas, metas de cada funcionalidade e diários de bordo p
 
 - **[Historico/](file:///c:/Projetos/lumini-hub/Documentos/Planejamento/Historico/)**: Diário de bordo detalhando as atividades executadas por dia/período de desenvolvimento.
 - **[Modulo_0_Configuracao/](file:///c:/Projetos/lumini-hub/Documentos/Planejamento/Modulo_0_Configuracao/)**: Setup do projeto frontend e backend, e o cadastro base de Empresa (multi-empresa self-referencing, config fiscal e plano de contas) que serve de fundação pros demais módulos.
-- **[Modulo_1_CRM_Integracoes/](file:///c:/Projetos/lumini-hub/Documentos/Planejamento/Modulo_1_CRM_Integracoes/)**: Middleware (Loja Integrada $\leftrightarrow$ SQL Server) e o CRM do Vendedor.
+- **[Modulo_1_CRM/](file:///c:/Projetos/lumini-hub/Documentos/Planejamento/Modulo_1_CRM/)**: CRM do Vendedor — Leads, Pipeline (Kanban), Oportunidades, Atividades, Pós-Venda e Churn.
 - **[Modulo_2_Produtos_Estoque/](file:///c:/Projetos/lumini-hub/Documentos/Planejamento/Modulo_2_Produtos_Estoque/)**: Catálogo de Produtos, Imagens e Localização/Saldos de Estoque.
 - **[Modulo_3_Compras/](file:///c:/Projetos/lumini-hub/Documentos/Planejamento/Modulo_3_Compras/)**: Pedidos de Compras e Manifesto Eletrônico da SEFAZ.
 - **[Modulo_4_Vendas_Caixas/](file:///c:/Projetos/lumini-hub/Documentos/Planejamento/Modulo_4_Vendas_Caixas/)**: Vendas de Balcão (Ambientes/Obra), Projetos CAD, Faturamento Parcial e Controle de Caixas.
@@ -15,6 +15,7 @@ Aqui estruturamos as tarefas, metas de cada funcionalidade e diários de bordo p
 - **[Modulo_6_Fiscal/](file:///c:/Projetos/lumini-hub/Documentos/Planejamento/Modulo_6_Fiscal/)**: Certificados Digitais A1, Parametrizações Tributárias e Emissão de NFe/NFSe/NFCe/MDFe via ACBr.
 - **[Modulo_7_Contabilidade/](file:///c:/Projetos/lumini-hub/Documentos/Planejamento/Modulo_7_Contabilidade/)**: Plano de Contas, Lançamentos Contábeis de Dupla Partida, Balancete, Razão e DRE.
 - **[Modulo_8_MultiTenant/](file:///c:/Projetos/lumini-hub/Documentos/Planejamento/Modulo_8_MultiTenant/)**: Estratégia de isolamento entre clientes/tenants (banco de dados físico separado por cliente) — ortogonal ao Módulo 0 (Empresa), que trata da estrutura dentro do banco de um único cliente.
+- **[Modulo_9_Integracoes/](file:///c:/Projetos/lumini-hub/Documentos/Planejamento/Modulo_9_Integracoes/)**: Middleware de sincronismo bidirecional (Loja Integrada $\leftrightarrow$ SQL Server legado) — separado do Módulo 1 (CRM) em 2026-09-13, eram dois microsserviços diferentes espremidos no mesmo módulo por prioridade da época.
 
 ## 📜 Regras de Uso
 1. **Antes de Iniciar uma Feature:** Crie ou atualize o `plano_*.md` e `tasks_*.md` na pasta do respectivo módulo detalhando as regras.

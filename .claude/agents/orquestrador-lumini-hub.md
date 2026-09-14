@@ -74,13 +74,15 @@ features criadas a partir de agora.
 | Prefixo | Módulo |
 |---|---|
 | `CFG` | Modulo_0_Configuracao |
-| `CRM` | Modulo_1_CRM_Integracoes |
+| `CRM` | Modulo_1_CRM |
 | `EST` | Modulo_2_Produtos_Estoque |
 | `COM` | Modulo_3_Compras |
 | `VND` | Modulo_4_Vendas_Caixas |
 | `FIN` | Modulo_5_Financeiro |
 | `FIS` | Modulo_6_Fiscal |
 | `CTB` | Modulo_7_Contabilidade |
+| `MTN` | Modulo_8_MultiTenant |
+| `INT` | Modulo_9_Integracoes |
 
 Para descobrir o próximo `N` livre de um prefixo, procure (`Grep`) por
 `EPIC <PREFIXO>-` em todos os `tasks_*.md` daquele módulo — nunca mantenha um
