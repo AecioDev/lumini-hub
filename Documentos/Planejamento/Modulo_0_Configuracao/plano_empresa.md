@@ -4,7 +4,7 @@
 
 Este módulo cria o cadastro de **Empresa** — a estrutura organizacional de um único cliente (tenant) da Lumini Hub, que pode ter uma empresa Matriz com outras empresas vinculadas embaixo dela (filial por CNPJ ou não, mas geridas pelo mesmo gestor geral). Junto dele, criamos a base de uma coisa que o Módulo 6 (Fiscal) já pressupõe sem ela existir: **Configuração Fiscal** por empresa (certificados, tributação, numeração de notas).
 
-**Importante**: isso não é multi-tenant. Multi-tenant (cliente A da Lumini vs. cliente B) é banco de dados físico separado, resolvido fora deste módulo. Aqui é a estrutura **dentro** do banco de um único cliente.
+**Importante**: isso não é multi-tenant. Multi-tenant (cliente A da Lumini vs. cliente B) é banco de dados físico separado, resolvido fora deste módulo. Aqui é a estrutura **dentro** do banco de um único cliente. **Ver `Modulo_8_MultiTenant/plano_multitenant.md`** (2026-09-13) — assunto isolado num módulo próprio, com as perguntas em aberto sobre a estratégia de isolamento entre tenants (nenhuma decisão tomada ainda).
 
 ---
 

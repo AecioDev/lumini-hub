@@ -14,6 +14,7 @@ Aqui estruturamos as tarefas, metas de cada funcionalidade e diários de bordo p
 - **[Modulo_5_Financeiro/](file:///c:/Projetos/lumini-hub/Documentos/Planejamento/Modulo_5_Financeiro/)**: Contas a Pagar/Receber, Bancos, Caixa e Emissão de Boletos.
 - **[Modulo_6_Fiscal/](file:///c:/Projetos/lumini-hub/Documentos/Planejamento/Modulo_6_Fiscal/)**: Certificados Digitais A1, Parametrizações Tributárias e Emissão de NFe/NFSe/NFCe/MDFe via ACBr.
 - **[Modulo_7_Contabilidade/](file:///c:/Projetos/lumini-hub/Documentos/Planejamento/Modulo_7_Contabilidade/)**: Plano de Contas, Lançamentos Contábeis de Dupla Partida, Balancete, Razão e DRE.
+- **[Modulo_8_MultiTenant/](file:///c:/Projetos/lumini-hub/Documentos/Planejamento/Modulo_8_MultiTenant/)**: Estratégia de isolamento entre clientes/tenants (banco de dados físico separado por cliente) — ortogonal ao Módulo 0 (Empresa), que trata da estrutura dentro do banco de um único cliente.
 
 ## 📜 Regras de Uso
 1. **Antes de Iniciar uma Feature:** Crie ou atualize o `plano_*.md` e `tasks_*.md` na pasta do respectivo módulo detalhando as regras.
