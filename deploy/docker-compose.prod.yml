@@ -1,0 +1,84 @@
+# Uso (na VM, a partir da raiz do repo):
+#   docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env up -d --build
+# Só o "web" (Caddy) expõe portas. Postgres e serviços ficam na rede interna.
+x-backend-env: &backend-env
+  APP_ENV: ${APP_ENV:-staging}
+  DB_HOST: postgres
+  DB_PORT: "5432"
+  DB_USER: ${DB_USER:-postgres}
+  DB_PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD}
+  DB_NAME: ${DB_NAME:-erp_system}
+  DB_SSLMODE: disable
+  DATABASE_URL: postgres://${DB_USER:-postgres}:${DB_PASSWORD}@postgres:5432/${DB_NAME:-erp_system}?sslmode=disable
+  JWT_SECRET: ${JWT_SECRET:?defina JWT_SECRET}
+  JWT_ACCESS_EXP: ${JWT_ACCESS_EXP:-15}
+  JWT_REFRESH_EXP: ${JWT_REFRESH_EXP:-10080}
+  CERTIFICATE_ENCRYPTION_KEY: ${CERTIFICATE_ENCRYPTION_KEY:?defina CERTIFICATE_ENCRYPTION_KEY}
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-erp_system}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-erp_system}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api-auth:
+    build: { context: .., dockerfile: deploy/Dockerfile.backend, args: { SERVICE: api.auth } }
+    restart: unless-stopped
+    environment: *backend-env
+    depends_on: { postgres: { condition: service_healthy } }
+
+  api-core:
+    build: { context: .., dockerfile: deploy/Dockerfile.backend, args: { SERVICE: api.core } }
+    restart: unless-stopped
+    environment: *backend-env
+    depends_on: { postgres: { condition: service_healthy } }
+
+  api-integrations:
+    profiles: ["integrations"]   # desligado por padrão: depende do SQL Server legado
+    build: { context: .., dockerfile: deploy/Dockerfile.backend, args: { SERVICE: api.integrations } }
+    restart: unless-stopped
+    environment:
+      <<: *backend-env
+      MSSQL_HOST: ${MSSQL_HOST:-}
+      MSSQL_PORT: ${MSSQL_PORT:-1433}
+      MSSQL_USER: ${MSSQL_USER:-}
+      MSSQL_PASSWORD: ${MSSQL_PASSWORD:-}
+      MSSQL_NAME: ${MSSQL_NAME:-FOCCO_ERP}
+    depends_on: { postgres: { condition: service_healthy } }
+
+  gateway:
+    build: { context: .., dockerfile: deploy/Dockerfile.backend, args: { SERVICE: api.gateway } }
+    restart: unless-stopped
+    environment:
+      <<: *backend-env
+      AUTH_SERVICE_URL: http://api-auth:4001
+      CORE_SERVICE_URL: http://api-core:4002
+      INTEGRATIONS_SERVICE_URL: http://api-integrations:4007
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:?defina CORS_ALLOWED_ORIGINS}
+    depends_on: [api-auth, api-core]
+
+  web:
+    build: { context: .., dockerfile: deploy/Dockerfile.frontend }
+    restart: unless-stopped
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy_data:/data
+    depends_on: [gateway]
+
+volumes:
+  postgres_data:
+  caddy_data:

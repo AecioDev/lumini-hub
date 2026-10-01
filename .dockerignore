@@ -1,0 +1,5 @@
+**/node_modules
+Frontend/dist
+Backend/bin
+Backend/.env
+.git
