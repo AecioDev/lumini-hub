@@ -6,13 +6,13 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlserver"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 )
 
-// InitDB inicializa e retorna a conexão GORM com o banco de dados
+// InitDB inicializa e retorna a conexão GORM com o banco de dados.
+// O nível do log depende de APP_ENV (ver newLogger).
 func InitDB(cfg *config.Config) (*gorm.DB, error) {
 	db, err := gorm.Open(postgres.Open(cfg.Database.DSN()), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info), // Habilitar logs lógicos para desenvolvimento
+		Logger: newLogger(cfg.App.Env, nil),
 	})
 	if err != nil {
 		return nil, err
@@ -21,10 +21,11 @@ func InitDB(cfg *config.Config) (*gorm.DB, error) {
 	return db, nil
 }
 
-// InitSQLServerDB inicializa e retorna a conexão GORM com o SQL Server
+// InitSQLServerDB inicializa e retorna a conexão GORM com o SQL Server.
+// O nível do log depende de APP_ENV (ver newLogger).
 func InitSQLServerDB(cfg *config.Config) (*gorm.DB, error) {
 	db, err := gorm.Open(sqlserver.Open(cfg.SQLServer.DSN()), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info), // Habilitar logs lógicos para desenvolvimento
+		Logger: newLogger(cfg.App.Env, nil),
 	})
 	if err != nil {
 		return nil, err
