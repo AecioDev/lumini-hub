@@ -32,3 +32,11 @@ docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env up -d --
 - `api.integrations` fora do ar neste ambiente.
 - A senha do `admin` e o `deploy/.env` existem só na VM.
 - Chave SSH movida do OneDrive para `C:\Users\espir\.ssh\` (estava sincronizando na nuvem).
+
+## Atualização (CFG-9.5.3)
+
+O schema e o catálogo provisórios (`deploy/db/01_schema.sql` e `02_catalog.sql`) foram **removidos**: os
+serviços agora criam as tabelas sozinhos (`DB_AUTO_MIGRATE`) e o `api.auth` semeia o catálogo, o perfil ADMIN
+e o admin inicial (`BOOTSTRAP_ADMIN_*`). O compose deixou de montar `deploy/db` e passou a repassar
+`DB_AUTO_MIGRATE` e `BOOTSTRAP_ADMIN_*`. O roteiro de primeiro acesso está em `deploy/README.md`.
+A pendência "tabelas centrais sem AutoMigrate" desta nota foi resolvida pelo EPIC CFG-9.

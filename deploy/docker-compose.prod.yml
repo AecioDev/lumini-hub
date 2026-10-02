@@ -14,6 +14,9 @@ x-backend-env: &backend-env
   JWT_ACCESS_EXP: ${JWT_ACCESS_EXP:-15}
   JWT_REFRESH_EXP: ${JWT_REFRESH_EXP:-10080}
   CERTIFICATE_ENCRYPTION_KEY: ${CERTIFICATE_ENCRYPTION_KEY:?defina CERTIFICATE_ENCRYPTION_KEY}
+  # true (padrão): os serviços criam as tabelas e o api.auth semeia o catálogo, o menu e o admin
+  # inicial num banco vazio. false: nada é migrado nem semeado (ver deploy/README.md).
+  DB_AUTO_MIGRATE: ${DB_AUTO_MIGRATE:-true}
 
 services:
   postgres:
@@ -25,8 +28,6 @@ services:
       POSTGRES_DB: ${DB_NAME:-erp_system}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      # Roda só no primeiro start, com o volume vazio: schema + catálogo de perfis/permissões
-      - ./db:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-erp_system}"]
       interval: 5s
@@ -36,7 +37,12 @@ services:
   api-auth:
     build: { context: .., dockerfile: deploy/Dockerfile.backend, args: { SERVICE: api.auth } }
     restart: unless-stopped
-    environment: *backend-env
+    environment:
+      <<: *backend-env
+      # Primeiro usuário ADMIN: só é criado no 1º boot (banco sem usuários) e só com a senha definida.
+      BOOTSTRAP_ADMIN_USERNAME: ${BOOTSTRAP_ADMIN_USERNAME:-admin}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-}
     depends_on: { postgres: { condition: service_healthy } }
 
   api-core:
