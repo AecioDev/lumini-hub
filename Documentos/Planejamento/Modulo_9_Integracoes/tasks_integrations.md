@@ -1,5 +1,7 @@
 # Tasks - api.integrations (Fase 1: Estrutura, Conexões e Gateway)
 
+> **MÓDULO PAUSADO (2026-10-01), decisão do usuário.** O Módulo 9 fica pausado/descontinuado neste repositório por tempo indeterminado. O acesso ao banco legado SQL Server virá de uma **aplicação separada**, criada e executada pelo usuário direto no servidor do legado do cliente; mais adiante ele pode aproveitar aquele trabalho para migrar para cá. A Fase 1 (abaixo) continua no código, sem ser evoluída agora. **A Fase 2 / EPIC INT-1 está pausada: nenhuma tarefa deve ser iniciada nem recomendada como "próxima"**. Nada foi apagado; o histórico e as decisões abaixo ficam preservados para uma eventual retomada.
+
 Acompanhamento da Fase 1 do `api.integrations` (porta 4007), conforme `Documentos/Diversos/Lumini Hub Project Initiation.md` e o plano registrado no `CLAUDE.md`.
 
 ## Backend
@@ -34,7 +36,7 @@ Prefixo `INT` (Módulo 9 — Integrações). Convenção de IDs/tags conforme `.
 
 ### EPIC INT-1: Fase 2 — Integração real com a Loja Integrada
 
-- [ ] [BACKLOG] **EPIC INT-1**: Torna o `api.integrations` funcional de ponta a ponta — autenticação via Personal Token, recepção e processamento de webhooks de Pedido (criação de nota no legado, reserva/devolução de estoque, pré-venda pendente de faturamento), e o sincronismo de produtos/preço do legado pra Loja Integrada via polling do `LogAltera`. Ver `plano_integrations.md` § "🔌 Fase 2" pra todo o levantamento e trade-offs. Duas facetas ficam deliberadamente incompletas dentro deste Épico por dependerem de decisão do cliente/diretoria (não é esquecimento): o valor de estoque enviado à LI (INT-1.5.6) e a automação pós-pré-venda-paga (nota fiscal/despacho, mencionada como observação em INT-1.4.3) — ver `plano_integrations.md` § "Pendências em aberto".
+- [ ] [BACKLOG] **EPIC INT-1** (**PAUSADO em 2026-10-01**: módulo 9 pausado por decisão do usuário, acesso ao legado virá de aplicação separada no servidor do cliente; tags dos filhos inalteradas, não recomendar nenhuma): Torna o `api.integrations` funcional de ponta a ponta — autenticação via Personal Token, recepção e processamento de webhooks de Pedido (criação de nota no legado, reserva/devolução de estoque, pré-venda pendente de faturamento), e o sincronismo de produtos/preço do legado pra Loja Integrada via polling do `LogAltera`. Ver `plano_integrations.md` § "🔌 Fase 2" pra todo o levantamento e trade-offs. Duas facetas ficam deliberadamente incompletas dentro deste Épico por dependerem de decisão do cliente/diretoria (não é esquecimento): o valor de estoque enviado à LI (INT-1.5.6) e a automação pós-pré-venda-paga (nota fiscal/despacho, mencionada como observação em INT-1.4.3) — ver `plano_integrations.md` § "Pendências em aberto".
 
 #### PBI INT-1.1: Reformular `IntegrationConfig` e a tela de Configurações → Integrações pra Fase 2
 

@@ -1,5 +1,7 @@
 # Módulo 9 - Integrações (Loja Integrada ↔ SQL Server Legado)
 
+> **MÓDULO PAUSADO (2026-10-01), decisão do usuário.** Este módulo fica pausado/descontinuado neste repositório por tempo indeterminado. Motivo: o acesso ao banco legado SQL Server virá de uma **aplicação separada**, que o usuário criará e rodará direto no servidor do legado do cliente; mais adiante ele pode aproveitar aquele trabalho para migrar para cá. A **Fase 1 já implementada permanece no código**, apenas não será evoluída agora. A **Fase 2 (EPIC INT-1)** está pausada: todo o escopo, levantamento e decisões abaixo ficam preservados, sem alteração, para uma eventual retomada.
+
 Este módulo cobre o `api.integrations` (porta 4007) — middleware de sincronismo bidirecional entre a **Loja Integrada** (e-commerce) e o **SQL Server** legado do cliente (`FOCCO_ERP`), que o Lumini Hub está substituindo aos poucos.
 
 > **Separado do CRM em 2026-09-13**: até então vivia junto do `api.crm` num único `Modulo_1_CRM_Integracoes`, por prioridade da época — mas Integrações é um microsserviço à parte, já com Fase 1 implementada e rodando, sem relação de código com o CRM. Ver `Modulo_1_CRM/plano_crm.md` pro CRM. O detalhe técnico completo (schema legado, endpoints, fluxo de estoque Oficial → Reserva → cliente) continua documentado em `CLAUDE.md` § "Legacy SQL Server Integration" — este arquivo não duplica, só referencia e complementa com o que falta.
