@@ -33,11 +33,26 @@ func main() {
 	}
 	middlewares.InitPermissionChecker(db)
 
-	// Migração pontual da tabela de empresas (demais tabelas do api.core --
-	// Customer/Supplier -- não usam AutoMigrate hoje; escopo restrito só a
-	// esta struct nova, mesmo padrão já usado em api.auth pro MenuItem)
-	if err := db.AutoMigrate(&domain.Company{}, &domain.CompanyFiscalConfig{}); err != nil {
-		log.Fatalf("Erro ao migrar tabela de empresas: %v", err)
+	// AutoMigrate das tabelas do api.core (DB_AUTO_MIGRATE, ligado por padrão pra
+	// um banco vazio subir sozinho; em produção com dados reais, desligar).
+	// Ordem de dependência: Country > State > City; Customer e Supplier antes de
+	// Address/Document/Contact (FK customer_id/supplier_id); Address depende de
+	// City e Document de State. Company e CompanyFiscalConfig não dependem dos demais.
+	if cfg.Database.AutoMigrate {
+		if err := db.AutoMigrate(
+			&domain.Company{},
+			&domain.CompanyFiscalConfig{},
+			&domain.Country{},
+			&domain.State{},
+			&domain.City{},
+			&domain.Customer{},
+			&domain.Supplier{},
+			&domain.Address{},
+			&domain.Document{},
+			&domain.Contact{},
+		); err != nil {
+			log.Fatalf("Erro ao migrar tabelas do api.core: %v", err)
+		}
 	}
 
 	// Configurar engine do Gin
