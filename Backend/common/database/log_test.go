@@ -83,6 +83,8 @@ func TestNewLogger_DevelopmentMostraOsValoresMesmoNoScan(t *testing.T) {
 // carregar o valor do parâmetro. Precisa de TEST_DATABASE_URL; pula sem ela.
 func TestNewLogger_ErroEmProducaoNaoVazaValorDoParametro(t *testing.T) {
 	db := testutil.OpenTestDB(t)
+	// newLogger muda um filtro GLOBAL do GORM: devolve o padrão pro próximo teste
+	t.Cleanup(func() { logger.RecorderParamsFilter = defaultRecorderParamsFilter })
 
 	var buf bytes.Buffer
 	quiet := db.Session(&gorm.Session{Logger: newLogger("production", &buf)})
