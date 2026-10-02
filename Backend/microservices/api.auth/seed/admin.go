@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"unicode/utf8"
 
 	"lumini-hub/api.auth/internal/domain"
 	"lumini-hub/common/utils"
@@ -16,10 +17,13 @@ import (
 const (
 	// AdminName é o nome de exibição do usuário admin inicial.
 	AdminName = "Administrador"
-	// MinAdminPasswordLength é o tamanho mínimo da senha do admin inicial. Maior que o
-	// mínimo da API de usuários (6) de propósito: este usuário nasce com perfil ADMIN,
-	// num servidor que pode estar exposto na internet.
+	// MinAdminPasswordLength é o tamanho mínimo (em caracteres) da senha do admin inicial.
+	// Maior que o mínimo da API de usuários (6) de propósito: este usuário nasce com perfil
+	// ADMIN, num servidor que pode estar exposto na internet.
 	MinAdminPasswordLength = 8
+	// MaxAdminPasswordBytes é o limite do bcrypt: senha maior é recusada (o bcrypt moderno
+	// devolve erro em vez de truncar em silêncio).
+	MaxAdminPasswordBytes = 72
 	// defaultEmailDomain completa o e-mail do admin quando BOOTSTRAP_ADMIN_EMAIL não vem:
 	// users.email é unique, então "" duplicaria assim que outro usuário sem e-mail existisse.
 	defaultEmailDomain = "@lumini.local"
@@ -66,8 +70,11 @@ func BootstrapAdmin(db *gorm.DB, in AdminBootstrap) (bool, error) {
 			log.Printf("[api.auth] BOOTSTRAP_ADMIN_PASSWORD não definida: o admin inicial não foi criado")
 			return nil
 		}
-		if len(in.Password) < MinAdminPasswordLength {
+		if utf8.RuneCountInString(in.Password) < MinAdminPasswordLength {
 			return fmt.Errorf("BOOTSTRAP_ADMIN_PASSWORD curta demais: mínimo de %d caracteres", MinAdminPasswordLength)
+		}
+		if len(in.Password) > MaxAdminPasswordBytes {
+			return fmt.Errorf("BOOTSTRAP_ADMIN_PASSWORD longa demais: máximo de %d bytes (limite do bcrypt)", MaxAdminPasswordBytes)
 		}
 		username := strings.TrimSpace(in.Username)
 		if username == "" {

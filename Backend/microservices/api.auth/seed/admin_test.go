@@ -192,6 +192,41 @@ func TestBootstrapAdmin_ErrosDeConfiguracaoNaoVazamSenha(t *testing.T) {
 		}
 	})
 
+	// 4 letras acentuadas somam 8 bytes, mas são só 4 caracteres: o mínimo conta caracteres
+	t.Run("acentuada curta: o mínimo conta caracteres, não bytes", func(t *testing.T) {
+		db := newAdminTestDB(t)
+		in := input()
+		in.Password = "áéíó"
+		if created, err := BootstrapAdmin(db, in); err == nil || created {
+			t.Errorf("created=%v err=%v, esperado erro de senha curta", created, err)
+		}
+	})
+
+	t.Run("acentuada com 8 caracteres é aceita", func(t *testing.T) {
+		db := newAdminTestDB(t)
+		in := input()
+		in.Password = "áéíóúãõç" // 8 caracteres, 16 bytes
+		if created, err := BootstrapAdmin(db, in); err != nil || !created {
+			t.Errorf("created=%v err=%v, esperado criar", created, err)
+		}
+	})
+
+	t.Run("senha acima do limite do bcrypt", func(t *testing.T) {
+		db := newAdminTestDB(t)
+		in := input()
+		in.Password = strings.Repeat("a", MaxAdminPasswordBytes+1)
+		created, err := BootstrapAdmin(db, in)
+		if err == nil || created {
+			t.Fatalf("created=%v err=%v, esperado erro de senha longa", created, err)
+		}
+		if !strings.Contains(err.Error(), "longa demais") {
+			t.Errorf("mensagem pouco clara: %v", err)
+		}
+		if strings.Contains(err.Error(), in.Password) {
+			t.Errorf("o erro vazou a senha")
+		}
+	})
+
 	t.Run("sem a role ADMIN", func(t *testing.T) {
 		db := testutil.OpenTestDB(t)
 		if err := db.AutoMigrate(&domain.Permission{}, &domain.Role{}, &domain.User{}); err != nil {
