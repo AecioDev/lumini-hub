@@ -112,6 +112,28 @@ func TestPrepareDatabase_BancoVazioSobeSozinhoEEhIdempotente(t *testing.T) {
 	}
 }
 
+// O ADMIN é dono do catálogo de perfis: o menu "Perfis e Permissões" tem que nascer ligado a
+// roles.view (como no banco de dev), e não a admin.create_permissions, que é só do DEVELOP.
+// Um banco semeado do zero com o vínculo errado esconde o menu do ADMIN.
+func TestPrepareDatabase_MenuDeRolesNasceComRolesView(t *testing.T) {
+	db := testutil.OpenTestDB(t)
+	cfg := &config.Config{}
+	cfg.Database.AutoMigrate = true
+	if err := prepareDatabase(db, cfg); err != nil {
+		t.Fatal(err)
+	}
+
+	var code string
+	err := db.Raw(`SELECT p.permission FROM menu_items m JOIN permissions p ON p.id = m.permission_id
+		WHERE m.href = '/settings/roles' AND m.deleted_at IS NULL`).Scan(&code).Error
+	if err != nil {
+		t.Fatal(err)
+	}
+	if code != "roles.view" {
+		t.Errorf("o menu /settings/roles exige %q, esperado roles.view", code)
+	}
+}
+
 func TestPrepareDatabase_CriaAdminInicialSoUmaVezESoComSenha(t *testing.T) {
 	const password = "SenhaForte-2026"
 

@@ -97,7 +97,7 @@ var menuItemSeedTree = []menuItemSeed{
 		Children: []menuItemSeed{
 			{Name: "Empresas", Icon: "ph:buildings", Href: "/settings/companies", PermissionCode: "companies.view"},
 			{Name: "Usuários", Icon: "ph:user-circle", Href: "/settings/users", PermissionCode: "users.view"},
-			{Name: "Perfis e Permissões", Icon: "ph:shield-check", Href: "/settings/roles", PermissionCode: "admin.create_permissions"},
+			{Name: "Perfis e Permissões", Icon: "ph:shield-check", Href: "/settings/roles", PermissionCode: "roles.view"},
 			{Name: "Integrações", Icon: "ph:arrows-clockwise", Href: "/settings/integrations", PermissionCode: "integrations.view"},
 		},
 	},
