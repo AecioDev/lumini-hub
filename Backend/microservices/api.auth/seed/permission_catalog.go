@@ -7,11 +7,14 @@ type PermissionSeed struct {
 	Module      string
 }
 
-// PermissionCatalog é a fonte única, em código, das permissões do sistema
-// (as mesmas que o código referencia em RequirePermission("...") e que o menu
-// usa). Transcrito 1:1 do banco de desenvolvimento em 2026-10-01, sem renomear
-// nada — a limpeza de nomes/módulos é tarefa separada. O seed só ADICIONA
-// entradas ausentes; nunca altera nem apaga uma permissão já existente.
+// PermissionCatalog é a fonte única, em código, do catálogo de permissões.
+// Transcrito 1:1 do banco de desenvolvimento em 2026-10-01, sem renomear nada —
+// a limpeza de nomes/módulos é tarefa separada. Todo PermissionCode do menu
+// está aqui, MAS nem toda permissão exigida por RequirePermission("...") está:
+// faltam customers.create/edit/delete, suppliers.view/create/edit/delete e
+// integrations.edit (nunca foram cadastradas no dev). Até entrarem aqui, essas
+// rotas só funcionam para ADMIN/DEVELOP (bypass). O seed só ADICIONA entradas
+// ausentes; nunca altera nem apaga uma permissão já existente.
 var PermissionCatalog = []PermissionSeed{
 	// Admin
 	{Permission: "dashboard.admin.view", Description: "Visualizar o dashboard do administrador", Module: "Admin"},
