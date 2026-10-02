@@ -25,6 +25,10 @@ interface AuthContextValue {
   logout: () => Promise<void>;
   hasPermission: (permissionCode: string) => boolean;
   setActiveCompany: (companyId: number) => Promise<void>;
+  // Recarrega o usuário logado (GET /auth/me) — usado quando algo que muda
+  // `visible_companies`/empresa ativa acontece sem passar pelo login (ex.: o
+  // admin cadastra a primeira empresa direto do CompanySelectionGate).
+  refreshUser: () => Promise<ApiUserDetail>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -90,6 +94,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(updatedUser);
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    const refreshedUser = await authService.me();
+    setUser(refreshedUser);
+    return refreshedUser;
+  }, []);
+
   const isAdmin = user?.role?.name?.toUpperCase() === "ADMIN";
   const isDeveloper = user?.role?.name === "DEVELOP";
 
@@ -113,8 +123,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout,
       hasPermission,
       setActiveCompany,
+      refreshUser,
     }),
-    [user, isBootstrapping, isDeveloper, login, logout, hasPermission, setActiveCompany]
+    [user, isBootstrapping, isDeveloper, login, logout, hasPermission, setActiveCompany, refreshUser]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

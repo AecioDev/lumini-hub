@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import { Alert, Button, Card, Select, Typography } from "antd";
 import { CHROME_BG } from "@/theme/antd-theme";
 import { useThemeMode } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCreateCompany } from "@/hooks/useCreateCompany";
+import { CompanyForm } from "@/components/companies/forms/CompanyForm";
 import { Logo } from "@/components/layout/Logo";
 
 const { Text } = Typography;
@@ -20,15 +22,33 @@ const { Text } = Typography;
 // permission ficaria preso aqui pra sempre (esta tela bloqueia qualquer
 // rota até a escolha ser feita, sem saída visível) se dependesse dela —
 // mesmo bug já corrigido no ActiveCompanySwitcher.tsx, replicado aqui.
+//
+// Primeiro acesso (CFG-8.1.3): com ZERO empresas cadastradas não há o que
+// escolher, e o cadastro em /settings/companies fica atrás deste mesmo Gate.
+// Por isso, quem tem companies.create ganha o botão "Cadastrar Empresa", que
+// troca o seletor pelo CompanyForm aqui dentro (estado local, sem rota). Ao
+// salvar, refreshUser() recarrega o /me e o backend, vendo exatamente 1
+// empresa ativa, já a devolve como ativa — o Gate some sozinho. Sem a
+// permission, o usuário só vê a orientação de procurar um administrador.
 export function CompanySelectionGate() {
   const { mode } = useThemeMode();
-  const { user, setActiveCompany } = useAuth();
+  const { user, setActiveCompany, refreshUser, hasPermission, logout } = useAuth();
 
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
 
   const companies = user?.visible_companies ?? [];
+  const hasNoCompanies = companies.length === 0;
+  const canCreateCompany = hasNoCompanies && hasPermission("companies.create");
+
+  // O hook já trata a falha deste callback com mensagem própria.
+  const handleCompanyCreated = useCallback(async () => {
+    await refreshUser();
+  }, [refreshUser]);
+  const { submit: createCompany, submitting: creatingCompany } =
+    useCreateCompany(handleCompanyCreated);
 
   const handleConfirm = async () => {
     if (!selectedId) return;
@@ -43,7 +63,11 @@ export function CompanySelectionGate() {
     }
   };
 
-  return (
+  const handleLogout = () => {
+    logout().catch(() => undefined);
+  };
+
+  const shell = (children: ReactNode) => (
     <div
       style={{
         minHeight: "100vh",
@@ -51,47 +75,112 @@ export function CompanySelectionGate() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        padding: 24,
         background: CHROME_BG[mode],
       }}
     >
-      <Card
-        style={{ width: 420, borderRadius: 12, boxShadow: "0 8px 32px rgba(0,0,0,0.2)" }}
-        styles={{ body: { padding: 40 } }}
-      >
-        <div style={{ marginBottom: 24 }}>
+      {children}
+    </div>
+  );
+
+  if (creating) {
+    return shell(
+      <div style={{ width: "100%", maxWidth: 600 }}>
+        <div style={{ marginBottom: 24, display: "flex", justifyContent: "center" }}>
           <Logo />
         </div>
-
-        <Text strong style={{ display: "block", fontSize: 16, marginBottom: 4 }}>
-          Escolha uma empresa
+        <Text strong style={{ display: "block", fontSize: 16, marginBottom: 4, textAlign: "center" }}>
+          Cadastre sua empresa
         </Text>
-        <Text type="secondary" style={{ display: "block", marginBottom: 20 }}>
-          Selecione com qual empresa você deseja trabalhar nesta sessão.
-        </Text>
-
-        <Select
-          style={{ width: "100%", marginBottom: 16 }}
-          placeholder="Selecione uma empresa"
-          value={selectedId ?? undefined}
-          onChange={setSelectedId}
-          options={companies.map((company) => ({
-            value: company.id,
-            label: company.name,
-          }))}
-        />
-
-        {error && <Alert type="error" message={error} showIcon style={{ marginBottom: 16 }} />}
-
-        <Button
-          type="primary"
-          block
-          disabled={!selectedId}
-          loading={submitting}
-          onClick={() => void handleConfirm()}
+        <Text
+          type="secondary"
+          style={{ display: "block", marginBottom: 20, textAlign: "center" }}
         >
-          Continuar
+          Informe os dados da empresa para começar a usar o sistema.
+        </Text>
+        <CompanyForm
+          submitting={creatingCompany}
+          submitLabel="Cadastrar Empresa"
+          onSubmit={(values) => void createCompany(values)}
+          onCancel={() => setCreating(false)}
+        />
+        <Button type="link" block style={{ marginTop: 12 }} onClick={handleLogout}>
+          Sair
         </Button>
-      </Card>
-    </div>
+      </div>
+    );
+  }
+
+  return shell(
+    <Card
+      style={{ width: 420, borderRadius: 12, boxShadow: "0 8px 32px rgba(0,0,0,0.2)" }}
+      styles={{ body: { padding: 40 } }}
+    >
+      <div style={{ marginBottom: 24 }}>
+        <Logo />
+      </div>
+
+      {hasNoCompanies ? (
+        <>
+          <Text strong style={{ display: "block", fontSize: 16, marginBottom: 4 }}>
+            Nenhuma empresa cadastrada
+          </Text>
+          <Text type="secondary" style={{ display: "block", marginBottom: 20 }}>
+            {canCreateCompany
+              ? "Cadastre a empresa para começar a usar o sistema."
+              : "Peça a um administrador para cadastrar a empresa."}
+          </Text>
+          {canCreateCompany && (
+            <Button
+              type="primary"
+              block
+              style={{ marginBottom: 12 }}
+              onClick={() => setCreating(true)}
+            >
+              Cadastrar Empresa
+            </Button>
+          )}
+          <Button block onClick={handleLogout}>
+            Sair
+          </Button>
+        </>
+      ) : (
+        <>
+          <Text strong style={{ display: "block", fontSize: 16, marginBottom: 4 }}>
+            Escolha uma empresa
+          </Text>
+          <Text type="secondary" style={{ display: "block", marginBottom: 20 }}>
+            Selecione com qual empresa você deseja trabalhar nesta sessão.
+          </Text>
+
+          <Select
+            style={{ width: "100%", marginBottom: 16 }}
+            placeholder="Selecione uma empresa"
+            value={selectedId ?? undefined}
+            onChange={setSelectedId}
+            options={companies.map((company) => ({
+              value: company.id,
+              label: company.name,
+            }))}
+          />
+
+          {error && <Alert type="error" message={error} showIcon style={{ marginBottom: 16 }} />}
+
+          <Button
+            type="primary"
+            block
+            disabled={!selectedId}
+            loading={submitting}
+            onClick={() => void handleConfirm()}
+          >
+            Continuar
+          </Button>
+
+          <Button type="link" block style={{ marginTop: 12 }} onClick={handleLogout}>
+            Sair
+          </Button>
+        </>
+      )}
+    </Card>
   );
 }
