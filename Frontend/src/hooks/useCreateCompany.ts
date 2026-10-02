@@ -23,10 +23,23 @@ export function useCreateCompany(onSuccess: () => void | Promise<void>) {
           trade_name: values.trade_name,
           cnpj: values.cnpj ?? "",
         });
-        feedback.success("Empresa criada com sucesso.");
-        await onSuccess();
       } catch (error) {
         feedback.error(getApiErrorMessage(error, "Erro ao criar empresa."));
+        setSubmitting(false);
+        return;
+      }
+
+      // A empresa já existe a partir daqui: uma falha do `onSuccess` (ex.:
+      // refreshUser do Gate) não pode virar "Erro ao criar empresa" — o
+      // usuário tentaria recriar e esbarraria no CNPJ duplicado.
+      feedback.success("Empresa criada com sucesso.");
+      try {
+        await onSuccess();
+      } catch {
+        feedback.error(
+          "A empresa foi criada, mas não foi possível continuar. Recarregue a página.",
+          "Atenção"
+        );
       } finally {
         setSubmitting(false);
       }
