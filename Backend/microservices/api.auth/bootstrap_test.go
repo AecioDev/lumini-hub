@@ -112,6 +112,60 @@ func TestPrepareDatabase_BancoVazioSobeSozinhoEEhIdempotente(t *testing.T) {
 	}
 }
 
+func TestPrepareDatabase_CriaAdminInicialSoUmaVezESoComSenha(t *testing.T) {
+	const password = "SenhaForte-2026"
+
+	t.Run("com senha: nasce no 1º boot e o 2º não duplica", func(t *testing.T) {
+		db := testutil.OpenTestDB(t)
+		cfg := &config.Config{}
+		cfg.Database.AutoMigrate = true
+		cfg.Bootstrap = config.BootstrapAdminConfig{Username: "admin", Password: password}
+		logs := capturaLog(t)
+
+		for boot := 1; boot <= 2; boot++ {
+			if err := prepareDatabase(db, cfg); err != nil {
+				t.Fatalf("%dº boot: %v", boot, err)
+			}
+			if got := takeBoot(t, db); got.users != 1 {
+				t.Fatalf("%dº boot: %d usuários, esperado 1", boot, got.users)
+			}
+		}
+		var roleName string
+		err := db.Raw("SELECT r.name FROM users u JOIN roles r ON r.id = u.role_id WHERE u.username = 'admin'").Scan(&roleName).Error
+		if err != nil || roleName != seed.AdminRoleName {
+			t.Errorf("perfil do admin = %q (err=%v), esperado %s", roleName, err, seed.AdminRoleName)
+		}
+		if strings.Contains(logs.String(), password) {
+			t.Errorf("a senha apareceu no log do boot: %s", logs.String())
+		}
+	})
+
+	t.Run("sem senha: o boot funciona e não cria usuário", func(t *testing.T) {
+		db := testutil.OpenTestDB(t)
+		cfg := &config.Config{}
+		cfg.Database.AutoMigrate = true
+		if err := prepareDatabase(db, cfg); err != nil {
+			t.Fatal(err)
+		}
+		if got := takeBoot(t, db); got.users != 0 {
+			t.Errorf("criou %d usuários sem BOOTSTRAP_ADMIN_PASSWORD", got.users)
+		}
+	})
+
+	t.Run("flag desligada: não cria nem o usuário", func(t *testing.T) {
+		db := testutil.OpenTestDB(t)
+		cfg := &config.Config{}
+		cfg.Database.AutoMigrate = false
+		cfg.Bootstrap = config.BootstrapAdminConfig{Username: "admin", Password: password}
+		if err := prepareDatabase(db, cfg); err != nil {
+			t.Fatal(err)
+		}
+		if n := tableCount(t, db); n != 0 {
+			t.Errorf("a flag desligada criou %d tabelas", n)
+		}
+	})
+}
+
 func TestPrepareDatabase_FlagDesligadaEmBancoPopuladoNaoMexeEmNada(t *testing.T) {
 	db := testutil.OpenTestDB(t)
 	cfg := &config.Config{}

@@ -86,6 +86,14 @@ type BootstrapAdminConfig struct {
 	Email    string
 }
 
+// String e GoString omitem a senha, pra BOOTSTRAP_ADMIN_PASSWORD não vazar se alguém
+// imprimir o Config (ou este campo) com %v, %+v ou %#v.
+func (b BootstrapAdminConfig) String() string {
+	return fmt.Sprintf("{Username:%s Email:%s Password:<omitida>}", b.Username, b.Email)
+}
+
+func (b BootstrapAdminConfig) GoString() string { return b.String() }
+
 // Load carrega as configurações do ambiente
 func Load() (*Config, error) {
 	// Carregar variáveis de ambiente do arquivo .env se existir

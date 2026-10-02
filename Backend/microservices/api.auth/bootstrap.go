@@ -23,7 +23,9 @@ import (
 //     criadas pelo GORM a partir dos many2many) e de MenuItem (FK permission_id).
 //  2. seed.SyncCatalog: catálogo de permissões + role ADMIN (permissão nova no
 //     código entra na tabela e no ADMIN no boot seguinte).
-//  3. seeder.SeedMenuItems: depois do catálogo, porque o menu referencia as
+//  3. seed.BootstrapAdmin: o primeiro usuário ADMIN, a partir de BOOTSTRAP_ADMIN_*, só
+//     com a tabela users vazia e depois do SyncCatalog (a role ADMIN precisa existir).
+//  4. seeder.SeedMenuItems: depois do catálogo, porque o menu referencia as
 //     permissões pelo código; com elas ausentes o item nasceria sem permissão
 //     própria, e isso nunca é corrigido depois (itens existentes são pulados).
 func prepareDatabase(db *gorm.DB, cfg *config.Config) error {
@@ -41,6 +43,13 @@ func prepareDatabase(db *gorm.DB, cfg *config.Config) error {
 	}
 	if err := seed.SyncCatalog(db); err != nil {
 		return fmt.Errorf("semeando permissões e a role %s: %w", seed.AdminRoleName, err)
+	}
+	if _, err := seed.BootstrapAdmin(db, seed.AdminBootstrap{
+		Username: cfg.Bootstrap.Username,
+		Password: cfg.Bootstrap.Password,
+		Email:    cfg.Bootstrap.Email,
+	}); err != nil {
+		return fmt.Errorf("criando o admin inicial: %w", err)
 	}
 	if err := seeder.SeedMenuItems(db); err != nil {
 		return fmt.Errorf("semeando itens de menu: %w", err)
