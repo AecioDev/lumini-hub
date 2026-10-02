@@ -33,10 +33,20 @@ func main() {
 	}
 	middlewares.InitPermissionChecker(db)
 
-	// Migração pontual da tabela de itens de menu (demais tabelas do api.auth
-	// não usam AutoMigrate hoje; escopo restrito só a esta struct nova)
-	if err := db.AutoMigrate(&domain.MenuItem{}); err != nil {
-		log.Fatalf("Erro ao migrar tabela de itens de menu: %v", err)
+	// AutoMigrate das tabelas do api.auth (DB_AUTO_MIGRATE, ligado por padrão pra
+	// um banco vazio subir sozinho; em produção com dados reais, desligar).
+	// Ordem de dependência: Permission e Role antes de User (FK role_id e as
+	// tabelas de junção role_permissions/user_permissions, criadas pelo GORM a
+	// partir dos many2many) e de MenuItem (FK permission_id).
+	if cfg.Database.AutoMigrate {
+		if err := db.AutoMigrate(
+			&domain.Permission{},
+			&domain.Role{},
+			&domain.User{},
+			&domain.MenuItem{},
+		); err != nil {
+			log.Fatalf("Erro ao migrar tabelas do api.auth: %v", err)
+		}
 	}
 	if err := seeder.SeedMenuItems(db); err != nil {
 		log.Fatalf("Erro ao semear itens de menu: %v", err)

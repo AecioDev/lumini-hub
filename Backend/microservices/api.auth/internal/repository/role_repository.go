@@ -130,6 +130,6 @@ func (r *GormRoleRepository) UpdatePermissions(role *domain.Role, permissionIDs 
 // CountByPermissionID conta quantos Papeis estão usando uma determinada permissão
 func (r *GormRoleRepository) CountByPermissionID(permissionID uint) (int64, error) {
 	var count int64
-	err := r.GetDB().Model(&domain.RolePermissions{}).Where("permission_id = ?", permissionID).Count(&count).Error
+	err := r.GetDB().Table("role_permissions").Where("permission_id = ?", permissionID).Count(&count).Error
 	return count, err
 }
