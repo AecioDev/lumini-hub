@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -17,6 +18,7 @@ type Config struct {
 	SQLServer SQLServerConfig
 	JWT       JWTConfig
 	Security  SecurityConfig
+	Bootstrap BootstrapAdminConfig
 	App       AppConfig
 }
 
@@ -42,6 +44,10 @@ type DatabaseConfig struct {
 	DBName       string
 	SSLMode      string
 	DatabaseLink string
+	// AutoMigrate liga/desliga o AutoMigrate dos serviços ao subir (DB_AUTO_MIGRATE).
+	// Ligado por padrão pra um banco vazio subir sozinho; em produção com dados
+	// reais o operador desliga explicitamente (DB_AUTO_MIGRATE=false).
+	AutoMigrate bool
 }
 
 // SQLServerConfig armazena configurações do banco de dados SQL Server
@@ -70,6 +76,16 @@ type SecurityConfig struct {
 	CertificateEncryptionKey string
 }
 
+// BootstrapAdminConfig armazena as credenciais do primeiro usuário ADMIN, criado
+// só no primeiro boot (banco sem usuários). Transitório: no multi-tenant quem
+// provisiona o primeiro admin é o app comercial. Não há senha default de
+// propósito — sem BOOTSTRAP_ADMIN_PASSWORD o admin simplesmente não é criado.
+type BootstrapAdminConfig struct {
+	Username string
+	Password string
+	Email    string
+}
+
 // Load carrega as configurações do ambiente
 func Load() (*Config, error) {
 	// Carregar variáveis de ambiente do arquivo .env se existir
@@ -93,6 +109,10 @@ func Load() (*Config, error) {
 	dbName := getEnv("DB_NAME", "erp_system")
 	dbSSLMode := getEnv("DB_SSLMODE", "disable")
 	dbLink := getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/erp_system?sslmode=disable")
+	dbAutoMigrate, err := getEnvBool("DB_AUTO_MIGRATE", true)
+	if err != nil {
+		return nil, err
+	}
 
 	// Configurações do SQL Server
 	mssqlHost := getEnv("MSSQL_HOST", "localhost")
@@ -108,6 +128,13 @@ func Load() (*Config, error) {
 
 	// Chave de criptografia de dados sensíveis reversíveis
 	certificateEncryptionKey := getEnv("CERTIFICATE_ENCRYPTION_KEY", "")
+
+	// Primeiro usuário ADMIN (sem default de senha)
+	bootstrapAdmin := BootstrapAdminConfig{
+		Username: getEnv("BOOTSTRAP_ADMIN_USERNAME", "admin"),
+		Password: getEnv("BOOTSTRAP_ADMIN_PASSWORD", ""),
+		Email:    getEnv("BOOTSTRAP_ADMIN_EMAIL", ""),
+	}
 
 	// Configurações gerais da aplicação
 	appEnv := getEnv("APP_ENV", "development")
@@ -127,6 +154,7 @@ func Load() (*Config, error) {
 			DBName:       dbName,
 			SSLMode:      dbSSLMode,
 			DatabaseLink: dbLink,
+			AutoMigrate:  dbAutoMigrate,
 		},
 		SQLServer: SQLServerConfig{
 			Host:     mssqlHost,
@@ -143,6 +171,7 @@ func Load() (*Config, error) {
 		Security: SecurityConfig{
 			CertificateEncryptionKey: certificateEncryptionKey,
 		},
+		Bootstrap: bootstrapAdmin,
 		App: AppConfig{
 			Env: appEnv,
 		},
@@ -181,4 +210,19 @@ func getEnv(key, defaultValue string) string {
 		return value
 	}
 	return defaultValue
+}
+
+// getEnvBool lê uma variável booleana. Valor inválido é erro (em vez de cair
+// no default em silêncio): um "DB_AUTO_MIGRATE=flase" digitado errado não pode
+// deixar o AutoMigrate ligado em produção sem ninguém perceber.
+func getEnvBool(key string, defaultValue bool) (bool, error) {
+	value, exists := os.LookupEnv(key)
+	if !exists || strings.TrimSpace(value) == "" {
+		return defaultValue, nil
+	}
+	parsed, err := strconv.ParseBool(strings.TrimSpace(value))
+	if err != nil {
+		return false, fmt.Errorf("%s inválido (%q): use true ou false", key, value)
+	}
+	return parsed, nil
 }
