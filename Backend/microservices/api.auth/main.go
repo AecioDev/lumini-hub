@@ -9,9 +9,7 @@ import (
 	"syscall"
 	"time"
 
-	"lumini-hub/api.auth/internal/domain"
 	"lumini-hub/api.auth/internal/routes"
-	"lumini-hub/api.auth/internal/seeder"
 	"lumini-hub/common/config"
 	"lumini-hub/common/database"
 	"lumini-hub/common/middlewares"
@@ -33,23 +31,9 @@ func main() {
 	}
 	middlewares.InitPermissionChecker(db)
 
-	// AutoMigrate das tabelas do api.auth (DB_AUTO_MIGRATE, ligado por padrão pra
-	// um banco vazio subir sozinho; em produção com dados reais, desligar).
-	// Ordem de dependência: Permission e Role antes de User (FK role_id e as
-	// tabelas de junção role_permissions/user_permissions, criadas pelo GORM a
-	// partir dos many2many) e de MenuItem (FK permission_id).
-	if cfg.Database.AutoMigrate {
-		if err := db.AutoMigrate(
-			&domain.Permission{},
-			&domain.Role{},
-			&domain.User{},
-			&domain.MenuItem{},
-		); err != nil {
-			log.Fatalf("Erro ao migrar tabelas do api.auth: %v", err)
-		}
-	}
-	if err := seeder.SeedMenuItems(db); err != nil {
-		log.Fatalf("Erro ao semear itens de menu: %v", err)
+	// Migração do schema e seed de dados base (ver prepareDatabase)
+	if err := prepareDatabase(db, cfg); err != nil {
+		log.Fatalf("Erro ao preparar o banco de dados: %v", err)
 	}
 
 	// Configurar engine do Gin

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"lumini-hub/api.auth/internal/domain"
+	"lumini-hub/common/utils"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -21,7 +22,7 @@ const (
 	// permissão cujo módulo NÃO é este — o que dá as 50 de hoje. É regra de
 	// vínculo-modelo, distinta de utils.IsDeveloperOnlyPermission (bypass em
 	// tempo de execução): o ADMIN passa pelo bypass de roles.* e permissions.view.
-	DevelopModule = "Develop"
+	DevelopModule = utils.DeveloperModule
 )
 
 // SyncCatalog sincroniza o catálogo de permissões e o perfil ADMIN. Idempotente:
