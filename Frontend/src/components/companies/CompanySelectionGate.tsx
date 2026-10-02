@@ -104,6 +104,9 @@ export function CompanySelectionGate() {
           onSubmit={(values) => void createCompany(values)}
           onCancel={() => setCreating(false)}
         />
+        <Button type="link" block style={{ marginTop: 12 }} onClick={handleLogout}>
+          Sair
+        </Button>
       </div>
     );
   }
@@ -117,14 +120,26 @@ export function CompanySelectionGate() {
         <Logo />
       </div>
 
-      {hasNoCompanies && !canCreateCompany ? (
+      {hasNoCompanies ? (
         <>
           <Text strong style={{ display: "block", fontSize: 16, marginBottom: 4 }}>
             Nenhuma empresa cadastrada
           </Text>
           <Text type="secondary" style={{ display: "block", marginBottom: 20 }}>
-            Peça a um administrador para cadastrar a empresa.
+            {canCreateCompany
+              ? "Cadastre a empresa para começar a usar o sistema."
+              : "Peça a um administrador para cadastrar a empresa."}
           </Text>
+          {canCreateCompany && (
+            <Button
+              type="primary"
+              block
+              style={{ marginBottom: 12 }}
+              onClick={() => setCreating(true)}
+            >
+              Cadastrar Empresa
+            </Button>
+          )}
           <Button block onClick={handleLogout}>
             Sair
           </Button>
@@ -161,11 +176,9 @@ export function CompanySelectionGate() {
             Continuar
           </Button>
 
-          {canCreateCompany && (
-            <Button block style={{ marginTop: 12 }} onClick={() => setCreating(true)}>
-              Cadastrar Empresa
-            </Button>
-          )}
+          <Button type="link" block style={{ marginTop: 12 }} onClick={handleLogout}>
+            Sair
+          </Button>
         </>
       )}
     </Card>
