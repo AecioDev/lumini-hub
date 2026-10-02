@@ -32,13 +32,18 @@ func main() {
 	}
 	middlewares.InitPermissionChecker(db)
 
-	if err := db.AutoMigrate(
-		&domain.IntegrationConfig{},
-		&domain.SyncLog{},
-		&domain.ProductMapping{},
-		&domain.WebhookEvent{},
-	); err != nil {
-		log.Fatalf("Erro ao migrar tabelas do api.integrations: %v", err)
+	// AutoMigrate só das tabelas Postgres do api.integrations (DB_AUTO_MIGRATE,
+	// ligado por padrão; em produção com dados reais, desligar). As structs de
+	// internal/legacy são do SQL Server legado e nunca migram.
+	if cfg.Database.AutoMigrate {
+		if err := db.AutoMigrate(
+			&domain.IntegrationConfig{},
+			&domain.SyncLog{},
+			&domain.ProductMapping{},
+			&domain.WebhookEvent{},
+		); err != nil {
+			log.Fatalf("Erro ao migrar tabelas do api.integrations: %v", err)
+		}
 	}
 
 	// A conexão com o SQL Server legado é best-effort: se estiver indisponível, o serviço sobe
