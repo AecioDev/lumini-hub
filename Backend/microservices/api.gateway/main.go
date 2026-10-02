@@ -41,7 +41,7 @@ func main() {
 
 	// Configurar CORS no Gateway para permitir requisições do frontend e cookies HTTP-Only
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000", "http://localhost:3001"},
+		AllowOrigins:     allowedOrigins(),
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "Cookie"},
 		ExposeHeaders:    []string{"Content-Length", "Set-Cookie"},
@@ -50,17 +50,17 @@ func main() {
 	}))
 
 	// Definir as URLs dos microsserviços
-	authURL, err := url.Parse("http://localhost:4001")
+	authURL, err := url.Parse(envOr("AUTH_SERVICE_URL", "http://localhost:4001"))
 	if err != nil {
 		log.Fatalf("URL do serviço de autenticação inválida: %v", err)
 	}
 
-	coreURL, err := url.Parse("http://localhost:4002")
+	coreURL, err := url.Parse(envOr("CORE_SERVICE_URL", "http://localhost:4002"))
 	if err != nil {
 		log.Fatalf("URL do serviço core inválida: %v", err)
 	}
 
-	integrationsURL, err := url.Parse("http://localhost:4007")
+	integrationsURL, err := url.Parse(envOr("INTEGRATIONS_SERVICE_URL", "http://localhost:4007"))
 	if err != nil {
 		log.Fatalf("URL do serviço de integrações inválida: %v", err)
 	}
@@ -159,4 +159,25 @@ func main() {
 	}
 
 	log.Println("API Gateway desligado com sucesso")
+}
+
+// envOr retorna o valor da variável de ambiente ou o default quando ela está vazia.
+func envOr(key, fallback string) string {
+	if v := strings.TrimSpace(os.Getenv(key)); v != "" {
+		return v
+	}
+	return fallback
+}
+
+// allowedOrigins lê CORS_ALLOWED_ORIGINS (lista separada por vírgula); sem ela,
+// mantém os origins de desenvolvimento local.
+func allowedOrigins() []string {
+	raw := envOr("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:3001")
+	var origins []string
+	for _, o := range strings.Split(raw, ",") {
+		if o = strings.TrimSpace(o); o != "" {
+			origins = append(origins, o)
+		}
+	}
+	return origins
 }

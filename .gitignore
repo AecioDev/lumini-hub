@@ -30,3 +30,5 @@ Frontend/.env
 # Exemplos
 Documentos/exemplos
 Documentos/Diversos
+# Deploy
+deploy/.env

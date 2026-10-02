@@ -1,0 +1,18 @@
+# SITE_ADDRESS=":80" -> HTTP por IP (teste). Com domínio (ex.: lumini.exemplo.com.br)
+# o Caddy emite o HTTPS sozinho.
+{$SITE_ADDRESS::80} {
+	encode gzip
+
+	handle /api/* {
+		reverse_proxy gateway:4000
+	}
+	handle /swagger/* {
+		reverse_proxy gateway:4000
+	}
+
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+}
