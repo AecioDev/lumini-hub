@@ -68,6 +68,15 @@ func mustSync(t *testing.T, db *gorm.DB) {
 	}
 }
 
+func mustPermission(t *testing.T, db *gorm.DB, code string) domain.Permission {
+	t.Helper()
+	var permission domain.Permission
+	if err := db.Where("permission = ?", code).First(&permission).Error; err != nil {
+		t.Fatalf("permissão %s não encontrada: %v", code, err)
+	}
+	return permission
+}
+
 func adminRole(t *testing.T, db *gorm.DB) domain.Role {
 	t.Helper()
 	var role domain.Role
@@ -94,6 +103,30 @@ func TestPermissionCatalog_Integridade(t *testing.T) {
 			t.Errorf("permissão duplicada no catálogo: %s", entry.Permission)
 		}
 		seen[entry.Permission] = true
+	}
+}
+
+// Os demais testes derivam os números do próprio catálogo (pra não quebrar quando o
+// EPIC CFG-10 incluir permissões). Esta âncora fixa um PISO: apagar entradas por engano
+// ou tirar o módulo Develop do catálogo faz este teste falhar. Atualizar os pisos junto
+// com o CFG-10 se o catálogo crescer de propósito.
+func TestPermissionCatalog_Ancora(t *testing.T) {
+	const minTotal, minDevelop, minAdmin = 59, 9, 50
+
+	var develop int
+	for _, entry := range PermissionCatalog {
+		if entry.Module == DevelopModule {
+			develop++
+		}
+	}
+	if len(PermissionCatalog) < minTotal {
+		t.Errorf("catálogo com %d permissões, piso %d", len(PermissionCatalog), minTotal)
+	}
+	if develop < minDevelop {
+		t.Errorf("módulo %s com %d permissões, piso %d", DevelopModule, develop, minDevelop)
+	}
+	if adminGrantable() < minAdmin {
+		t.Errorf("o ADMIN receberia %d permissões, piso %d", adminGrantable(), minAdmin)
 	}
 }
 
@@ -149,8 +182,7 @@ func TestSyncCatalog_PermissaoManualEEditadaPermanecem(t *testing.T) {
 	if err := db.Where("permission = ?", "custom.manual").First(&manual).Error; err != nil {
 		t.Errorf("permissão criada à mão sumiu: %v", err)
 	}
-	var after domain.Permission
-	db.Where("permission = ?", edited.Permission).First(&after)
+	after := mustPermission(t, db, edited.Permission)
 	if after.Description != "EDITADA PELO OPERADOR" {
 		t.Errorf("o seed sobrescreveu a descrição editada: %q", after.Description)
 	}
@@ -168,10 +200,10 @@ func TestSyncCatalog_VinculoRemovidoNaoVoltaEPermissaoExcluidaNaoRenasce(t *test
 			continue
 		}
 		if removed.ID == 0 {
-			db.Where("permission = ?", entry.Permission).First(&removed)
+			removed = mustPermission(t, db, entry.Permission)
 			continue
 		}
-		db.Where("permission = ?", entry.Permission).First(&deleted)
+		deleted = mustPermission(t, db, entry.Permission)
 		break
 	}
 	if removed.ID == 0 || deleted.ID == 0 {

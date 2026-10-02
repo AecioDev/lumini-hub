@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"lumini-hub/api.auth/seed"
 	"lumini-hub/common/config"
 	"lumini-hub/common/testutil"
 
@@ -77,8 +78,24 @@ func TestPrepareDatabase_BancoVazioSobeSozinhoEEhIdempotente(t *testing.T) {
 		t.Fatalf("1º boot: %v", err)
 	}
 	first := takeBoot(t, db)
-	if first.permissions == 0 || first.roles != 1 || first.links == 0 || first.menus == 0 {
-		t.Errorf("1º boot incompleto: %+v", first)
+	var grantable int64
+	for _, entry := range seed.PermissionCatalog {
+		if entry.Module != seed.DevelopModule {
+			grantable++
+		}
+	}
+	if first.permissions != int64(len(seed.PermissionCatalog)) || first.roles != 1 || first.links != grantable || first.menus == 0 {
+		t.Errorf("1º boot: %+v, esperado %d permissões, 1 role e %d vínculos (catálogo fora do módulo %s), menu não vazio",
+			first, len(seed.PermissionCatalog), grantable, seed.DevelopModule)
+	}
+	var developLinks int64
+	if err := db.Table("role_permissions AS rp").
+		Joins("JOIN permissions p ON p.id = rp.permission_id").
+		Where("p.module = ?", seed.DevelopModule).Count(&developLinks).Error; err != nil {
+		t.Fatal(err)
+	}
+	if developLinks != 0 {
+		t.Errorf("%d permissões do módulo %s vinculadas ao ADMIN, esperado 0", developLinks, seed.DevelopModule)
 	}
 	if first.users != 0 {
 		t.Errorf("o boot não deveria criar usuários (isso é o bootstrap do admin): %d", first.users)
@@ -95,22 +112,33 @@ func TestPrepareDatabase_BancoVazioSobeSozinhoEEhIdempotente(t *testing.T) {
 	}
 }
 
-func TestPrepareDatabase_FlagDesligadaEmBancoPopuladoNaoSemeiaNada(t *testing.T) {
+func TestPrepareDatabase_FlagDesligadaEmBancoPopuladoNaoMexeEmNada(t *testing.T) {
 	db := testutil.OpenTestDB(t)
 	cfg := &config.Config{}
 	cfg.Database.AutoMigrate = true
 	if err := prepareDatabase(db, cfg); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.Exec("DELETE FROM menu_items").Error; err != nil {
-		t.Fatal(err)
+
+	// desfaz um pouco de cada coisa que o boot semeia: se a flag desligada ainda
+	// rodasse qualquer parte do seed, algum desses voltaria. A permissão apagada é do
+	// módulo Develop, que nunca é vinculada ao ADMIN (apagar uma vinculada violaria a FK).
+	for _, stmt := range []string{
+		"DELETE FROM menu_items",
+		"DELETE FROM role_permissions WHERE permission_id = (SELECT min(id) FROM permissions)",
+		"DELETE FROM permissions WHERE id = (SELECT min(id) FROM permissions WHERE module = '" + seed.DevelopModule + "')",
+	} {
+		if err := db.Exec(stmt).Error; err != nil {
+			t.Fatalf("%s: %v", stmt, err)
+		}
 	}
+	before := takeBoot(t, db)
 
 	cfg.Database.AutoMigrate = false
 	if err := prepareDatabase(db, cfg); err != nil {
 		t.Fatal(err)
 	}
-	if got := takeBoot(t, db); got.menus != 0 {
-		t.Errorf("a flag desligada semeou %d itens de menu", got.menus)
+	if after := takeBoot(t, db); after != before {
+		t.Errorf("a flag desligada alterou o banco: antes %+v, depois %+v", before, after)
 	}
 }
