@@ -6,7 +6,9 @@ Relação com `tasks_schema_seed.md` (EPIC CFG-9): **o código deste Épico não
 
 ### EPIC CFG-8: Onboarding da primeira empresa no `CompanySelectionGate`
 
-- [ ] [FINALIZADO] **EPIC CFG-8**: Num banco com zero empresas, o usuário autorizado (`companies.create`, inclusive ADMIN/DEVELOP pelo bypass) cadastra a empresa direto na tela de seleção e entra no sistema ao salvar; sem permissão vê mensagem e botão sair. Sem rota nova, sem flag, sem mudança de backend. Escopo: `plano_onboarding_empresa.md`.
+- [ ] [EM-TESTE] **EPIC CFG-8**: Num banco com zero empresas, o usuário autorizado (`companies.create`, inclusive ADMIN/DEVELOP pelo bypass) cadastra a empresa direto na tela de seleção e entra no sistema ao salvar; sem permissão vê mensagem e botão sair. Sem rota nova, sem flag, sem mudança de backend. Escopo: `plano_onboarding_empresa.md`.
+
+  - Em teste desde 2026-10-02: a CFG-8.2.1 (roteiro de primeiro acesso em `deploy/README.md`) foi para EM-TESTE; será validada pelo usuário junto do roteiro do CFG-9, sobre a `develop`. O PBI CFG-8.1 segue ENTREGUE. NÃO avançar para TESTADO-USUARIO nem ENTREGUE até o usuário confirmar.
 
 #### PBI CFG-8.1: Cadastrar a primeira empresa dentro do Gate
 
@@ -54,9 +56,9 @@ Relação com `tasks_schema_seed.md` (EPIC CFG-9): **o código deste Épico não
 
 #### PBI CFG-8.2: Roteiro de primeiro acesso documentado
 
-- [ ] [FINALIZADO] **PBI CFG-8.2**: O roteiro admin, login, cadastro da empresa fica registrado na doc de deploy. Dependência **apenas documental** do seed do admin.
+- [ ] [EM-TESTE] **PBI CFG-8.2**: O roteiro admin, login, cadastro da empresa fica registrado na doc de deploy. Dependência **apenas documental** do seed do admin.
 
-  - [ ] [FINALIZADO] CFG-8.2.1: Documentar o roteiro de primeiro acesso (admin por `BOOTSTRAP_ADMIN_*`, login, cadastro da empresa no Gate) na doc de deploy da OCI, se existir. Pode ser feita junto de CFG-9.5.3 (mesma doc, mesma pendência P5 do `plano_schema_seed.md`). (depende de CFG-8.1.3 e CFG-9.4.1; só documentação, não bloqueia código)
+  - [ ] [EM-TESTE] CFG-8.2.1: Documentar o roteiro de primeiro acesso (admin por `BOOTSTRAP_ADMIN_*`, login, cadastro da empresa no Gate) na doc de deploy da OCI, se existir. Pode ser feita junto de CFG-9.5.3 (mesma doc, mesma pendência P5 do `plano_schema_seed.md`). (depende de CFG-8.1.3 e CFG-9.4.1; só documentação, não bloqueia código)
     - Finalizada em 2026-10-01: o critério era só o roteiro de primeiro acesso, que agora existe em `deploy/README.md` (entregue junto da CFG-9.5.3, commit 3d21084 na `develop` local): clonar, criar `.env`, subir, login do admin, Cadastrar Empresa no seletor, remover `BOOTSTRAP_ADMIN_PASSWORD` depois. Aguardando teste do usuário (EM-TESTE/TESTADO-USUARIO ainda não percorridos).
 
 ### Pendência herdada do plano (não é tarefa de código)
