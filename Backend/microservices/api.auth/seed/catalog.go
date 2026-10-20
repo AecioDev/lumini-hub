@@ -19,7 +19,7 @@ const (
 	AdminRoleDescription = "Administrador do sistema"
 	// DevelopModule é o módulo das permissões de catálogo/administração técnica
 	// (roles.*, permissions.*, admin.create_permissions). O ADMIN recebe toda
-	// permissão cujo módulo NÃO é este — o que dá as 50 de hoje. É regra de
+	// permissão cujo módulo NÃO é este — o que dá as 58 de hoje. É regra de
 	// vínculo-modelo, distinta de utils.IsDeveloperOnlyPermission (bypass em
 	// tempo de execução): o ADMIN passa pelo bypass de roles.* e permissions.view.
 	DevelopModule = utils.DeveloperModule
