@@ -45,9 +45,8 @@ var menuItemSeedTree = []menuItemSeed{
 			{
 				Name: "Cadastros", Icon: "ph:gear",
 				Children: []menuItemSeed{
-					// TODO: não existe permissão dedicada de Fornecedores no catálogo ainda;
-					// usando purchases.view como aproximação até criarem suppliers.view.
-					{Name: "Fornecedores", Icon: "ph:briefcase", Href: "/suppliers", PermissionCode: "purchases.view"},
+					// Cadastro de fornecedores (suppliers.*); purchases.* é a rotina de Compras (entrada de notas).
+					{Name: "Fornecedores", Icon: "ph:briefcase", Href: "/suppliers", PermissionCode: "suppliers.view"},
 				},
 			},
 		},

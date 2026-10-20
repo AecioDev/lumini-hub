@@ -8,13 +8,11 @@ type PermissionSeed struct {
 }
 
 // PermissionCatalog é a fonte única, em código, do catálogo de permissões.
-// Transcrito 1:1 do banco de desenvolvimento em 2026-10-01, sem renomear nada —
-// a limpeza de nomes/módulos é tarefa separada. Todo PermissionCode do menu
-// está aqui, MAS nem toda permissão exigida por RequirePermission("...") está:
-// faltam customers.create/edit/delete, suppliers.view/create/edit/delete e
-// integrations.edit (nunca foram cadastradas no dev). Até entrarem aqui, essas
-// rotas só funcionam para ADMIN/DEVELOP (bypass). O seed só ADICIONA entradas
-// ausentes; nunca altera nem apaga uma permissão já existente.
+// Transcrito 1:1 do banco de desenvolvimento em 2026-10-01; em 2026-10-20 (CFG-10.1)
+// entraram as 8 permissões que RequirePermission exige e o dev nunca cadastrou
+// (customers.create/edit/delete, suppliers.view/create/edit/delete e
+// integrations.edit). A limpeza de nomes/módulos herdados é tarefa separada (CFG-10.2).
+// O seed só ADICIONA entradas ausentes; nunca altera nem apaga uma permissão já existente.
 var PermissionCatalog = []PermissionSeed{
 	// Admin
 	{Permission: "dashboard.admin.view", Description: "Visualizar o dashboard do administrador", Module: "Admin"},
@@ -24,6 +22,10 @@ var PermissionCatalog = []PermissionSeed{
 	{Permission: "purchases.edit", Description: "Editar compras", Module: "Compras"},
 	{Permission: "purchases.reports", Description: "Gerar relatórios de compras", Module: "Compras"},
 	{Permission: "purchases.view", Description: "Visualizar compras", Module: "Compras"},
+	{Permission: "suppliers.create", Description: "Criar fornecedores", Module: "Compras"},
+	{Permission: "suppliers.delete", Description: "Excluir fornecedores", Module: "Compras"},
+	{Permission: "suppliers.edit", Description: "Editar fornecedores", Module: "Compras"},
+	{Permission: "suppliers.view", Description: "Visualizar fornecedores", Module: "Compras"},
 	// dashboard
 	{Permission: "dashboard.view_default", Description: "Visualizar o dashboard padrão do perfil", Module: "dashboard"},
 	// Develop
@@ -70,6 +72,7 @@ var PermissionCatalog = []PermissionSeed{
 	// Gerencial
 	{Permission: "dashboard.manager.view", Description: "Visualizar o dashboard gerencial", Module: "Gerencial"},
 	// Integrações
+	{Permission: "integrations.edit", Description: "Editar Integrações", Module: "Integrações"},
 	{Permission: "integrations.view", Description: "Visualizar Integrações", Module: "Integrações"},
 	// Usuários
 	{Permission: "users.create", Description: "Criar usuários", Module: "Usuários"},
@@ -77,6 +80,9 @@ var PermissionCatalog = []PermissionSeed{
 	{Permission: "users.edit", Description: "Editar usuários", Module: "Usuários"},
 	{Permission: "users.view", Description: "Visualizar usuários", Module: "Usuários"},
 	// Vendas
+	{Permission: "customers.create", Description: "Criar clientes", Module: "Vendas"},
+	{Permission: "customers.delete", Description: "Excluir clientes", Module: "Vendas"},
+	{Permission: "customers.edit", Description: "Editar clientes", Module: "Vendas"},
 	{Permission: "customers.view", Description: "Visualizar clientes", Module: "Vendas"},
 	{Permission: "dashboard.sales.view", Description: "Visualizar o dashboard de vendas", Module: "Vendas"},
 	{Permission: "orders.view", Description: "Visualizar pedidos de vendas", Module: "Vendas"},

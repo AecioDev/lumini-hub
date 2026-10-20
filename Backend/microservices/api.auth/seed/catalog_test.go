@@ -111,7 +111,7 @@ func TestPermissionCatalog_Integridade(t *testing.T) {
 // ou tirar o módulo Develop do catálogo faz este teste falhar. Atualizar os pisos junto
 // com o CFG-10 se o catálogo crescer de propósito.
 func TestPermissionCatalog_Ancora(t *testing.T) {
-	const minTotal, minDevelop, minAdmin = 59, 9, 50
+	const minTotal, minDevelop, minAdmin = 67, 9, 58
 
 	var develop int
 	for _, entry := range PermissionCatalog {
