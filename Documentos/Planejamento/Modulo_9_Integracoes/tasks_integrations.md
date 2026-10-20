@@ -15,7 +15,7 @@ Acompanhamento da Fase 1 do `api.integrations` (porta 4007), conforme `Documento
 - [x] [CONCLUÍDO POR: Claude] Proxy no `api.gateway` + entrada no `run_services.bat`
 - [x] [CONCLUÍDO POR: Claude] Build (`go build`) e testes (`go test`, incluindo `sequence_repository_test.go` skip-if-unconfigured) passando
 - [x] [CONCLUÍDO POR: Claude] Swagger regenerado incluindo `api.integrations`
-- [ ] **Pendente manual (não é código):** criar as permissões `integrations.view` e `integrations.edit` via `POST /api/permissions` (tela Configurações → Permissões ou Swagger UI) — `permissions` é tabela do `api.auth`, não deve ser escrita direto pelo `api.integrations`
+- [ ] **Pendente manual (não é código) — ATUALIZADO em 2026-10-20:** `integrations.edit` já está no catálogo em código (CFG-10.1.2, `api.auth/seed`; chega a bancos novos pelo seed, ADMIN recebe automaticamente), então não precisa mais ser criada manualmente via POST em bancos novos. Em bancos já semeados (dev, VM OCI) conferir se ela existe; `integrations.view` já estava no catálogo. Nota original: criar as permissões `integrations.view` e `integrations.edit` via `POST /api/permissions` (tela Configurações → Permissões ou Swagger UI) — `permissions` é tabela do `api.auth`, não deve ser escrita direto pelo `api.integrations`
 
 ## Frontend
 

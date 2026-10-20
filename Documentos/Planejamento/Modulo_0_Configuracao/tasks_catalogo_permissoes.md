@@ -8,10 +8,24 @@ Criado em 2026-10-01 pelo orquestrador, por decisão do usuário, a partir de ac
 
 #### PBI CFG-10.1: Cadastrar as 8 permissões exigidas pelo código e ausentes do catálogo
 
-- [ ] [BACKLOG] **PBI CFG-10.1**: Toda permissão exigida por `RequirePermission` existe no catálogo.
+- [ ] [FINALIZADO] **PBI CFG-10.1**: Toda permissão exigida por `RequirePermission` existe no catálogo.
 
-  - [ ] [BACKLOG] CFG-10.1.1: Decidir com o usuário nome, módulo e descrição das 8 permissões ausentes: `customers.create`, `customers.edit`, `customers.delete`, `suppliers.view`, `suppliers.create`, `suppliers.edit`, `suppliers.delete`, `integrations.edit` (conferir por grep em `RequirePermission(` se há outras).
-  - [ ] [BACKLOG] CFG-10.1.2: Adicionar as permissões decididas ao catálogo em `api.auth/seed`; atualizar as contagens dos testes (hoje 59 permissões / 50 vínculos ao ADMIN; mudam quando entrarem, a regra do ADMIN é `Module != "Develop"`). (depende de CFG-10.1.1, CFG-9.3.4)
+  - [ ] [FINALIZADO] CFG-10.1.1: Decidir com o usuário nome, módulo e descrição das 8 permissões ausentes: `customers.create`, `customers.edit`, `customers.delete`, `suppliers.view`, `suppliers.create`, `suppliers.edit`, `suppliers.delete`, `integrations.edit` (conferir por grep em `RequirePermission(` se há outras).
+    - DECISÃO DO USUÁRIO (2026-10-20), as 8 permissões ficam assim:
+      - `customers.create` "Criar clientes", `customers.edit` "Editar clientes", `customers.delete` "Excluir clientes" (módulo Vendas).
+      - `suppliers.view` "Visualizar fornecedores", `suppliers.create` "Criar fornecedores", `suppliers.edit` "Editar fornecedores", `suppliers.delete` "Excluir fornecedores" (módulo Compras).
+      - `integrations.edit` "Editar Integrações" (módulo Integrações).
+    - Decisão tomada e materializada no seed pela CFG-10.1.2 (finalizada em 2026-10-20).
+  - [ ] [FINALIZADO] CFG-10.1.2: Adicionar as permissões decididas ao catálogo em `api.auth/seed`; atualizar as contagens dos testes (hoje 59 permissões / 50 vínculos ao ADMIN; mudam quando entrarem, a regra do ADMIN é `Module != "Develop"`). (depende de CFG-10.1.1, CFG-9.3.4)
+    - Critério de aceite:
+      - [x] As 8 permissões da decisão da CFG-10.1.1 entram no catálogo do seed, com os códigos, descrições e módulos exatos acima.
+      - [x] Catálogo vai de 59 para 67 permissões; vínculos do ADMIN de 50 para 58 (as 8 novas não são do módulo "Develop"); contagens dos testes atualizadas.
+      - [x] Nenhum código `permission` existente é renomeado; `go build ./...`, `go vet` e `go test ./...` limpos.
+    - Finalizada em 2026-10-20 na branch `feature/catalogo-permissoes` (worktree `C:\Projetos\lumini-hub-develop`), commit `26f02af`, local, SEM push, saindo de `0b0f217` da `develop`. Aguardando teste do usuário: NÃO avançar para EM-TESTE/TESTADO-USUARIO/ENTREGUE até ele confirmar.
+    - Evidências: `go build`/`go vet` ok; `go test ./...` do api.auth com Postgres real (`TEST_DATABASE_URL`, banco `seed_test`) = 16 testes de seed PASS, 0 skip; stack `deploy/docker-compose.prod.yml` subida do zero em banco vazio (projeto compose descartável, já removido): 67 permissões, 58 vínculos do ADMIN, 0 do módulo Develop, 8 novas presentes (`suppliers.*` em Compras), admin criado, login via Caddy 200 e senha errada 401, frontend 200, 0 ocorrências de senha/hash nos logs.
+    - Revisor (`revisor-codigo-lumini-hub`): APROVOU sem bloqueantes; ressalvas de docs corrigidas no próprio commit (CLAUDE.md linhas 87 e 98 e comentário do menu seeder).
+    - Decisão do usuário em 2026-10-20: o item de menu Fornecedores (`/suppliers`) passou de `purchases.view` para `suppliers.view` (`purchases.*` é a rotina futura de Compras/entrada de notas; `suppliers.*` é o cadastro de fornecedores). Ver CFG-10.4.1 sobre bancos já semeados.
+    - ATENÇÃO: as 8 permissões novas só chegam ao ADMIN automaticamente (regra `Module != "Develop"`); usuários com permissões individuais NÃO as recebem sozinhos, é preciso concedê-las manualmente.
 
 #### PBI CFG-10.2: Limpar descrições e módulos herdados do dev
 
@@ -41,7 +55,7 @@ Criado em 2026-10-01 pelo orquestrador, por decisão do usuário, a partir de ac
 
 - [ ] [BACKLOG] **PBI CFG-10.4**: `SeedMenuItems` do código reflete o menu real do dev.
 
-  - [ ] [BACKLOG] CFG-10.4.1: Conferir os itens de menu do `menu_item_seeder.go` contra a tabela `menu_items` do banco de dev (permissão vinculada por item). A conferência feita na CFG-9.5.2 cobriu só `/settings/*` (`companies.view`, `integrations.view`, `roles.view`, `users.view`) e achou uma divergência (`/settings/roles` ligado a `admin.create_permissions` no código vs. `roles.view` no dev, já corrigida); os demais itens não foram conferidos. Divergências corrigidas no seeder ou registradas.
+  - [ ] [BACKLOG] CFG-10.4.1: (2026-10-20: o item de Fornecedores no `menu_item_seeder.go` está RESOLVIDO, agora ligado a `suppliers.view` na CFG-10.1.2. PENDÊNCIA: o seed do menu pula itens existentes, então em bancos JÁ semeados (dev, VM OCI) o item `/suppliers` continua em `purchases.view` e precisa de ajuste manual ou migração; só bancos novos já nascem certos.) Conferir os itens de menu do `menu_item_seeder.go` contra a tabela `menu_items` do banco de dev (permissão vinculada por item). A conferência feita na CFG-9.5.2 cobriu só `/settings/*` (`companies.view`, `integrations.view`, `roles.view`, `users.view`) e achou uma divergência (`/settings/roles` ligado a `admin.create_permissions` no código vs. `roles.view` no dev, já corrigida); os demais itens não foram conferidos. Divergências corrigidas no seeder ou registradas.
 
 #### PBI CFG-10.5: Notas e follow-ups do revisor sobre o log do GORM (da CFG-10.3.1; não bloqueantes)
 
