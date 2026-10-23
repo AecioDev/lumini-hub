@@ -42,7 +42,7 @@ Entram as 8 permissões que as rotas já exigiam e que o catálogo não tinha:
 
 Com isso toda permissão exigida por `RequirePermission` existe no catálogo (antes, essas rotas só funcionavam para ADMIN e DEVELOP).
 
-### 2.5 Menu "Fornecedores" separado de Compras ⚠️
+### 2.5 Menu "Fornecedores" separado de Compras ✅
 - O item de menu **Fornecedores** (cadastro) passa a usar `suppliers.view`, separado de `purchases.*` (a futura rotina de Compras, com entrada de notas). Vale para bancos novos.
 
 ---
@@ -50,7 +50,7 @@ Com isso toda permissão exigida por `RequirePermission` existe no catálogo (an
 ## 3. Correções
 
 - **Log do banco por ambiente** ✅: fora de `development`, o log do GORM deixa de mostrar o SQL com parâmetros (e com isso o hash de senha). Testado com `APP_ENV=staging`: só as requisições aparecem.
-- **Menu "Perfis e Permissões" escondido do ADMIN** ⚠️: num banco semeado do zero o item nascia ligado a uma permissão que só o DEVELOP tem; agora usa `roles.view`.
+- **Menu "Perfis e Permissões" escondido do ADMIN** ✅: num banco semeado do zero o item nascia ligado a uma permissão que só o DEVELOP tem; agora usa `roles.view`.
 - **`go run main.go` no `api.auth`** ✅: o comando voltou a compilar (a função de preparo do banco ficou de novo no `main.go`, e um teste protege isso).
 
 ---
