@@ -33,7 +33,7 @@ Painel do que já foi feito e do que falta. Quem conduz é o Aécio; o Claude s�
 
 Já implementado e na `develop`; falta você validar.
 
-- [ ] **CFG-020** Versão do banco gravada no próprio banco: tabela `schema_versions` (uma linha por publicação), constantes `Required` e `AppVersion` em `Backend/common/dbversion/dbversion.go` (subidas à mão a cada release), o `api.auth` registra no fim do boot com `DB_AUTO_MIGRATE=true`, e com `DB_AUTO_MIGRATE=false` os três serviços conferem e recusam subir se o banco estiver atrás ou sem versão. A coluna de nota do desenho original foi dispensada: o que mudou em cada versão fica em `releases/`. *(implementado, aguardando teste)*
+_Nada aguardando teste no momento._
 
 ## 2. Próximos (Configuração / base)
 
@@ -85,3 +85,4 @@ O Lumini Hub é um sistema feito do zero. Escopo de cada módulo em `Modulo_N_*/
 - [x] **CFG-011** Remoção de `deploy/db/*.sql` e do mount `./db` do `docker-compose.prod.yml`: o banco vazio é criado só pelos serviços (antigo CFG-9.5.3; marcado como testado em 22/10/2026; a conferência na VM da OCI está em CFG-021)
 - [x] **CFG-012** Logger do GORM por ambiente: fora de `development` o log não mostra SQL com valores nem hash de senha (antigo CFG-10.3.1; testado em 22/10/2026 com `APP_ENV=staging`)
 - [x] **CFG-013** 8 permissões novas no catálogo (`customers.create/edit/delete`, `suppliers.view/create/edit/delete`, `integrations.edit`), 67 no total e 58 para o ADMIN (antigo CFG-10.1; testado em 22/10/2026 na tela de permissões do usuário). O menu "Fornecedores" ligado a `suppliers.view` só vale para bancos novos; o ajuste dos bancos já semeados está em CFG-016
+- [x] **CFG-020** Versão do banco gravada no próprio banco: tabela `schema_versions` (uma linha por publicação), constantes `Required` e `AppVersion` em `Backend/common/dbversion/dbversion.go` (subidas à mão a cada release), o `api.auth` registra no fim do boot com `DB_AUTO_MIGRATE=true`, e com `DB_AUTO_MIGRATE=false` os três serviços conferem e recusam subir se o banco estiver atrás ou sem versão (testado em 22/10/2026: registrou a versão 2 no primeiro boot e não duplicou ao reiniciar)
