@@ -17,7 +17,8 @@ Painel do que já foi feito e do que falta. Quem conduz é o Aécio; o Claude s�
 
 Já implementado e na `develop`; falta você validar.
 
-- [ ] Remoção de `deploy/db/01_schema.sql` e `02_catalog.sql` e do mount `./db` no `docker-compose.prod.yml`: os serviços passam a criar tudo sozinhos - CFG-9.5.3 *(implementado, aguardando confirmação sua)*
+_Nada aguardando teste no momento._
+
 
 ## 2. Próximos (Configuração / base)
 
@@ -64,5 +65,6 @@ Escopo de cada um em `Modulo_N_*/plano_*.md`. Nenhum tem código hoje; no menu c
 - [x] Gateway único com CORS centralizado; Swagger gerado
 - [x] Cadastro da primeira empresa num banco sem empresas, direto na tela de seleção (CFG-8; testado)
 - [x] Roteiro de primeiro acesso no `deploy/README.md`: clonar, `.env`, subir, login do admin, cadastrar empresa (CFG-8.2.1; testado)
+- [x] Remoção de `deploy/db/*.sql` e do mount `./db` do `docker-compose.prod.yml`: o banco vazio é criado só pelos serviços (CFG-9.5.3; marcado como testado em 22/10/2026; a conferência na VM da OCI acontece quando ela for atualizada)
 - [x] Logger do GORM por ambiente: fora de `development` o log não mostra SQL com valores nem hash de senha (CFG-10.3.1; testado em 22/10/2026 com `APP_ENV=staging`)
 - [x] 8 permissões novas no catálogo (`customers.create/edit/delete`, `suppliers.view/create/edit/delete`, `integrations.edit`), 67 no total e 58 para o ADMIN (CFG-10.1; testado em 22/10/2026 na tela de permissões do usuário). O menu "Fornecedores" ligado a `suppliers.view` só vale para bancos novos; o ajuste dos bancos já semeados está em "Próximos"
