@@ -19,7 +19,6 @@ Já implementado e na `develop`; falta você validar.
 
 - [ ] Cadastro da primeira empresa num banco sem nenhuma empresa (tela de seleção, botão "Cadastrar Empresa", entra no sistema ao salvar; sem permissão mostra mensagem e botão sair) - CFG-8 *(implementado, aguardando teste)*
 - [ ] Roteiro de primeiro acesso no `deploy/README.md` e remoção de `deploy/db/*.sql` - CFG-8.2.1 / CFG-9.5.3 *(implementado, aguardando teste; o log de 03/10 diz que os cenários A a D do CFG-9 já foram testados, confirmar se isso cobre estes dois)*
-- [ ] 8 permissões novas no catálogo (`customers.create/edit/delete`, `suppliers.view/create/edit/delete`, `integrations.edit`) e menu "Fornecedores" ligado a `suppliers.view` - CFG-10.1 *(implementado, aguardando teste)*
 
 ## 2. Próximos (Configuração / base)
 
@@ -65,3 +64,4 @@ Escopo de cada um em `Modulo_N_*/plano_*.md`. Nenhum tem código hoje; no menu c
 - [x] Deploy em Docker + Caddy na VM da OCI (versão antiga em produção)
 - [x] Gateway único com CORS centralizado; Swagger gerado
 - [x] Logger do GORM por ambiente: fora de `development` o log não mostra SQL com valores nem hash de senha (CFG-10.3.1; testado em 22/10/2026 com `APP_ENV=staging`)
+- [x] 8 permissões novas no catálogo (`customers.create/edit/delete`, `suppliers.view/create/edit/delete`, `integrations.edit`), 67 no total e 58 para o ADMIN (CFG-10.1; testado em 22/10/2026 na tela de permissões do usuário). O menu "Fornecedores" ligado a `suppliers.view` só vale para bancos novos; o ajuste dos bancos já semeados está em "Próximos"
