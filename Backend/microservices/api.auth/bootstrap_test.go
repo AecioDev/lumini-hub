@@ -9,6 +9,7 @@ import (
 
 	"lumini-hub/api.auth/seed"
 	"lumini-hub/common/config"
+	"lumini-hub/common/dbversion"
 	"lumini-hub/common/testutil"
 
 	"gorm.io/gorm"
@@ -55,16 +56,51 @@ func capturaLog(t *testing.T) *bytes.Buffer {
 	return &buf
 }
 
-func TestPrepareDatabase_FlagDesligadaNaoFazNada(t *testing.T) {
+func TestPrepareDatabase_FlagDesligadaEmBancoVazioRecusaSubirSemCriarNada(t *testing.T) {
 	db := testutil.OpenTestDB(t)
 	cfg := &config.Config{}
 	cfg.Database.AutoMigrate = false
 
-	if err := prepareDatabase(db, cfg); err != nil {
-		t.Fatalf("com a flag desligada não deveria dar erro: %v", err)
+	err := prepareDatabase(db, cfg)
+	if err == nil || !strings.Contains(err.Error(), "não tem versão registrada") {
+		t.Fatalf("com a flag desligada num banco sem versão registrada deveria recusar subir, veio: %v", err)
 	}
 	if n := tableCount(t, db); n != 0 {
 		t.Errorf("a flag desligada criou %d tabelas num banco vazio", n)
+	}
+}
+
+func TestPrepareDatabase_RegistraAVersaoDoBancoUmaVezSo(t *testing.T) {
+	db := testutil.OpenTestDB(t)
+	cfg := &config.Config{}
+	cfg.Database.AutoMigrate = true
+
+	for boot := 1; boot <= 2; boot++ {
+		if err := prepareDatabase(db, cfg); err != nil {
+			t.Fatalf("boot %d: %v", boot, err)
+		}
+	}
+	var rows []dbversion.SchemaVersion
+	if err := db.Find(&rows).Error; err != nil {
+		t.Fatal(err)
+	}
+	if len(rows) != 1 || rows[0].DBVersion != dbversion.Required || rows[0].AppVersion != dbversion.AppVersion {
+		t.Fatalf("schema_versions = %+v; esperado 1 linha com a versão %d / %s", rows, dbversion.Required, dbversion.AppVersion)
+	}
+
+	// com o banco já na versão exigida, a flag desligada sobe sem erro
+	cfg.Database.AutoMigrate = false
+	if err := prepareDatabase(db, cfg); err != nil {
+		t.Fatalf("flag desligada em banco na versão exigida: %v", err)
+	}
+
+	// banco atrás do que o código exige: a flag desligada recusa subir
+	if err := db.Exec("UPDATE schema_versions SET db_version = ?", dbversion.Required-1).Error; err != nil {
+		t.Fatal(err)
+	}
+	err := prepareDatabase(db, cfg)
+	if err == nil || !strings.Contains(err.Error(), "está na versão") {
+		t.Fatalf("banco atrás deveria recusar subir, veio: %v", err)
 	}
 }
 
@@ -179,8 +215,9 @@ func TestPrepareDatabase_CriaAdminInicialSoUmaVezESoComSenha(t *testing.T) {
 		cfg := &config.Config{}
 		cfg.Database.AutoMigrate = false
 		cfg.Bootstrap = config.BootstrapAdminConfig{Username: "admin", Password: password}
-		if err := prepareDatabase(db, cfg); err != nil {
-			t.Fatal(err)
+		// banco sem versão registrada: a flag desligada recusa subir, e mesmo assim não cria nada
+		if err := prepareDatabase(db, cfg); err == nil {
+			t.Fatal("esperava recusa por banco sem versão registrada")
 		}
 		if n := tableCount(t, db); n != 0 {
 			t.Errorf("a flag desligada criou %d tabelas", n)

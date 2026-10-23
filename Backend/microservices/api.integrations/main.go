@@ -15,6 +15,7 @@ import (
 	"lumini-hub/api.integrations/internal/service"
 	"lumini-hub/common/config"
 	"lumini-hub/common/database"
+	"lumini-hub/common/dbversion"
 	"lumini-hub/common/middlewares"
 
 	"github.com/gin-gonic/gin"
@@ -44,6 +45,9 @@ func main() {
 		); err != nil {
 			log.Fatalf("Erro ao migrar tabelas do api.integrations: %v", err)
 		}
+	} else if err := dbversion.Check(db); err != nil {
+		// Flag desligada: o operador cuida do schema; só confere se o banco é novo o bastante.
+		log.Fatalf("Banco incompatível com este sistema: %v", err)
 	}
 
 	// A conexão com o SQL Server legado é best-effort: se estiver indisponível, o serviço sobe

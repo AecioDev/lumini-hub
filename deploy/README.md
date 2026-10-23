@@ -46,6 +46,8 @@ Com a flag desligada nenhum serviço migra e o `api.auth` não semeia nada. O ca
 menu **não** são aplicados sozinhos: aplique-os por outro meio (por exemplo, subindo uma vez com a flag
 ligada). O `api.integrations`, se estiver no ar, ainda precisa que a tabela `integration_configs` exista.
 
+Com a flag desligada, cada serviço também **confere a versão do banco** (tabela `schema_versions`) e se recusa a subir se o banco estiver atrás do que o código exige, ou se não tiver versão registrada, com uma mensagem dizendo o que fazer. Para atualizar o banco: suba uma vez o `api-auth` com `DB_AUTO_MIGRATE=true`; ele migra, semeia e registra a nova versão. Depois volte a flag para `false`.
+
 ## HTTP, domínio e HTTPS
 
 Sem domínio, o acesso é por IP em HTTP (`SITE_ADDRESS=:80`, `APP_ENV=staging`). Os cookies de login só

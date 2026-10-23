@@ -33,7 +33,7 @@ Painel do que já foi feito e do que falta. Quem conduz é o Aécio; o Claude s�
 
 Já implementado e na `develop`; falta você validar.
 
-_Nada aguardando teste no momento._
+- [ ] **CFG-020** Versão do banco gravada no próprio banco: tabela `schema_versions` (uma linha por publicação), constantes `Required` e `AppVersion` em `Backend/common/dbversion/dbversion.go` (subidas à mão a cada release), o `api.auth` registra no fim do boot com `DB_AUTO_MIGRATE=true`, e com `DB_AUTO_MIGRATE=false` os três serviços conferem e recusam subir se o banco estiver atrás ou sem versão. A coluna de nota do desenho original foi dispensada: o que mudou em cada versão fica em `releases/`. *(implementado, aguardando teste)*
 
 ## 2. Próximos (Configuração / base)
 
@@ -43,10 +43,11 @@ _Nada aguardando teste no momento._
 - [ ] **CFG-017** `APP_ENV` não definido vira `development` (log verboso): exigir explícito fora de dev ou inverter o padrão para o modo seguro (antigo CFG-10.5.1)
 - [ ] **CFG-018** Nunca logar `err` bruto nos handlers (mensagem do Postgres pode citar valores) (antigo CFG-10.5.2)
 - [ ] **CFG-019** Dívida técnica: `CompanyService.GetCompanies` usa `GetDB()` cru, fora do `UoW.Execute()`
-- [ ] **CFG-020** Gravar a versão do banco dentro do próprio banco: tabela `schema_versions` (`db_version`, `app_version`, `applied_at`, nota), uma linha por publicação; constante com a versão exigida pelo código num lugar só (`common`), subida à mão nas publicações com mudança de banco; só o `api.auth` grava (depois do `AutoMigrate` e do seed); no boot, com `DB_AUTO_MIGRATE=false` os serviços só conferem e recusam subir se o banco estiver atrás. A primeira versão gravada seria a 2, junto com a publicação `2026.2.2.0`. Limite: o `AutoMigrate` só adiciona; mudanças que mexem em dados existentes precisam de script próprio. Incluir "mudou o banco? subiu a versão?" no roteiro de release
 - [ ] **CFG-021** Atualizar a VM da OCI para a versão nova (o deploy lá é antigo; para atualizar é preciso recriar o volume do Postgres). Conferir lá que o `docker-compose.prod.yml` novo sobe sem o `deploy/db`
 - [ ] **CFG-022** Traduzir o `CLAUDE.md` e as skills para português
 - [ ] **CFG-023** Arquivar o histórico dos `tasks_*.md` grandes (`tasks_empresa.md` tem ~330 KB)
+- [ ] **CFG-024** Barra de status no layout do sistema (frontend), numa área fixa da página, mostrando a versão do sistema e a versão do banco (precisa de um endpoint que leia `dbversion.AppVersion` e a tabela `schema_versions`, ex.: `/api/auth/version`) e outras informações que forem surgindo com o tempo (ambiente, empresa ativa, etc.). Ligada ao CFG-020
+- [ ] **CFG-025** Scripts de migração por versão do banco, para o que o `AutoMigrate` não resolve (remover ou renomear coluna, ajustar dados existentes, triggers/funções, `NOT NULL` novo em tabela com linhas). Cada script leva o banco de uma versão à seguinte (`002_...`, `003_...`) e roda só os acima do número gravado em `schema_versions.db_version`, para atualizar um banco muito antigo em ordem. Só fazer quando aparecer a primeira mudança desse tipo. Ligada ao CFG-020
 
 ## 3. Módulos ainda não iniciados
 

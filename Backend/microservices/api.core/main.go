@@ -14,6 +14,7 @@ import (
 	"lumini-hub/api.core/internal/routes"
 	"lumini-hub/common/config"
 	"lumini-hub/common/database"
+	"lumini-hub/common/dbversion"
 	"lumini-hub/common/middlewares"
 
 	"github.com/gin-gonic/gin"
@@ -53,6 +54,9 @@ func main() {
 		); err != nil {
 			log.Fatalf("Erro ao migrar tabelas do api.core: %v", err)
 		}
+	} else if err := dbversion.Check(db); err != nil {
+		// Flag desligada: o operador cuida do schema; só confere se o banco é novo o bastante.
+		log.Fatalf("Banco incompatível com este sistema: %v", err)
 	}
 
 	// Configurar engine do Gin

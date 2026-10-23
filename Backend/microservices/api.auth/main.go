@@ -16,6 +16,7 @@ import (
 	"lumini-hub/api.auth/seed"
 	"lumini-hub/common/config"
 	"lumini-hub/common/database"
+	"lumini-hub/common/dbversion"
 	"lumini-hub/common/middlewares"
 
 	"github.com/gin-gonic/gin"
@@ -95,7 +96,9 @@ func main() {
 // flag desligada — produção com dados reais — o serviço não migra NEM semeia
 // nada ao subir, e o operador assume schema e dados (o catálogo de permissões
 // precisa então ser aplicado por outro meio, ex.: rodar uma vez com a flag
-// ligada). Na ordem:
+// ligada). Com a flag desligada ele só CONFERE a versão do banco (dbversion.Check) e
+// recusa subir se o banco estiver atrás do que o código exige. Com ela ligada, registra
+// a versão no fim (passo 5). Na ordem:
 //
 //  1. AutoMigrate das tabelas. Ordem de dependência: Permission e Role antes de
 //     User (FK role_id e as tabelas de junção role_permissions/user_permissions,
@@ -109,6 +112,9 @@ func main() {
 //     própria, e isso nunca é corrigido depois (itens existentes são pulados).
 func prepareDatabase(db *gorm.DB, cfg *config.Config) error {
 	if !cfg.Database.AutoMigrate {
+		if err := dbversion.Check(db); err != nil {
+			return fmt.Errorf("conferindo a versão do banco: %w", err)
+		}
 		return nil
 	}
 
@@ -132,6 +138,14 @@ func prepareDatabase(db *gorm.DB, cfg *config.Config) error {
 	}
 	if err := seeder.SeedMenuItems(db); err != nil {
 		return fmt.Errorf("semeando itens de menu: %w", err)
+	}
+	// 5. Só depois de tudo ter dado certo: registra em que versão o banco ficou.
+	inserted, err := dbversion.Record(db)
+	if err != nil {
+		return err
+	}
+	if inserted {
+		log.Printf("[api.auth] Banco registrado na versão %d (sistema %s)", dbversion.Required, dbversion.AppVersion)
 	}
 	return nil
 }

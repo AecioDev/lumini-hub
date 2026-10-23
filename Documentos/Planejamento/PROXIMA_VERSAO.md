@@ -12,6 +12,8 @@ Alterações feitas desde o último envio ao servidor. O Claude acrescenta uma l
 - Primeiro admin: definir `BOOTSTRAP_ADMIN_PASSWORD` (8 a 72 caracteres) no `deploy/.env` no primeiro boot e remover depois. Sem a senha nenhum usuário é criado.
 - `deploy/.env` precisa de `APP_ENV` explícito: fora de `development` o log do GORM não mostra SQL com valores.
 - `deploy/db/01_schema.sql` e `02_catalog.sql` foram removidos; o `docker-compose.prod.yml` não monta mais `./db`.
+- Nova tabela `schema_versions` (`db_version`, `app_version`, `applied_at`): o banco passa a registrar a versão em que está. O `api-auth` cria a tabela e grava a versão 2 (`2026.2.2.0`) no fim de um boot com `DB_AUTO_MIGRATE=true`.
+- Com `DB_AUTO_MIGRATE=false`, `api-auth`, `api-core` e `api-integrations` conferem a versão e **recusam subir** se o banco estiver atrás da 2 ou sem versão registrada. Para atualizar o banco: subir uma vez o `api-auth` com a flag ligada.
 - Bancos já semeados (dev e OCI): o item de menu "Fornecedores" continua em `purchases.view`; ajustar a mão para `suppliers.view`.
 - As 8 permissões novas entram no próximo boot do `api.auth` e vão automaticamente só para o ADMIN; usuários com permissões individuais precisam recebê-las pela tela de Usuários.
 
