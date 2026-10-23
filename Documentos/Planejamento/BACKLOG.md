@@ -7,7 +7,7 @@ Painel do que já foi feito e do que falta. Quem conduz é o Aécio; o Claude s�
 - `[ ]` = em aberto (ainda não feito, **ou** feito mas ainda não testado por você).
 - `[x]` = feito **e testado por você**. Só você move para `[x]`; o Claude nunca marca sozinho.
 - Quando algo está implementado mas ainda sem o seu teste, continua `[ ]` e leva a nota `(implementado, aguardando teste)`.
-- **ID de tarefa**: todo item começa com um ID `PREFIXO-NNN` em negrito (ex.: **CFG-014**). O prefixo é o módulo (tabela abaixo); o número é sequencial dentro do prefixo, tem 3 dígitos e **nunca é reaproveitado**, nem quando o item é concluído ou cancelado. Para achar o próximo ID livre de um prefixo, procure o maior número dele neste arquivo e some 1. Para buscar uma tarefa, procure o ID (ex.: `CFG-014`) no repositório, no `PROXIMA_VERSAO.md` e nos releases.
+- **ID de tarefa**: todo item começa com um ID `PREFIXO-NNN` em negrito (ex.: **CFG-014**). O prefixo é o módulo (tabela abaixo); o número é sequencial dentro do prefixo, tem 3 dígitos e **nunca é reaproveitado**, nem quando o item é concluído ou cancelado (ex.: o **CFG-019** foi descartado e o número ficou sem uso). Para achar o próximo ID livre de um prefixo, procure o maior número dele neste arquivo e some 1. Para buscar uma tarefa, procure o ID (ex.: `CFG-014`) no repositório, no `PROXIMA_VERSAO.md` e nos releases.
 - O que foi feito desde o último envio ao servidor fica listado em `PROXIMA_VERSAO.md`. Ao enviar, o Claude gera `releases/<versão>.md` a partir dele e zera o arquivo.
 - Versão: `ano.versao_do_banco.sequencia_versao.sequencia_patch`. O segundo número é a versão do banco: sobe uma unidade por publicação que traz mudanças de banco (não por mudança individual), e cada release lista o que mudou nele. Próxima: `2026.2.2.0`.
 - Os `tasks_*.md` e `plano_*.md` antigos continuam como histórico e consulta. Não são mais atualizados (o escopo e as regras de negócio de cada módulo continuam nos `plano_*.md`). Os códigos antigos desses arquivos (ex.: `CFG-10.2`) aparecem aqui como "antigo ...", só para você achar a história.
@@ -42,7 +42,6 @@ _Nada aguardando teste no momento._
 - [ ] **CFG-016** Bancos já semeados (dev e VM da OCI): o item de menu "Fornecedores" continua em `purchases.view`; precisa de ajuste manual ou migração, porque o seed do menu pula itens existentes
 - [ ] **CFG-017** `APP_ENV` não definido vira `development` (log verboso): exigir explícito fora de dev ou inverter o padrão para o modo seguro (antigo CFG-10.5.1)
 - [ ] **CFG-018** Nunca logar `err` bruto nos handlers (mensagem do Postgres pode citar valores) (antigo CFG-10.5.2)
-- [ ] **CFG-019** Dívida técnica: `CompanyService.GetCompanies` usa `GetDB()` cru, fora do `UoW.Execute()`
 - [ ] **CFG-021** Atualizar a VM da OCI para a versão nova (o deploy lá é antigo; para atualizar é preciso recriar o volume do Postgres). Conferir lá que o `docker-compose.prod.yml` novo sobe sem o `deploy/db`
 - [ ] **CFG-022** Traduzir o `CLAUDE.md` e as skills para português
 - [ ] **CFG-023** Arquivar o histórico dos `tasks_*.md` grandes (`tasks_empresa.md` tem ~330 KB)
