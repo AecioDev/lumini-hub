@@ -16,6 +16,7 @@ Alterações feitas desde o último envio ao servidor. O Claude acrescenta uma l
 
 ## Correções
 
+- **CFG-015**: o item de menu "Financeiro > Contas a Pagar > Fornecedores" passa a usar `suppliers.view` (antes `purchases.view`), como o de Compras; vale só para bancos novos.
 - **CFG-014**: `roles.*` deixam de se chamar "usuários" (agora "perfis"); `permissions.*` e `integrations.*` em minúsculas como as demais; `finance.receive_boleto` vira "Receber boletos"; `dashboard.view_default` passa do módulo `dashboard` para `Dashboard`, que aparece em "Outros" na edição de usuário.
 
 ## Interno (não afeta o servidor)

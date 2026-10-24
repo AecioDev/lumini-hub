@@ -19,8 +19,9 @@ type menuItemSeed struct {
 	Children       []menuItemSeed
 }
 
-// menuItemSeedTree replica a árvore hoje descrita em Frontend/src/config/navigation.ts,
-// com ícones Phosphor (via Iconify, prefixo "ph:") para manter a aparência visual atual.
+// menuItemSeedTree é a árvore de menu padrão de um banco novo, com ícones Phosphor (via
+// Iconify, prefixo "ph:"). Todo PermissionCode precisa existir no catálogo de permissões
+// (api.auth/seed), o que o teste da árvore confere.
 var menuItemSeedTree = []menuItemSeed{
 	{
 		Name: "Dashboard", Icon: "ph:squares-four", Href: "/dashboard",
@@ -85,8 +86,7 @@ var menuItemSeedTree = []menuItemSeed{
 			{
 				Name: "Contas a Pagar", Icon: "ph:bank", Href: "/financial/accounts-payable", PermissionCode: "finance.view",
 				Children: []menuItemSeed{
-					// TODO: mesma ausência de permissão dedicada de Fornecedores, ver acima.
-					{Name: "Fornecedores", Icon: "ph:briefcase", Href: "/suppliers", PermissionCode: "purchases.view"},
+					{Name: "Fornecedores", Icon: "ph:briefcase", Href: "/suppliers", PermissionCode: "suppliers.view"},
 				},
 			},
 		},
