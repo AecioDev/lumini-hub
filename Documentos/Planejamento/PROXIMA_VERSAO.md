@@ -23,4 +23,4 @@ Alterações feitas desde o último envio ao servidor. O Claude acrescenta uma l
 
 ## Interno (não afeta o servidor)
 
-_Nada ainda._
+- **CFG-022**: `CLAUDE.md` e as skills `lumini_hub_backend_architecture` e `lumini_hub_entity_creation` traduzidos para português, com três pontos desatualizados das skills corrigidos. O `CLAUDE.md` também deixou de descrever o banco legado e o login local passou a depender do `BOOTSTRAP_ADMIN_PASSWORD`.

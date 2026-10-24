@@ -1,107 +1,106 @@
 ---
 name: lumini-hub-entity-creation
-description: Step-by-step guidelines for creating and registering new domain entities, repositories, services, and routes in the Lumini Hub backend.
+description: Passo a passo para criar e registrar novas entidades de domínio, repositories, services e rotas no backend do Lumini Hub.
 ---
 
-# Lumini Hub Entity Creation Guidelines
+# Diretrizes para criar entidades no Lumini Hub
 
-This skill defines the step-by-step process for creating, writing, and registering a new database entity (such as Brands, Products, etc.) inside the microservices of the Lumini Hub Go backend.
+Esta skill define o passo a passo para criar, escrever e registrar uma nova entidade de banco (como Marcas, Produtos etc.) dentro dos microsserviços do backend Go do Lumini Hub.
 
-Always perform these steps in order when the user asks to add or create a new entity.
-
----
-
-## Overview of Microservice Context
-All file paths below are relative to the specific microservice folder where the entity belongs:
-*   **Core Entities (ERP/Admin/Registration)**: Locate in `Backend/microservices/api.core/`
-*   **Auth/Role Entities**: Locate in `Backend/microservices/api.auth/`
+Execute sempre estes passos em ordem quando o usuário pedir para adicionar ou criar uma entidade nova.
 
 ---
 
-## Step 0: Company Scoping — Ask Before Modeling
-
-Lumini Hub is multi-company **within a single tenant database** (multi-tenant itself is one physical database per client, handled outside this skill). A holding company can have subsidiary/branch companies self-referencing under it (`Company.ParentID`, same shape as `MenuItem.ParentID`). Almost every entity has to take a position on how it relates to `Company`, and getting this wrong is expensive to retrofit once rows exist — **never assume, ask the user which of these three buckets the new entity falls into before writing Step 1's model**:
-
-1. **Hard-scoped** — the entity has its own `CompanyID uint` FK and every row belongs to exactly one Company. Default assumption for anything operational/transactional that must never mix between companies: stock, sales, purchase orders, financial entries, invoices, cash registers, etc. Repositories/services for hard-scoped entities must filter by the requester's Company (see visibility rule below) in every query — this is as mandatory as the Unit of Work pattern, not optional hardening.
-2. **Global with a visibility relationship** — no `CompanyID` on the entity itself (the catalog stays shared/global), but a weak many-to-many table (`<entity>_companies`) controls which Companies can see/use each row. Reference case: `Product` — one shared catalog, but a `product_companies` join table controls which products a given Company's sellers can see/sell.
-3. **Global, unscoped** — no Company relationship at all. Reserved for genuinely cross-company reference data (e.g., the Permission catalog, generic lookup tables). Justify explicitly why an entity belongs here instead of bucket 1 or 2 — it should be the exception, not the default.
-
-**Visibility rule to apply once `Company` exists** (confirmed 2026-07-21): a user has a default `CompanyID` on their own record. They only see data scoped to that Company, UNLESS they hold a permission that grants visibility into subsidiary Companies below their own in the self-referencing hierarchy (or, if the user has no Company linked, that same permission decides whether they see everything) — this is a permission-gated exception, not automatic just from being higher in the tree.
-
-If `Company` itself doesn't exist yet in a given codebase snapshot, still ask the scoping question and record the answer in the feature's `plano_*.md` so the `CompanyID` FK/join table is added in the same pass once `Company` lands, instead of being silently forgotten.
-
-## Step 0.5: 1:1 Config Entities Don't Get Delete
-
-Found 2026-09-05 building `CompanyFiscalConfig`: a soft-deleted row plus a plain unique index (e.g. `CompanyID uniqueIndex`) lets the deleted row keep occupying the unique value, blocking recreation later (`ExistsByX` on the app side correctly ignores soft-deleted rows via GORM's default scope, but the raw DB unique *index* doesn't unless it's a partial index with `where:deleted_at IS NULL`). The real fix isn't a smarter index (though that's cheap insurance, add it anyway) — it's recognizing that **a 1:1 configuration record intrinsic to a parent (e.g. `CompanyFiscalConfig`, `CompanyVisualConfig`) has no business meaning for "delete"**: as long as the parent (`Company`) exists, it always has (or should have) that configuration, even if empty. Deleting the row doesn't correspond to anything a user would actually want — "clear the certificate" or "reset the colors" are `Update`s with empty/default values, or a dedicated action, never a row deletion.
-
-**Before Step 6 (Handler), decide**: is this entity a real list (rows genuinely come and go — `Company`, `ChartOfAccounts`, `CompanyDocumentIssuanceConfig`) or a 1:1 config glued to a parent? For the latter, skip Delete entirely: no `Delete<Entity>` in the service, no handler method, no route, and no `<entity>.delete` permission in Step 11 — only `view`/`create`/`edit`. Don't build it "for completeness" and remove it later; ask this before Step 1, same spirit as Step 0.
+## Visão geral do contexto dos microsserviços
+Todos os caminhos de arquivo abaixo são relativos à pasta do microsserviço a que a entidade pertence:
+*   **Entidades do Core (ERP/Admin/Cadastros)**: ficam em `Backend/microservices/api.core/`
+*   **Entidades de Auth/Perfis**: ficam em `Backend/microservices/api.auth/`
 
 ---
 
-## Step-by-Step Entity Creation Process
+## Passo 0: Escopo por empresa: pergunte antes de modelar
 
-### Step 1: Base Domain Model
-Create the base model structure in `internal/models/<entity>.go`.
-*   Define the struct representing the database table with GORM tags (e.g., `gorm:"primaryKey"`, `gorm:"type:varchar(100)"`, `gorm:"uniqueIndex"`).
-*   Create request payloads for creation and updating (e.g., `Create<Entity>Request`, `Update<Entity>Request`) with validation tags (e.g., `binding:"required,min=2"`).
+O Lumini Hub é multiempresa **dentro do banco de um único tenant** (o multi-tenant em si é um banco físico por cliente, tratado fora desta skill). Uma empresa matriz pode ter empresas filiais autorreferenciadas abaixo dela (`Company.ParentID`, mesmo formato do `MenuItem.ParentID`). Quase toda entidade precisa definir como se relaciona com `Company`, e errar isso sai caro de corrigir depois que já existem linhas: **nunca presuma, pergunte ao usuário em qual destes três grupos a nova entidade se encaixa antes de escrever o modelo do Passo 1**:
 
-### Step 2: Model DTOs & Mappers
-Create the DTO structure in `internal/models/<entity>_dto.go`.
-*   Include DTOs optimized for lists and details (e.g., `<Entity>DTO`, `<Entity>DetailDTO`).
-*   Implement converter methods/functions to safely map entities to DTOs (e.g., `ToDTO()` and `ToDetailDTO()`).
+1. **Restrita à empresa**: a entidade tem a sua própria FK `CompanyID uint` e toda linha pertence a exatamente uma Company. Suposição padrão para tudo que for operacional/transacional e nunca puder se misturar entre empresas: estoque, vendas, pedidos de compra, lançamentos financeiros, notas fiscais, caixas etc. Repositories/services de entidades restritas precisam filtrar pela Company do solicitante (ver a regra de visibilidade abaixo) em toda consulta: isso é tão obrigatório quanto o padrão Unit of Work, não um reforço opcional.
+2. **Global com relação de visibilidade**: sem `CompanyID` na própria entidade (o catálogo continua compartilhado/global), mas uma tabela de muitos-para-muitos fraca (`<entity>_companies`) controla quais Companies podem ver/usar cada linha. Caso de referência: `Product`: um catálogo compartilhado, mas uma tabela de junção `product_companies` controla quais produtos os vendedores de determinada Company podem ver/vender.
+3. **Global, sem escopo**: nenhuma relação com Company. Reservado para dados de referência realmente comuns a todas as empresas (por exemplo, o catálogo de Permissões, tabelas genéricas de consulta). Justifique de forma explícita por que a entidade está aqui e não no grupo 1 ou 2: deve ser a exceção, não o padrão.
 
-### Step 3: Specific Repository Interface and GORM Implementation
-Create the repository in `internal/repository/<entity>_repository.go`.
-*   Define a specific interface that extends `commonrepo.Repository[domain.<Entity>]`.
-*   Provide a GORM struct implementation.
-*   If the entity requires preloaded relationships (e.g., `Addresses` or `Contacts`), override `FindByID` or write a custom search method to apply `preload`.
+**Regra de visibilidade a aplicar quando a `Company` existir** (confirmada em 2026-07-21): o usuário tem um `CompanyID` padrão no próprio registro. Ele só vê dados da sua Company, A MENOS que tenha uma permissão que dê visibilidade às Companies subsidiárias abaixo da sua na hierarquia autorreferenciada (ou, se o usuário não tiver Company vinculada, essa mesma permissão decide se ele vê tudo): é uma exceção controlada por permissão, não automática só por estar mais acima na árvore.
 
-### Step 4: Input and Business Validator
-Create the validator in `internal/validator/<entity>_validator.go`.
-*   Implement validations to enforce business rules before persistency (e.g., uniqueness of a code or document, validating nested items).
+Se a própria `Company` ainda não existir numa versão do código, faça mesmo assim a pergunta de escopo e registre a resposta no `plano_*.md` da funcionalidade, para que a FK `CompanyID`/a tabela de junção seja adicionada na mesma passada quando a `Company` chegar, em vez de ser esquecida em silêncio.
 
-### Step 5: Service Layer (Business Logic)
-Create the service in `internal/service/<entity>_service.go`.
-*   Inject the unit of work interface `repository.UnitOfWork` and the validator.
-*   **Strict rule**: Use the Unit of Work (`s.uow.Execute(func(uow repository.UnitOfWork) error { ... })`) to wrap all repository insert, update, or delete operations. This guarantees transactions are committed atomically.
+## Passo 0.5: Entidades de configuração 1:1 não têm Delete
 
-### Step 6: Handler Layer (Controller)
-Create the handler in `internal/handlers/<entity>.go`.
-*   Inject the Service.
-*   Implement endpoints for Create, Update, Delete, GetByID, and Search (`/filter` POST method).
-*   Always use `utils.SuccessResponse`, `utils.ErrorResponse`, or `utils.ValidationErrorResponse` for returning payloads.
-*   Document every endpoint using standard declarative Swagger annotations (`@Summary`, `@Tags`, `@Router`, etc.).
+Descoberto em 2026-09-05 ao construir o `CompanyFiscalConfig`: uma linha com soft delete somada a um índice único simples (por exemplo, `CompanyID uniqueIndex`) faz a linha apagada continuar ocupando o valor único, impedindo recriá-la depois (o `ExistsByX` do lado da aplicação ignora corretamente as linhas com soft delete pelo escopo padrão do GORM, mas o *índice* único cru do banco não ignora, a menos que seja um índice parcial com `where:deleted_at IS NULL`). A correção de verdade não é um índice mais esperto (embora seja um seguro barato, e vale colocá-lo mesmo assim): é reconhecer que **um registro de configuração 1:1 intrínseco a um pai (por exemplo, `CompanyFiscalConfig`, `CompanyVisualConfig`) não tem significado de negócio para "excluir"**: enquanto o pai (`Company`) existir, ele sempre tem (ou deveria ter) essa configuração, mesmo que vazia. Apagar a linha não corresponde a nada que um usuário realmente queira: "limpar o certificado" ou "restaurar as cores" são `Update`s com valores vazios/padrão, ou uma ação dedicada, nunca a exclusão da linha.
 
-### Step 7: Routes Definition
-Create the routes file in `internal/routes/<entity>_routes.go`.
-*   Register endpoints to the Gin router group, applying necessary Auth or Role-based middleware.
-
-### Step 8: Server Integration
-Wire the repository, validator, service, handler and route registration together in the microservice's own startup code (`main.go` today — neither `api.core` nor `api.auth` has a separate `internal/server/` package yet, despite `CLAUDE.md` naming one as the convention; check the current microservice before assuming the file exists).
-
-### Step 9: Automatic DB Migrations
-Add the new struct to the `AutoMigrate(...)` call in the microservice's `main.go` (e.g. `api.core/main.go` for the `Company` entity). There is no dedicated `migrate.go` file in either `api.core` or `api.auth` today.
-
-### Step 10: Database Seeder
-Add default seed data (permissions, menu items, system config) via the microservice's `internal/seeder/` package if it has one (`api.auth` does, e.g. `menu_item_seeder.go`; `api.core` doesn't yet — follow the same package-per-microservice pattern if you're the first entity there needing seed data).
-
-### Step 11: Security & RBAC Permissions
-Register the new entity permissions (e.g., `view_<entities>`, `create_<entities>`, `edit_<entities>`, `delete_<entities>`) in the permissions table via seeders or initial SQL scripts. Map them to default user roles (Admin, Manager).
-Whenever you add standard permissions, make sure to also write seed logic to insert these permissions and link them directly to the `ADMIN` role.
-
-### Step 12: Unit Tests (Recommended)
-Create unit/integration tests in `internal/service/<entity>_service_test.go` or `internal/validator/<entity>_validator_test.go` to test logic isolation.
+**Antes do Passo 6 (Handler), decida**: esta entidade é uma lista de verdade (as linhas realmente entram e saem: `Company`, `ChartOfAccounts`, `CompanyDocumentIssuanceConfig`) ou uma configuração 1:1 colada a um pai? Para o segundo caso, pule o Delete por inteiro: sem `Delete<Entity>` no service, sem método no handler, sem rota e sem a permissão `<entity>.delete` no Passo 11: apenas `view`/`create`/`edit`. Não construa "por completude" para remover depois; faça esta pergunta antes do Passo 1, no mesmo espírito do Passo 0.
 
 ---
 
-## Important Rules for AI Code Generation
-1.  **Do not skip layers**: Never bind controllers directly to repositories. Always implement the Service layer and route operations via the Unit of Work.
-2.  **No direct GORM DB in Services**: Services must only interact with `repository.UnitOfWork`.
-3.  **Strict Path Naming**: Align snake_case filenames (e.g., `customer_supplier_repository.go`) to match existing file name conventions.
-4.  **Swagger Regeneration**: Whenever you modify or add handlers, regenerate swagger documentation in the gateway directory:
+## Passo a passo para criar uma entidade
+
+### Passo 1: Modelo de domínio base
+Crie a estrutura do modelo base em `internal/models/<entity>.go`.
+*   Defina a struct que representa a tabela do banco com as tags do GORM (por exemplo, `gorm:"primaryKey"`, `gorm:"type:varchar(100)"`, `gorm:"uniqueIndex"`).
+*   Crie os payloads de criação e atualização (por exemplo, `Create<Entity>Request`, `Update<Entity>Request`) com tags de validação (por exemplo, `binding:"required,min=2"`).
+
+### Passo 2: DTOs e mapeadores do modelo
+Crie a estrutura de DTO em `internal/models/<entity>_dto.go`.
+*   Inclua DTOs otimizados para listas e para detalhes (por exemplo, `<Entity>DTO`, `<Entity>DetailDTO`).
+*   Implemente métodos/funções conversoras para mapear entidades em DTOs com segurança (por exemplo, `ToDTO()` e `ToDetailDTO()`).
+
+### Passo 3: Interface de repository específica e implementação GORM
+Crie o repository em `internal/repository/<entity>_repository.go`.
+*   Defina uma interface específica que estenda `commonrepo.Repository[domain.<Entity>]`.
+*   Forneça uma implementação em struct com GORM.
+*   Se a entidade precisar de relacionamentos pré-carregados (por exemplo, `Addresses` ou `Contacts`), sobrescreva o `FindByID` ou escreva um método de busca próprio que aplique o `preload`.
+
+### Passo 4: Validador de entrada e de negócio
+Crie o validador em `internal/validator/<entity>_validator.go`.
+*   Implemente validações que garantam as regras de negócio antes da persistência (por exemplo, unicidade de um código ou documento, validação de itens aninhados).
+
+### Passo 5: Camada de service (lógica de negócio)
+Crie o service em `internal/service/<entity>_service.go`.
+*   Injete a interface do unit of work `repository.UnitOfWork` e o validador.
+*   **Regra estrita**: use o Unit of Work (`s.uow.Execute(func(uow repository.UnitOfWork) error { ... })`) para envolver todas as operações de insert, update ou delete dos repositories. Isso garante que as transações sejam confirmadas de forma atômica.
+
+### Passo 6: Camada de handler (controller)
+Crie o handler em `internal/handlers/<entity>.go`.
+*   Injete o Service.
+*   Implemente os endpoints de Create, Update, Delete, GetByID e a busca (método POST `/filter`).
+*   Use sempre `utils.SuccessResponse`, `utils.ErrorResponse` ou `utils.ValidationErrorResponse` para devolver os payloads. Num 500 o texto do erro não vai ao cliente (fica no log do servidor); nunca ponha erro bruto do banco numa resposta 4xx.
+*   Documente cada endpoint com as anotações declarativas padrão do Swagger (`@Summary`, `@Tags`, `@Router` etc.).
+
+### Passo 7: Definição das rotas
+Crie o arquivo de rotas em `internal/routes/<entity>_routes.go`.
+*   Registre os endpoints no grupo do roteador Gin, aplicando os middlewares de Auth ou de permissão que forem necessários.
+
+### Passo 8: Integração no servidor
+Ligue o repository, o validator, o service, o handler e o registro de rotas no código de inicialização do próprio microsserviço (hoje o `main.go`: nem o `api.core` nem o `api.auth` têm ainda um pacote `internal/server/` separado, apesar de o `CLAUDE.md` citá-lo como convenção; confira o microsserviço atual antes de presumir que o arquivo existe).
+
+### Passo 9: Migrações automáticas do banco
+Adicione a nova struct à chamada `AutoMigrate(...)` do `main.go` do microsserviço (por exemplo, `api.core/main.go` para a entidade `Company`; no `api.auth` é o `prepareDatabase` do `main.go`), na ordem de dependência das chaves estrangeiras. Ela só roda quando `DB_AUTO_MIGRATE` está ligada. Não existe um arquivo `migrate.go` dedicado no `api.core` nem no `api.auth`.
+
+### Passo 10: Seed do banco
+Adicione dados padrão de seed (menu, configuração do sistema) pelo pacote `internal/seeder/` do microsserviço, se ele tiver um (o `api.auth` tem, por exemplo o `menu_item_seeder.go`; o `api.core` ainda não: siga o mesmo padrão de um pacote por microsserviço se você for a primeira entidade ali que precisa de dados de seed). O seed precisa ser idempotente e rodar sob a mesma flag `DB_AUTO_MIGRATE`. As permissões **não** entram aqui: ficam no catálogo do Passo 11.
+
+### Passo 11: Segurança e permissões RBAC
+Registre as permissões da nova entidade (`<entity>.view`, `<entity>.create`, `<entity>.edit`, `<entity>.delete`) no `PermissionCatalog` (`Backend/microservices/api.auth/seed/permission_catalog.go`), com uma descrição em português completa e o módulo a que pertencem (por exemplo "Criar fornecedores", módulo "Compras"). O próximo boot do `api.auth` as cria e as vincula ao perfil `ADMIN` automaticamente (tudo que não for do módulo `Develop`), sem tocar em vínculos que já existem. Toda permissão que uma rota exige com `RequirePermission("...")` precisa estar no catálogo. Atualize os pisos do teste de âncora (`catalog_test.go`) e o texto do `CLAUDE.md` se as contagens mudarem.
+
+### Passo 12: Testes unitários (recomendado)
+Crie testes unitários/de integração em `internal/service/<entity>_service_test.go` ou `internal/validator/<entity>_validator_test.go` para testar a lógica de forma isolada.
+
+---
+
+## Regras importantes para a geração de código por IA
+1.  **Não pule camadas**: nunca ligue controllers diretamente a repositories. Implemente sempre a camada de Service e faça as operações passarem pelo Unit of Work.
+2.  **Sem GORM direto nos Services**: os services só podem interagir com o `repository.UnitOfWork`.
+3.  **Nomes de arquivo estritos**: mantenha os nomes em snake_case (por exemplo, `customer_supplier_repository.go`) para seguir a convenção dos arquivos existentes.
+4.  **Regerar o Swagger**: sempre que alterar ou adicionar handlers, regere a documentação do Swagger na pasta do gateway:
     ```powershell
     swag init -g main.go -d ./,../../common,../api.auth,../api.core --parseDependency
     ```
-5.  **Automatic Permission Seeding**: When generating files for a new entity, you **MUST** automatically write/propose the GORM seeder logic (e.g. in `seeder.go`) or the equivalent database migration scripts to seed the new permissions (`view_<entity>`, `create_<entity>`, `edit_<entity>`, `delete_<entity>`) and map them to the `ADMIN` role template immediately.
-6.  **Ask the Company scoping question before Step 1, every time**: hard-scoped (own `CompanyID`), global-with-visibility-relationship (join table), or global-unscoped — see Step 0 above. Do not default to "unscoped" just because `Company` doesn't exist in the codebase yet; record the intended answer in `plano_*.md` regardless.
-7.  **1:1 config entities skip Delete entirely** (service, handler, route, and `.delete` permission) — see Step 0.5. Only real list-shaped entities keep the full CRUD.
+5.  **Permissões no catálogo, não em seed solto**: ao gerar os arquivos de uma entidade nova, você **DEVE** acrescentar as permissões (`<entity>.view`, `<entity>.create`, `<entity>.edit`, `<entity>.delete`) ao `PermissionCatalog` na mesma passada (Passo 11). É assim que elas chegam ao banco e ao `ADMIN`.
+6.  **Faça a pergunta de escopo por empresa antes do Passo 1, toda vez**: restrita à empresa (com `CompanyID` próprio), global com relação de visibilidade (tabela de junção) ou global sem escopo: ver o Passo 0 acima. Não adote "sem escopo" como padrão só porque a `Company` ainda não existe no código; registre a resposta pretendida no `plano_*.md` de qualquer forma.
+7.  **Entidades de configuração 1:1 pulam o Delete por inteiro** (service, handler, rota e a permissão `.delete`): ver o Passo 0.5. Só as entidades em formato de lista de verdade mantêm o CRUD completo.
