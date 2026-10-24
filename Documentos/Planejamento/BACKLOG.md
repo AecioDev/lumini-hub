@@ -38,10 +38,10 @@ _Nada aguardando teste no momento._
 
 
 
+
 ## 2. Próximos (Configuração / base)
 
 - [ ] **CFG-016** Bancos já semeados (dev e VM da OCI): os itens de menu "Fornecedores" (em Compras e em Financeiro > Contas a Pagar) continuam em `purchases.view`; precisa de ajuste manual ou migração, porque o seed do menu pula itens existentes
-- [ ] **CFG-018** Nunca logar `err` bruto nos handlers (mensagem do Postgres pode citar valores) (antigo CFG-10.5.2)
 - [ ] **CFG-022** Traduzir o `CLAUDE.md` e as skills para português
 - [ ] **CFG-023** Arquivar o histórico dos `tasks_*.md` grandes (`tasks_empresa.md` tem ~330 KB)
 - [ ] **CFG-024** Barra de status no layout do sistema (frontend), numa área fixa da página, mostrando a versão do sistema e a versão do banco (precisa de um endpoint que leia `dbversion.AppVersion` e a tabela `schema_versions`, ex.: `/api/auth/version`) e outras informações que forem surgindo com o tempo (ambiente, empresa ativa, etc.). Ligada ao CFG-020
@@ -89,3 +89,4 @@ O Lumini Hub é um sistema feito do zero. Escopo de cada módulo em `Modulo_N_*/
 - [x] **CFG-026** Painel de permissões do usuário (editar usuário e o resumo): todo item mostra a descrição completa da permissão, na ordem ver, criar, editar, excluir e demais, no lugar dos rótulos curtos "Ver"/"Criar"/"Editar"/"Excluir" que misturavam com os completos (testado em 23/10/2026)
 - [x] **CFG-015** Menu do seeder conferido contra o menu do banco de dev antigo (`erp_system`): hrefs, ícones e permissões iguais, exceto Fornecedores em Compras (já tratado) e uma posição repetida em Configurações. Achado e corrigido: "Financeiro > Contas a Pagar > Fornecedores" ainda usava `purchases.view`; agora usa `suppliers.view`. Novos testes garantem que toda permissão do menu existe no catálogo, que todo item com tela tem permissão e que Fornecedores usa `suppliers.view` (antigo CFG-10.4) (testado em 23/10/2026)
 - [x] **CFG-017** `APP_ENV` não definido deixa de virar `development`: sem a variável o sistema sobe em modo seguro (log do banco sem valores) e para ver o SQL no log é preciso `APP_ENV=development` no `.env`. As opções (development, staging, production, em branco) e o que cada uma faz estão explicadas no `Backend/.env.example`, no lugar de um aviso no console (antigo CFG-10.5.1) (testado em 23/10/2026)
+- [x] **CFG-018** Erro interno (500) não devolve mais o texto do erro ao cliente: `utils.ErrorResponse` grava o erro completo no log do servidor (método, caminho e erro, sem a query string) e a resposta leva só a `message`. Cobre os 40 pontos dos handlers que passavam o erro cru (o diagnóstico era de resposta, não de log). Ficam de fora os 25 casos de 400 genérico, que podem carregar texto de banco e precisam de revisão por entidade (antigo CFG-10.5.2) (testado em 23/10/2026: aceito pelos testes automáticos)

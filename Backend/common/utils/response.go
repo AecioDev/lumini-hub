@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"lumini-hub/common/utils/ginutils"
@@ -32,8 +33,19 @@ func SuccessResponse(c *gin.Context, statusCode int, message string, data interf
 	})
 }
 
-// ErrorResponse envia uma resposta de erro
+// ErrorResponse envia uma resposta de erro.
+//
+// Erro interno (500) nunca devolve o texto do erro ao cliente: os handlers passam o
+// err.Error() cru, que num erro de banco traz nome de tabela/constraint e até valores
+// (ex.: `invalid input syntax for type integer: "abc"`). No 500 o erro completo vai para o
+// log do servidor, com método e caminho, e a resposta leva só a `message` (o frontend cai
+// nela quando não há `error`). Os demais status continuam como estão: são mensagens de
+// regra de negócio escritas pra o usuário ver (e o 503 do SQL Server legado é um texto fixo).
 func ErrorResponse(c *gin.Context, statusCode int, message string, err string) {
+	if statusCode == http.StatusInternalServerError {
+		logInternalError(c, message, err)
+		err = ""
+	}
 	c.JSON(statusCode, Response{
 		Success:    false,
 		StatusCode: statusCode,
@@ -104,3 +116,15 @@ func GetUserIDFromContext(c *gin.Context) (uint, bool) {
 	return userID, true
 }
 
+// logInternalError grava o erro completo de um 500 no log do servidor.
+func logInternalError(c *gin.Context, message string, err string) {
+	method, path := "-", "-"
+	if c != nil && c.Request != nil && c.Request.URL != nil {
+		method, path = c.Request.Method, c.Request.URL.Path
+	}
+	if err == "" {
+		log.Printf("[erro 500] %s %s: %s", method, path, message)
+		return
+	}
+	log.Printf("[erro 500] %s %s: %s: %s", method, path, message, err)
+}
