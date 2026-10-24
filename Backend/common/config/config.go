@@ -144,8 +144,9 @@ func Load() (*Config, error) {
 		Email:    getEnv("BOOTSTRAP_ADMIN_EMAIL", ""),
 	}
 
-	// Configurações gerais da aplicação
-	appEnv := getEnv("APP_ENV", "development")
+	// Configurações gerais da aplicação. Sem APP_ENV o ambiente fica vazio, que é o modo
+	// seguro (log do banco sem valores): esquecer a variável nunca liga o log verboso.
+	appEnv := getEnv("APP_ENV", defaultAppEnv)
 
 	return &Config{
 		Server: ServerConfig{
@@ -213,6 +214,11 @@ func (c *SQLServerConfig) DSN() string {
 }
 
 // getEnv retorna o valor da variável de ambiente ou o valor padrão
+// defaultAppEnv é o ambiente quando APP_ENV não está definido. Precisa ser diferente de
+// "development": em development o log do banco mostra todo SQL com os valores (inclusive
+// hash de senha), e um deploy que esquecesse a variável voltaria a vazar isso.
+const defaultAppEnv = ""
+
 func getEnv(key, defaultValue string) string {
 	if value, exists := os.LookupEnv(key); exists {
 		return value

@@ -65,3 +65,29 @@ func TestLoad_AutoMigrate(t *testing.T) {
 		})
 	}
 }
+
+// Sem APP_ENV o ambiente não pode ser "development" (log do banco com valores e hash de senha).
+// Load() também lê o Backend/.env real, então o padrão em si é conferido pela constante.
+func TestLoad_AppEnvPadraoNaoEhDevelopment(t *testing.T) {
+	if strings.EqualFold(strings.TrimSpace(defaultAppEnv), "development") {
+		t.Fatalf("defaultAppEnv = %q: o padrão não pode ser development", defaultAppEnv)
+	}
+
+	t.Setenv("APP_ENV", "")
+	cfg, err := Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.App.Env != defaultAppEnv {
+		t.Errorf("APP_ENV em branco virou %q, esperado %q", cfg.App.Env, defaultAppEnv)
+	}
+
+	t.Setenv("APP_ENV", "development")
+	cfg, err = Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.App.Env != "development" {
+		t.Errorf("APP_ENV=development virou %q", cfg.App.Env)
+	}
+}
