@@ -35,9 +35,9 @@ Já implementado e na `develop`; falta você validar.
 
 _Nada aguardando teste no momento._
 
+
 ## 2. Próximos (Configuração / base)
 
-- [ ] **CFG-014** Descrições e módulos do catálogo de permissões herdados do dev: `roles.*` dizem "usuários", módulo "dashboard" em minúsculo, "Ver"/"Editar" em Integrações; sem renomear os códigos (antigo CFG-10.2)
 - [ ] **CFG-015** Conferir os itens de menu do `menu_item_seeder.go` contra a tabela `menu_items` do dev (só `/settings/*` foi conferido) (antigo CFG-10.4)
 - [ ] **CFG-016** Bancos já semeados (dev e VM da OCI): o item de menu "Fornecedores" continua em `purchases.view`; precisa de ajuste manual ou migração, porque o seed do menu pula itens existentes
 - [ ] **CFG-017** `APP_ENV` não definido vira `development` (log verboso): exigir explícito fora de dev ou inverter o padrão para o modo seguro (antigo CFG-10.5.1)
@@ -85,3 +85,5 @@ O Lumini Hub é um sistema feito do zero. Escopo de cada módulo em `Modulo_N_*/
 - [x] **CFG-013** 8 permissões novas no catálogo (`customers.create/edit/delete`, `suppliers.view/create/edit/delete`, `integrations.edit`), 67 no total e 58 para o ADMIN (antigo CFG-10.1; testado em 22/10/2026 na tela de permissões do usuário). O menu "Fornecedores" ligado a `suppliers.view` só vale para bancos novos; o ajuste dos bancos já semeados está em CFG-016
 - [x] **CFG-020** Versão do banco gravada no próprio banco: tabela `schema_versions` (uma linha por publicação), constantes `Required` e `AppVersion` em `Backend/common/dbversion/dbversion.go` (subidas à mão a cada release), o `api.auth` registra no fim do boot com `DB_AUTO_MIGRATE=true`, e com `DB_AUTO_MIGRATE=false` os três serviços conferem e recusam subir se o banco estiver atrás ou sem versão (testado em 22/10/2026: registrou a versão 2 no primeiro boot e não duplicou ao reiniciar)
 - [x] **CFG-021** Ambiente da OCI atualizado para a `2026.2.2.0`: código na `develop`, banco recriado do zero, admin inicial, primeira empresa cadastrada e permissões conferidas (testado em 22/10/2026). Release em `releases/Release_2026.2.2.0.md`
+- [x] **CFG-014** Textos e módulos do catálogo de permissões corrigidos no código (`roles.*` = perfis, `permissions.*`/`integrations.*` em minúsculas, "Receber boletos", módulo `Dashboard`); `roles.*` fica no módulo Develop de propósito (antigo CFG-10.2; testado em 23/10/2026 num banco de dev novo)
+- [x] **CFG-026** Painel de permissões do usuário (editar usuário e o resumo): todo item mostra a descrição completa da permissão, na ordem ver, criar, editar, excluir e demais, no lugar dos rótulos curtos "Ver"/"Criar"/"Editar"/"Excluir" que misturavam com os completos (testado em 23/10/2026)

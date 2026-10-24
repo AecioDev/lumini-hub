@@ -28,13 +28,6 @@ export function getOrphanModules(
   );
 }
 
-const ACTION_LABELS: Record<string, string> = {
-  view: "Ver",
-  create: "Criar",
-  edit: "Editar",
-  delete: "Excluir",
-};
-
 const MODULE_LABELS: Record<string, string> = {
   users: "Usuários",
   roles: "Perfis",
@@ -92,36 +85,21 @@ export interface PermissionItem {
   label: string;
 }
 
-// Ver/Criar/Editar/Excluir usam o rótulo em PT-BR; qualquer outra ação (ou
-// uma que colida — ex.: o módulo "dashboard" tem 5 permissões diferentes
-// terminando em ".view", uma por perfil de dashboard) usa a própria
-// descrição da permissão. No fim é só uma lista só, sem distinção visual.
+// Todo item usa a própria descrição da permissão (o catálogo do seed já traz textos
+// completos, ex.: "Excluir empresas"), sempre igual em qualquer módulo — antes, quando
+// o módulo tinha uma só permissão de uma ação, o painel mostrava "Ver"/"Criar"/"Editar"/
+// "Excluir" e o resultado ficava misto e ambíguo. A ordem é: ver, criar, editar,
+// excluir, as demais ações, e dentro de cada grupo por descrição.
 export function buildPermissionItems(permissions: ApiPermission[]): PermissionItem[] {
-  const grouped = new Map<string, ApiPermission[]>();
-  for (const perm of permissions) {
-    const action = extractAction(perm.permission);
-    const bucket = grouped.get(action);
-    if (bucket) bucket.push(perm);
-    else grouped.set(action, [perm]);
-  }
+  const rank = (perm: ApiPermission) => {
+    const index = CANONICAL_ACTION_ORDER.indexOf(extractAction(perm.permission));
+    return index >= 0 ? index : CANONICAL_ACTION_ORDER.length;
+  };
+  const label = (perm: ApiPermission) => perm.description || perm.permission;
 
-  const items: PermissionItem[] = [];
-
-  for (const action of CANONICAL_ACTION_ORDER) {
-    const bucket = grouped.get(action);
-    if (bucket && bucket.length === 1) {
-      items.push({ permission: bucket[0], label: ACTION_LABELS[action] });
-      grouped.delete(action);
-    }
-  }
-
-  for (const bucket of grouped.values()) {
-    for (const perm of bucket) {
-      items.push({ permission: perm, label: perm.description || perm.permission });
-    }
-  }
-
-  return items;
+  return [...permissions]
+    .sort((a, b) => rank(a) - rank(b) || label(a).localeCompare(label(b), "pt-BR"))
+    .map((perm) => ({ permission: perm, label: label(perm) }));
 }
 
 interface ModulePermissionsPanelProps {
