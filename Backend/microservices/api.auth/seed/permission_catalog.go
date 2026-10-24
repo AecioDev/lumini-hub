@@ -26,18 +26,18 @@ var PermissionCatalog = []PermissionSeed{
 	{Permission: "suppliers.delete", Description: "Excluir fornecedores", Module: "Compras"},
 	{Permission: "suppliers.edit", Description: "Editar fornecedores", Module: "Compras"},
 	{Permission: "suppliers.view", Description: "Visualizar fornecedores", Module: "Compras"},
-	// dashboard
-	{Permission: "dashboard.view_default", Description: "Visualizar o dashboard padrão do perfil", Module: "dashboard"},
+	// Dashboard
+	{Permission: "dashboard.view_default", Description: "Visualizar o dashboard padrão do perfil", Module: "Dashboard"},
 	// Develop
 	{Permission: "admin.create_permissions", Description: "Gerenciar perfis e permissões (catálogo)", Module: "Develop"},
-	{Permission: "permissions.create", Description: "Criar Permissões", Module: "Develop"},
-	{Permission: "permissions.delete", Description: "Excluir Permissões", Module: "Develop"},
-	{Permission: "permissions.edit", Description: "Editar Permissões", Module: "Develop"},
-	{Permission: "permissions.view", Description: "Visualizar Permissões", Module: "Develop"},
-	{Permission: "roles.create", Description: "Criar usuários", Module: "Develop"},
-	{Permission: "roles.delete", Description: "Excluir usuários", Module: "Develop"},
-	{Permission: "roles.edit", Description: "Editar usuários", Module: "Develop"},
-	{Permission: "roles.view", Description: "Visualizar usuários", Module: "Develop"},
+	{Permission: "permissions.create", Description: "Criar permissões", Module: "Develop"},
+	{Permission: "permissions.delete", Description: "Excluir permissões", Module: "Develop"},
+	{Permission: "permissions.edit", Description: "Editar permissões", Module: "Develop"},
+	{Permission: "permissions.view", Description: "Visualizar permissões", Module: "Develop"},
+	{Permission: "roles.create", Description: "Criar perfis", Module: "Develop"},
+	{Permission: "roles.delete", Description: "Excluir perfis", Module: "Develop"},
+	{Permission: "roles.edit", Description: "Editar perfis", Module: "Develop"},
+	{Permission: "roles.view", Description: "Visualizar perfis", Module: "Develop"},
 	// Empresas
 	{Permission: "companies.create", Description: "Criar empresas", Module: "Empresas"},
 	{Permission: "companies.delete", Description: "Excluir empresas", Module: "Empresas"},
@@ -65,15 +65,15 @@ var PermissionCatalog = []PermissionSeed{
 	{Permission: "finance.create", Description: "Criar transações financeiras", Module: "Financeiro"},
 	{Permission: "finance.delete", Description: "Excluir transações financeiras", Module: "Financeiro"},
 	{Permission: "finance.edit", Description: "Editar transações financeiras", Module: "Financeiro"},
-	{Permission: "finance.receive_boleto", Description: "Permissão para receber boleto financeiro", Module: "Financeiro"},
+	{Permission: "finance.receive_boleto", Description: "Receber boletos", Module: "Financeiro"},
 	{Permission: "finance.reports", Description: "Gerar relatórios financeiros", Module: "Financeiro"},
 	{Permission: "finance.view", Description: "Visualizar finanças", Module: "Financeiro"},
 	{Permission: "finance.view_pendencies", Description: "Visualizar pendências financeiras", Module: "Financeiro"},
 	// Gerencial
 	{Permission: "dashboard.manager.view", Description: "Visualizar o dashboard gerencial", Module: "Gerencial"},
 	// Integrações
-	{Permission: "integrations.edit", Description: "Editar Integrações", Module: "Integrações"},
-	{Permission: "integrations.view", Description: "Visualizar Integrações", Module: "Integrações"},
+	{Permission: "integrations.edit", Description: "Editar integrações", Module: "Integrações"},
+	{Permission: "integrations.view", Description: "Visualizar integrações", Module: "Integrações"},
 	// Usuários
 	{Permission: "users.create", Description: "Criar usuários", Module: "Usuários"},
 	{Permission: "users.delete", Description: "Excluir usuários", Module: "Usuários"},
