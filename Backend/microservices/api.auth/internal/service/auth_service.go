@@ -7,6 +7,7 @@ import (
 	"lumini-hub/api.auth/internal/domain"
 	"lumini-hub/api.auth/internal/repository"
 	"lumini-hub/common/config"
+	"lumini-hub/common/dbversion"
 	"lumini-hub/common/utils"
 
 	"gorm.io/gorm"
@@ -237,4 +238,19 @@ func (s *AuthService) GetUserByID(userID uint) (*domain.User, error) {
 		return nil, result.Error
 	}
 	return &user, nil
+}
+
+// GetVersionInfo devolve a versão do sistema (a do código) e a versão do banco (a registrada
+// em schema_versions, 0 se o banco ainda não tiver registro), além do ambiente (APP_ENV).
+func (s *AuthService) GetVersionInfo() (*domain.ApiVersionInfo, error) {
+	current, err := dbversion.Current(s.db)
+	if err != nil {
+		return nil, err
+	}
+	return &domain.ApiVersionInfo{
+		SystemVersion:           dbversion.AppVersion,
+		DatabaseVersion:         current,
+		RequiredDatabaseVersion: dbversion.Required,
+		Environment:             s.cfg.App.Env,
+	}, nil
 }

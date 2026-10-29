@@ -120,7 +120,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/lumini-hub_common_utils.Response"
+                                    "$ref": "#/definitions/utils.Response"
                                 },
                                 {
                                     "type": "object",
@@ -262,6 +262,58 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/version": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retorna a versão do sistema, a versão do banco de dados registrada, a versão do banco que o sistema exige e o ambiente de execução",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Autenticação"
+                ],
+                "summary": "Obtém as versões do sistema e do banco",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ApiVersionInfo"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/utils.Response"
                         }
@@ -2963,6 +3015,23 @@ const docTemplate = `{
                 }
             }
         },
+        "domain.ApiVersionInfo": {
+            "type": "object",
+            "properties": {
+                "database_version": {
+                    "type": "integer"
+                },
+                "environment": {
+                    "type": "string"
+                },
+                "required_database_version": {
+                    "type": "integer"
+                },
+                "system_version": {
+                    "type": "string"
+                }
+            }
+        },
         "domain.ChangePasswordRequest": {
             "type": "object",
             "required": [
@@ -3592,31 +3661,6 @@ const docTemplate = `{
                 },
                 "username": {
                     "type": "string"
-                }
-            }
-        },
-        "lumini-hub_common_utils.Response": {
-            "type": "object",
-            "properties": {
-                "data": {},
-                "error": {
-                    "type": "string"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "meta": {},
-                "statusCode": {
-                    "type": "integer"
-                },
-                "success": {
-                    "type": "boolean"
-                },
-                "validationErrors": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
                 }
             }
         },

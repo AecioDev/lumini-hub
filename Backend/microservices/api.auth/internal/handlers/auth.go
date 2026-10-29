@@ -243,3 +243,23 @@ func (h *AuthHandler) SetActiveCompany(c *gin.Context) {
 
 	utils.SuccessResponse(c, http.StatusOK, "Empresa ativa definida com sucesso", domain.LoginSuccessResponse{User: *user}, nil)
 }
+
+// GetVersion retorna a versão do sistema e a do banco
+// @Summary      Obtém as versões do sistema e do banco
+// @Description  Retorna a versão do sistema, a versão do banco de dados registrada, a versão do banco que o sistema exige e o ambiente de execução
+// @Tags         Autenticação
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  utils.Response{data=domain.ApiVersionInfo}
+// @Failure      401  {object}  utils.Response
+// @Failure      500  {object}  utils.Response
+// @Router       /auth/version [get]
+// @Security     ApiKeyAuth
+func (h *AuthHandler) GetVersion(c *gin.Context) {
+	info, err := h.authService.GetVersionInfo()
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Erro ao obter a versão do sistema", err.Error())
+		return
+	}
+	utils.SuccessResponse(c, http.StatusOK, "Versão do sistema", info, nil)
+}
