@@ -58,7 +58,9 @@ func GetPaginationParams(c *gin.Context) Pagination {
 	}
 }
 
-// Paginate aplica a paginação a uma consulta GORM
+// Paginate aplica a paginação a uma consulta GORM. A ordenação passa por safeOrderBy: só colunas
+// reais do modelo, nunca texto da requisição direto no SQL (e pagination.Sort/Order são
+// corrigidos para o que foi de fato usado).
 func Paginate(value interface{}, pagination *Pagination, db *gorm.DB) (*gorm.DB, error) {
 	var totalRows int64
 	db.Model(value).Count(&totalRows)
@@ -70,7 +72,16 @@ func Paginate(value interface{}, pagination *Pagination, db *gorm.DB) (*gorm.DB,
 	}
 
 	offset := (pagination.Page - 1) * pagination.Limit
-	return db.Offset(offset).Limit(pagination.Limit).Order(pagination.Sort + " " + pagination.Order), nil
+	paginated := db.Offset(offset).Limit(pagination.Limit)
+	if orderBy, ok := safeOrderBy(value, db, pagination.Sort, pagination.Order); ok {
+		paginated = paginated.Order(orderBy)
+		pagination.Sort = orderBy.Column.Name
+		pagination.Order = "asc"
+		if orderBy.Desc {
+			pagination.Order = "desc"
+		}
+	}
+	return paginated, nil
 }
 
 // ApiPagination representa informações de paginação para a API (usado em DTOs)
