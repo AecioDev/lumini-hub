@@ -384,6 +384,17 @@ definitions:
       updated_at:
         type: string
     type: object
+  domain.ApiVersionInfo:
+    properties:
+      database_version:
+        type: integer
+      environment:
+        type: string
+      required_database_version:
+        type: integer
+      system_version:
+        type: string
+    type: object
   domain.ChangePasswordRequest:
     properties:
       current_password:
@@ -808,23 +819,6 @@ definitions:
       username:
         type: string
     type: object
-  lumini-hub_common_utils.Response:
-    properties:
-      data: {}
-      error:
-        type: string
-      message:
-        type: string
-      meta: {}
-      statusCode:
-        type: integer
-      success:
-        type: boolean
-      validationErrors:
-        items:
-          type: string
-        type: array
-    type: object
   utils.ApiPagination:
     properties:
       limit:
@@ -940,7 +934,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/lumini-hub_common_utils.Response'
+            - $ref: '#/definitions/utils.Response'
             - properties:
                 data:
                   $ref: '#/definitions/domain.LoginSuccessResponse'
@@ -1026,6 +1020,37 @@ paths:
           schema:
             $ref: '#/definitions/utils.Response'
       summary: Renova token de autenticação
+      tags:
+      - Autenticação
+  /auth/version:
+    get:
+      consumes:
+      - application/json
+      description: Retorna a versão do sistema, a versão do banco de dados registrada,
+        a versão do banco que o sistema exige e o ambiente de execução
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiVersionInfo'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Obtém as versões do sistema e do banco
       tags:
       - Autenticação
   /companies:

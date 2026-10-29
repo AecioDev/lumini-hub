@@ -12,6 +12,7 @@ Alterações feitas desde o último envio ao servidor. O Claude acrescenta uma l
 
 ## Novidades e melhorias
 
+- **CFG-024**: barra de status no rodapé do sistema com a versão do sistema, a versão do banco (com aviso se estiver atrás do exigido) e o ambiente. Endpoint novo `GET /auth/version`, protegido por login.
 - **CFG-026**: o painel de permissões do usuário (editar usuário e o resumo) passa a mostrar sempre a descrição completa de cada permissão, em vez de "Ver"/"Criar"/"Editar"/"Excluir" quando o módulo tinha só uma.
 
 ## Correções

@@ -1,6 +1,7 @@
 import { api } from "../common/api";
 import type { ApiResponse } from "@/types/common";
 import type { ApiUserDetail, LoginRequest, LoginSuccessResponse } from "@/types/auth";
+import type { ApiVersionInfo } from "@/types/version";
 
 export const authService = {
   async login(payload: LoginRequest): Promise<ApiUserDetail> {
@@ -21,6 +22,11 @@ export const authService = {
       "/auth/refresh-token"
     );
     return data.data!.user;
+  },
+
+  async versionInfo(): Promise<ApiVersionInfo> {
+    const { data } = await api.get<ApiResponse<ApiVersionInfo>>("/auth/version");
+    return data.data!;
   },
 
   async logout(): Promise<void> {
