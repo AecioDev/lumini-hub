@@ -69,7 +69,7 @@ Crie o service em `internal/service/<entity>_service.go`.
 Crie o handler em `internal/handlers/<entity>.go`.
 *   Injete o Service.
 *   Implemente os endpoints de Create, Update, Delete, GetByID e a busca (método POST `/filter`).
-*   Use sempre `utils.SuccessResponse`, `utils.ErrorResponse` ou `utils.ValidationErrorResponse` para devolver os payloads. Num 500 o texto do erro não vai ao cliente (fica no log do servidor); nunca ponha erro bruto do banco numa resposta 4xx.
+*   Use sempre `utils.SuccessResponse`, `utils.ErrorResponse` ou `utils.ValidationErrorResponse` para devolver os payloads. Num 500 o texto do erro não vai ao cliente (fica no log do servidor); em qualquer outro status o texto de erro do banco é trocado por uma mensagem genérica (e vai para o log), então valide tamanho, duplicidade e formato antes do banco.
 *   Documente cada endpoint com as anotações declarativas padrão do Swagger (`@Summary`, `@Tags`, `@Router` etc.).
 
 ### Passo 7: Definição das rotas

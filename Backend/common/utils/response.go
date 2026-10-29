@@ -35,6 +35,9 @@ func SuccessResponse(c *gin.Context, statusCode int, message string, data interf
 
 // ErrorResponse envia uma resposta de erro.
 //
+// Texto de erro do banco de dados (SQLSTATE, falha de conexão) nunca vai ao cliente em nenhum
+// status: o original fica no log do servidor e a resposta leva GenericOperationError.
+//
 // Erro interno (500) nunca devolve o texto do erro ao cliente: os handlers passam o
 // err.Error() cru, que num erro de banco traz nome de tabela/constraint e até valores
 // (ex.: `invalid input syntax for type integer: "abc"`). No 500 o erro completo vai para o
@@ -45,6 +48,9 @@ func ErrorResponse(c *gin.Context, statusCode int, message string, err string) {
 	if statusCode == http.StatusInternalServerError {
 		logInternalError(c, message, err)
 		err = ""
+	} else {
+		// Em qualquer outro status, erro de banco nunca vai ao cliente (ver response_dberror.go).
+		err = hideDatabaseError(c, statusCode, message, err)
 	}
 	c.JSON(statusCode, Response{
 		Success:    false,
@@ -63,9 +69,12 @@ func ValidationErrorResponse(c *gin.Context, message string, errors interface{})
 		case string:
 			validationErrors = []string{v}
 		case []string:
-			validationErrors = v
+			validationErrors = append([]string(nil), v...)
 		default:
 			validationErrors = []string{fmt.Sprintf("%v", v)}
+		}
+		for i, text := range validationErrors {
+			validationErrors[i] = hideDatabaseError(c, http.StatusBadRequest, message, text)
 		}
 	}
 
@@ -118,10 +127,7 @@ func GetUserIDFromContext(c *gin.Context) (uint, bool) {
 
 // logInternalError grava o erro completo de um 500 no log do servidor.
 func logInternalError(c *gin.Context, message string, err string) {
-	method, path := "-", "-"
-	if c != nil && c.Request != nil && c.Request.URL != nil {
-		method, path = c.Request.Method, c.Request.URL.Path
-	}
+	method, path := requestInfo(c)
 	if err == "" {
 		log.Printf("[erro 500] %s %s: %s", method, path, message)
 		return

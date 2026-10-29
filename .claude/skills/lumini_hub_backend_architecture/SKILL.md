@@ -51,7 +51,7 @@ Todos os handlers **DEVEM** usar a struct padrão `utils.Response` de [response.
     "error": "texto da regra de negócio, mostrado ao usuário"
   }
   ```
-  Num **500**, o `ErrorResponse` nunca devolve o texto do erro ao cliente: grava o erro completo no log do servidor (método, caminho e erro) e a resposta leva só a `message`, sem o campo `error`. Pode passar o `err.Error()` cru num 500, mas nunca ponha erro bruto do banco numa resposta 4xx, onde o texto é mostrado ao usuário.
+  Num **500**, o `ErrorResponse` nunca devolve o texto do erro ao cliente: grava o erro completo no log do servidor (método, caminho e erro) e a resposta leva só a `message`, sem o campo `error`. Pode passar o `err.Error()` cru num 500. Em qualquer outro status, texto de erro do banco (`SQLSTATE`, falha de conexão) é trocado por "Não foi possível concluir a operação." e o original vai para o log; por isso valide tamanho, duplicidade e formato antes do banco e não dependa do erro dele para dar mensagem ao usuário.
 - **Erros de validação (`ValidationErrorResponse`)**:
   Aceita uma única string ou uma lista de strings (`[]string`).
   ```json

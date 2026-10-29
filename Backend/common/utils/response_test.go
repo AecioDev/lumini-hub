@@ -96,3 +96,75 @@ func TestErrorResponse_500SemContextoNaoQuebra(t *testing.T) {
 		t.Errorf("status = %d", rec.Code)
 	}
 }
+
+// Erro de banco nunca vai ao cliente, em nenhum status: fica no log e a resposta é genérica.
+func TestErrorResponse_ErroDeBancoNaoVaiAoClienteEmNenhumStatus(t *testing.T) {
+	dbErrors := []string{
+		`ERRO: valor é muito longo para tipo character varying(100) (SQLSTATE 22001)`,
+		pgErro,
+		`ERROR: insert or update on table "documents" violates foreign key constraint "fk_documents_state" (SQLSTATE 23503)`,
+		"failed to connect to `host=localhost user=postgres database=lumini_dev`: dial error (dial tcp 127.0.0.1:5432: connectex: connection refused)",
+		"sql: transaction has already been committed or rolled back",
+	}
+	for _, status := range []int{http.StatusBadRequest, http.StatusNotFound, http.StatusConflict, http.StatusUnauthorized} {
+		for _, dbErr := range dbErrors {
+			logs := capturaLog(t)
+			c, rec := newTestContext(http.MethodPost, "/api/customers")
+
+			ErrorResponse(c, status, "Erro ao criar cliente", dbErr)
+
+			r := decode(t, rec)
+			if r.Error != GenericOperationError || r.Message != "Erro ao criar cliente" || r.StatusCode != status {
+				t.Errorf("status %d, erro %q: resposta = %+v", status, dbErr, r)
+			}
+			body := rec.Body.String()
+			for _, leak := range []string{"SQLSTATE", "varchar", "character varying", "constraint", "127.0.0.1", "database=", "uni_users_email"} {
+				if strings.Contains(body, leak) {
+					t.Errorf("status %d: a resposta vazou %q: %s", status, leak, body)
+				}
+			}
+			if out := logs.String(); !strings.Contains(out, dbErr) || !strings.Contains(out, "POST") || !strings.Contains(out, "/api/customers") {
+				t.Errorf("status %d: o log deveria ter o erro completo, o método e o caminho: %s", status, out)
+			}
+		}
+	}
+}
+
+// Mensagens de regra de negócio e erros que não são do banco continuam indo ao usuário.
+func TestErrorResponse_MensagemDeNegocioContinuaIndoAoCliente(t *testing.T) {
+	for _, text := range []string{"já existe um cliente com este documento", "record not found", "perfil inválido", "CPF inválido"} {
+		logs := capturaLog(t)
+		c, rec := newTestContext(http.MethodPost, "/api/customers")
+
+		ErrorResponse(c, http.StatusBadRequest, "Erro ao criar cliente", text)
+
+		if r := decode(t, rec); r.Error != text {
+			t.Errorf("%q virou %q", text, r.Error)
+		}
+		if logs.Len() != 0 {
+			t.Errorf("%q não deveria gerar log de erro de banco: %s", text, logs.String())
+		}
+	}
+}
+
+func TestValidationErrorResponse_ErroDeBancoNaoVaiAoClienteENaoAlteraALista(t *testing.T) {
+	logs := capturaLog(t)
+	c, rec := newTestContext(http.MethodPost, "/api/customers")
+	original := []string{"o nome é obrigatório", pgErro}
+
+	ValidationErrorResponse(c, "Dados inválidos", original)
+
+	r := decode(t, rec)
+	if len(r.ValidationErrors) != 2 || r.ValidationErrors[0] != "o nome é obrigatório" || r.ValidationErrors[1] != GenericOperationError {
+		t.Errorf("validationErrors = %v", r.ValidationErrors)
+	}
+	if strings.Contains(rec.Body.String(), "SQLSTATE") {
+		t.Errorf("a resposta vazou o SQLSTATE: %s", rec.Body.String())
+	}
+	if original[1] != pgErro {
+		t.Error("a lista do chamador foi alterada")
+	}
+	if !strings.Contains(logs.String(), "uni_users_email") {
+		t.Errorf("o log deveria ter o erro completo: %s", logs.String())
+	}
+}
