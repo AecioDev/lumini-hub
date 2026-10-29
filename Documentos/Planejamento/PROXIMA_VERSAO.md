@@ -25,4 +25,5 @@ Alterações feitas desde o último envio ao servidor. O Claude acrescenta uma l
 
 ## Interno (não afeta o servidor)
 
+- **CFG-023**: os `tasks_*.md` fechados do Módulo 0 foram para `Documentos/Planejamento/Arquivo/`; README do planejamento, `CLAUDE.md`, skill e `plano_empresa.md` atualizados para os novos caminhos. O `CLAUDE.md` e a skill de arquitetura ganharam a regra de defesa contra SQL Injection (valores sempre como parâmetro `?`).
 - **CFG-022**: `CLAUDE.md` e as skills `lumini_hub_backend_architecture` e `lumini_hub_entity_creation` traduzidos para português, com três pontos desatualizados das skills corrigidos. O `CLAUDE.md` também deixou de descrever o banco legado e o login local passou a depender do `BOOTSTRAP_ADMIN_PASSWORD`.

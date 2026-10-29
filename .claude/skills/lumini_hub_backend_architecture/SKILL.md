@@ -130,4 +130,5 @@ Para tratar consultas complexas, com vários parâmetros e paginação, sem ench
 ## Erros comuns
 - **CORS duplicado**: adicionar CORS a qualquer microsserviço interno. Só o Gateway cuida do CORS.
 - **Conflito de caminhos no Gin**: registrar `router.Any("/*path")` junto com `/swagger/*any` no mesmo nível de grupo do roteador Gin. Direcione sempre os caminhos de proxy não mapeados por `router.NoRoute(...)`.
+- **SQL montado com texto**: concatenar ou usar `fmt.Sprintf` para pôr dado do usuário dentro de um `Where`/`Raw`/`Exec` abre a porta para SQL Injection. Valores sempre como parâmetro (`?`); colunas de ordenação vindas da requisição só depois de conferidas contra uma lista fixa.
 - **Esquecer o Preload**: não sobrescrever o `FindByID` ou o `FindByFilter` genéricos nos repositories do GORM quando a entidade precisa de preloads (por exemplo, endereços e contatos).
