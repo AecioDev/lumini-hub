@@ -8,13 +8,13 @@
 
 ## 1. Banco de dados
 
-Esta é a primeira versão que registra a versão do banco dentro dele (versão 2; o ambiente de testes da OCI estava na versão 1, criada por script SQL).
+Esta é a primeira versão que registra a versão do banco dentro dele (versão 2; o ambiente de testes estava na versão 1, criada por script SQL).
 
 - **Nova tabela `schema_versions`** (`db_version`, `app_version`, `applied_at`): uma linha por publicação que chegou ao banco. O `api.auth` cria a tabela e grava a versão no fim de um boot bem-sucedido com `DB_AUTO_MIGRATE=true`; reiniciar não duplica a linha.
 - Na subida, com `DB_AUTO_MIGRATE=true` (padrão), cada serviço cria as tabelas do seu schema (`api.auth`: 4; `api.core`: 10; `api.integrations`: 4) e o `api.auth` semeia o catálogo de permissões, o perfil `ADMIN`, o menu e o admin inicial.
 - Com `DB_AUTO_MIGRATE=false` (produção com dados reais), nada é migrado nem semeado, e `api.auth`, `api.core` e `api.integrations` **conferem a versão do banco** e recusam subir se ele estiver atrás da versão 2 ou sem versão registrada ⚠️.
 
-> **Atenção:** um banco da versão 1 (criado pelos scripts `deploy/db/*.sql`, com ids `integer`) **não deve ser atualizado por cima**: o seed só cria o perfil `ADMIN` quando não há nenhum perfil e pula itens de menu existentes. No ambiente da OCI o banco foi recriado do zero (ver seção 4).
+> **Atenção:** um banco da versão 1 (criado pelos scripts `deploy/db/*.sql`, com ids `integer`) **não deve ser atualizado por cima**: o seed só cria o perfil `ADMIN` quando não há nenhum perfil e pula itens de menu existentes. No ambiente de testes o banco foi recriado do zero (ver seção 4).
 
 ---
 
@@ -58,7 +58,7 @@ Com isso toda permissão exigida por `RequirePermission` existe no catálogo (an
 ## 4. Infraestrutura
 
 - **`deploy/docker-compose.prod.yml`**: deixou de montar `./db`; repassa `DB_AUTO_MIGRATE` a todos os serviços e `BOOTSTRAP_ADMIN_*` ao `api-auth`. `deploy/.env.example` e `deploy/README.md` atualizados.
-- **Ambiente da OCI** (VM `lumini-hub-dev`, `http://64.181.183.243`) atualizado para esta versão em 2026-10-22 ✅: código na `develop`, **banco recriado do zero** (os dados de teste anteriores foram apagados: usuário `admin` antigo, `TESTE` e a empresa "Minha Empresa"), imagens reconstruídas na própria VM (arm64) e primeiro acesso refeito com o roteiro do `deploy/README.md`. Conferido: 67 permissões, 58 vínculos do ADMIN, versão do banco 2, um usuário (`admin`), sem senha nos logs.
+- **Ambiente de testes** atualizado para esta versão em 2026-10-22 ✅: código na `develop`, **banco recriado do zero** (os dados de teste anteriores foram descartados), imagens reconstruídas no próprio servidor e primeiro acesso refeito com o roteiro do `deploy/README.md`. Conferido: 67 permissões, 58 vínculos do ADMIN, versão do banco 2, um único usuário (o administrador inicial), sem senha nos logs.
 - O `api.integrations` continua **fora** do compose (profile `integrations`); o acesso ao legado vai virar uma aplicação separada.
 - Acesso por IP, em HTTP (`APP_ENV=staging`): sem domínio e sem HTTPS ainda.
 
@@ -100,4 +100,4 @@ Com isso toda permissão exigida por `RequirePermission` existe no catálogo (an
 | **CFG-025** Scripts de migração por versão do banco (para o que o `AutoMigrate` não faz: remover/renomear, ajustar dados, triggers) | ⏳ Só quando aparecer a primeira mudança desse tipo |
 | **CFG-022 / CFG-023** Tradução do `CLAUDE.md` e das skills; arquivar o histórico dos `tasks_*.md` | ⏳ |
 | **VND-001 / COM-001** Telas de Clientes e de Fornecedores | ⏳ O backend e os services do frontend já existem |
-| **HTTPS e domínio** no ambiente da OCI | ⏳ Hoje por IP, em HTTP |
+| **HTTPS e domínio** no ambiente de testes | ⏳ Hoje o acesso é por IP, em HTTP |
