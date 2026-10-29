@@ -8,6 +8,7 @@ Alterações feitas desde o último envio ao servidor. O Claude acrescenta uma l
 
 ## Mudanças que afetam o banco ou a configuração do servidor
 
+- **CFG-016**: bancos já semeados precisam rodar `deploy/sql/CFG-016_menu_fornecedores_suppliers_view.sql` (idempotente) para que os itens de menu "Fornecedores" usem `suppliers.view`. Já aplicado no ambiente de testes; bancos novos já nascem certos.
 - **CFG-014**: textos e módulo de permissões do catálogo corrigidos no código. Só vale para bancos novos; bancos já semeados (inclusive o da OCI) mantêm os textos antigos, porque o seed nunca altera permissão existente.
 
 ## Novidades e melhorias
