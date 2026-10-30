@@ -6,9 +6,7 @@ import {
   Card,
   Input,
   Space,
-  Table,
   Tag,
-  Tooltip,
 } from "antd";
 import { Link } from "react-router-dom";
 import { userService } from "@/services/users/user-service";
@@ -18,13 +16,12 @@ import { useFeedback } from "@/hooks/useFeedback";
 import { getAvatarGradient, getInitials, getTagColor } from "@/utils/avatar";
 import type { ApiUser } from "@/types/auth";
 import { PageHeader } from "@/components/common/PageHeader";
-import { useActionButtonSize } from "@/hooks/useActionButtonSize";
+import { ResponsiveTable, RowActionButtons, type RowAction } from "@/components/common/ResponsiveTable";
 
 
 const PAGE_SIZE = 10;
 
 export function UsersListPage() {
-  const actionSize = useActionButtonSize();
   const { hasPermission } = useAuth();
   const feedback = useFeedback();
 
@@ -58,6 +55,44 @@ export function UsersListPage() {
     );
   }, [users, search]);
 
+  const rowActions = (user: ApiUser): RowAction[] => [
+    {
+      key: "view",
+      label: "Ver detalhes",
+      icon: <EyeOutlined />,
+      onClick: () => setDetailUserId(user.id),
+    },
+    ...(hasPermission("users.edit")
+      ? [
+          {
+            key: "edit",
+            label: "Editar",
+            icon: <EditOutlined />,
+            to: `/settings/users/${user.id}/edit`,
+          },
+        ]
+      : []),
+  ];
+
+  const renderRole = (role?: string) =>
+    role ? <Tag color={getTagColor(role)}>{role}</Tag> : "—";
+
+  const renderStatus = (isActive: boolean) => (
+    <Tag color={isActive ? "success" : "default"}>{isActive ? "Ativo" : "Inativo"}</Tag>
+  );
+
+  const renderIdentity = (user: ApiUser) => (
+    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <Avatar style={{ background: getAvatarGradient(user.name) }}>
+        {getInitials(user.name)}
+      </Avatar>
+      <div>
+        <div style={{ fontSize: 13, fontWeight: 500 }}>{user.name}</div>
+        <div style={{ fontSize: 12, opacity: 0.6 }}>{user.email}</div>
+      </div>
+    </div>
+  );
+
   return (
     <div>
       <PageHeader
@@ -90,7 +125,17 @@ export function UsersListPage() {
           />
         }
       >
-        <Table<ApiUser>
+        <ResponsiveTable<ApiUser>
+          card={{
+            title: renderIdentity,
+            tags: (user) => (
+              <Space size={4} wrap>
+                {renderRole(user.role)}
+                {renderStatus(user.is_active)}
+              </Space>
+            ),
+            actions: rowActions,
+          }}
           scroll={{ x: "max-content" }}
           rowKey="id"
           loading={loading}
@@ -103,58 +148,11 @@ export function UsersListPage() {
             showSizeChanger: false,
           }}
           columns={[
-            {
-              title: "Usuário",
-              dataIndex: "name",
-              render: (_, user) => (
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <Avatar style={{ background: getAvatarGradient(user.name) }}>
-                    {getInitials(user.name)}
-                  </Avatar>
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 500 }}>{user.name}</div>
-                    <div style={{ fontSize: 12, opacity: 0.6 }}>{user.email}</div>
-                  </div>
-                </div>
-              ),
-            },
-            {
-              title: "Perfil",
-              dataIndex: "role",
-              render: (role?: string) =>
-                role ? <Tag color={getTagColor(role)}>{role}</Tag> : "—",
-            },
-            {
-              title: "Status",
-              dataIndex: "is_active",
-              render: (isActive: boolean) => (
-                <Tag color={isActive ? "success" : "default"}>
-                  {isActive ? "Ativo" : "Inativo"}
-                </Tag>
-              ),
-            },
-            {
-              title: "Ações",
-              key: "actions",
-              render: (_, user) => (
-                <Space size={6}>
-                  <Tooltip title="Ver detalhes">
-                    <Button
-                      size={actionSize}
-                      icon={<EyeOutlined />}
-                      onClick={() => setDetailUserId(user.id)}
-                    />
-                  </Tooltip>
-                  {hasPermission("users.edit") && (
-                    <Tooltip title="Editar">
-                      <Link to={`/settings/users/${user.id}/edit`}>
-                        <Button size={actionSize} icon={<EditOutlined />} />
-                      </Link>
-                    </Tooltip>
-                  )}
-                </Space>
-              ),
-            },
+            { title: "ID", dataIndex: "id", width: 70 },
+            { title: "Usuário", dataIndex: "name", render: (_, user) => renderIdentity(user) },
+            { title: "Perfil", dataIndex: "role", render: renderRole },
+            { title: "Status", dataIndex: "is_active", render: renderStatus },
+            { title: "Ações", key: "actions", render: (_, user) => <RowActionButtons actions={rowActions(user)} /> },
           ]}
         />
       </Card>
