@@ -9,11 +9,12 @@ import { companyLogoUrl } from "@/services/companies/company-service";
 const { Text } = Typography;
 
 interface ActiveCompanySwitcherProps {
+  /** Menu lateral recolhido: mostra só o ícone/logo da empresa. */
   collapsed: boolean;
 }
 
-// Mostra a Company ativa no topo do sidebar (onde antes ficava a marca
-// Lumini Hub — movida pro rodapé, ver AppLayout.tsx). Usa a logo real da
+// Mostra a Company ativa no pé do menu lateral (a marca Lumini Hub fica no topo, ver AppSider.tsx;
+// o nome da empresa também aparece, só de leitura, na barra de status). Usa a logo real da
 // empresa (Company.LogoFile, CFG-7) quando ela tem uma cadastrada — via
 // has_logo em visible_companies (CFG-6.2.1) — e cai pro ícone genérico
 // ph:buildings quando não tem. A logo é renderizada sem nenhum card/fundo
@@ -68,8 +69,8 @@ export function ActiveCompanySwitcher({ collapsed }: ActiveCompanySwitcherProps)
           alignItems: "center",
           justifyContent: collapsed ? "center" : "flex-start",
           gap: 10,
-          padding: collapsed ? "20px 0" : "20px 16px",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
+          minWidth: 0,
+          padding: collapsed ? "16px 0" : "16px 16px",
           cursor: canSwitch ? "pointer" : "default",
         }}
       >
@@ -97,10 +98,10 @@ export function ActiveCompanySwitcher({ collapsed }: ActiveCompanySwitcherProps)
             </span>
             {canSwitch && (
               <Icon
-                icon="ph:caret-up-down"
-                width={14}
-                height={14}
-                style={{ flexShrink: 0, opacity: 0.5 }}
+                icon="ph:swap"
+                width={16}
+                height={16}
+                style={{ flexShrink: 0, opacity: 0.6 }}
               />
             )}
           </>

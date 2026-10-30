@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Tag, theme } from "antd";
+import { Logo } from "@/components/layout/Logo";
+import { useAuth } from "@/contexts/AuthContext";
 import { useThemeMode } from "@/contexts/ThemeContext";
 import { authService } from "@/services/auth/auth-service";
 import { CHROME_BG } from "@/theme/antd-theme";
@@ -18,12 +20,14 @@ const ENVIRONMENTS: Record<string, { label: string; color: string }> = {
   production: { label: "Produção", color: "green" },
 };
 
-// Barra de status fixa no rodapé do app: versão do sistema, versão do banco e ambiente.
-// Outras informações do sistema entram aqui com o tempo. Se a consulta falhar, a barra
+// Barra de status fixa no rodapé do app: versão do sistema, versão do banco, empresa ativa (só leitura:
+// a troca é no pé do menu lateral) e ambiente. Outras informações do sistema entram aqui com o tempo. Se a consulta falhar, a barra
 // continua no lugar, vazia, para o layout não pular.
 export function StatusBar() {
   const { token } = theme.useToken();
   const { mode } = useThemeMode();
+  const { user } = useAuth();
+  const companyName = user?.active_company_name;
   const [info, setInfo] = useState<ApiVersionInfo | null>(null);
 
   useEffect(() => {
@@ -59,6 +63,7 @@ export function StatusBar() {
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <Logo size={9} showWordmark={false} />
         {info && (
           <span>
             <a
@@ -81,6 +86,12 @@ export function StatusBar() {
           <Tag color="warning" style={{ margin: 0 }}>
             Banco desatualizado (exige v{info.required_database_version})
           </Tag>
+        )}
+        {companyName && (
+          <>
+            {info && <span aria-hidden="true">|</span>}
+            <span>Empresa: {companyName}</span>
+          </>
         )}
       </div>
 

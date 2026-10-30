@@ -12,7 +12,7 @@ _Nada ainda._
 
 ## Novidades e melhorias
 
-_Nada ainda._
+- **CFG-028** (Fase A e faixa do caminho; o restante segue na branch `feature/cfg-028-layout`): o logo da marca sobe para o topo do menu lateral, na mesma altura do cabeçalho; a empresa ativa fica no pé do menu (ícone de troca, que abre a gaveta) e o nome dela também aparece na barra de status; o título sai do cabeçalho e o caminho da tela (breadcrumb) ganha uma faixa entre o cabeçalho e o corpo; a busca do cabeçalho sai; as bordas do menu seguem o tema claro e escuro; o menu recolhido é lembrado ao recarregar.
 
 ## Correções
 
