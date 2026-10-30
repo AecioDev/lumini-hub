@@ -52,7 +52,7 @@ Há uma correção de **dados** em bancos que já existem:
 
 - Nenhuma mudança nos arquivos de deploy (compose, Dockerfiles, Caddy).
 - Novo script de dados em `deploy/sql/` (ver seção 1).
-- Atualização do ambiente de testes para esta versão: ⏳ pendente. Não recria o banco: é só atualizar o código e reconstruir as imagens.
+- **Ambiente de testes** atualizado para esta versão em 2026-10-29 ✅: código atualizado, imagens reconstruídas e serviços reiniciados, **sem recriar o banco** (os dados foram mantidos). Conferido no servidor: os cinco serviços no ar, a versão do banco 2 registrada com a nova versão do sistema (o histórico guarda as duas linhas), o frontend respondendo e o `GET /auth/version` recusando acesso sem login. A barra de status mostra "Versão 2026.2.3.0 - BD v2" no navegador.
 - O `go.mod` do módulo comum passa a declarar o `go-playground/validator` e suas dependências indiretas (nenhuma versão mudou).
 
 ---
