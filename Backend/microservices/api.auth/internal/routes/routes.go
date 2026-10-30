@@ -40,6 +40,7 @@ func SetupRoutes(router *gin.RouterGroup, db *gorm.DB, cfg *config.Config) {
 	users.Use(middlewares.AuthMiddleware(cfg))
 	{
 		users.GET("", middlewares.RequirePermission("users.view"), userHandler.GetUsers)
+		users.POST("/filter", middlewares.RequirePermission("users.view"), userHandler.PostUserFilter)
 		users.GET("/:id", middlewares.RequirePermission("users.view"), userHandler.GetUser)
 		users.POST("", middlewares.RequirePermission("users.create"), userHandler.CreateUser)
 		users.PUT("/:id", middlewares.RequirePermission("users.edit"), userHandler.UpdateUser)
@@ -65,6 +66,7 @@ func SetupRoutes(router *gin.RouterGroup, db *gorm.DB, cfg *config.Config) {
 	permissions.Use(middlewares.AuthMiddleware(cfg))
 	{
 		permissions.GET("", middlewares.RequirePermission("permissions.view"), permHandler.GetPermissions)
+		permissions.POST("/filter", middlewares.RequirePermission("permissions.view"), permHandler.PostPermissionFilter)
 		permissions.GET("/:id", middlewares.RequirePermission("permissions.view"), permHandler.GetPermission)
 		permissions.GET("/by-module", middlewares.RequirePermission("permissions.view"), permHandler.GetPermissionsByModule)
 		permissions.GET("/modules", middlewares.RequirePermission("permissions.view"), permHandler.GetAvailableModules)

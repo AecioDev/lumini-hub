@@ -30,3 +30,14 @@ export interface ApiUserListPaginated {
   users: ApiUser[];
   pagination?: ApiPagination;
 }
+
+// Espelha UserFilterRequest (POST /users/filter). `search` procura no nome, no usuário e no e-mail.
+export interface UserFilterRequest {
+  search?: string;
+  role_id?: number;
+  is_active?: boolean;
+  page_no?: number;
+  page_size?: number;
+  order_by_column?: string;
+  is_asc?: boolean;
+}

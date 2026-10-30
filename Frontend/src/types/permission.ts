@@ -47,3 +47,15 @@ export interface GetPermissionsFilters {
   roleId?: number;
   isLinkedToRole?: boolean;
 }
+
+// Espelha PermissionFilterRequest (POST /permissions/filter). `search` procura no código e na descrição.
+export interface PermissionFilterRequest {
+  search?: string;
+  module?: string;
+  role_id?: number;
+  is_linked_to_role?: boolean;
+  page_no?: number;
+  page_size?: number;
+  order_by_column?: string;
+  is_asc?: boolean;
+}

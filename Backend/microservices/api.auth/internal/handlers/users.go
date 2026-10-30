@@ -57,6 +57,35 @@ func (h *UserHandler) GetUsers(c *gin.Context) {
 	utils.SuccessResponse(c, http.StatusOK, "Usuários encontrados", users, nil)
 }
 
+// PostUserFilter busca usuários aplicando os filtros recebidos no corpo (PostFilter)
+// @Summary      Filtra usuários com paginação (PostFilter)
+// @Description  Busca usuários por texto (nome, usuário ou e-mail), perfil e status, com paginação e ordenação
+// @Tags         Usuários
+// @Accept       json
+// @Produce      json
+// @Param        filter  body      domain.UserFilterRequest  true  "Filtros e dados de paginação"
+// @Success      200     {object}  utils.Response{data=domain.ApiUserListPaginated}
+// @Failure      400     {object}  utils.Response
+// @Failure      401     {object}  utils.Response
+// @Failure      500     {object}  utils.Response
+// @Router       /users/filter [post]
+// @Security     ApiKeyAuth
+func (h *UserHandler) PostUserFilter(c *gin.Context) {
+	var req domain.UserFilterRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.ValidationErrorResponse(c, "Parâmetros de filtro inválidos", err)
+		return
+	}
+
+	users, err := h.userService.GetUsersByFilter(req, utils.RoleFromGinContext(c))
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Erro ao buscar usuários", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "Usuários encontrados", users, nil)
+}
+
 // GetUser retorna um usuário específico
 // @Summary      Busca usuário por ID
 // @Description  Retorna os detalhes de um único usuário

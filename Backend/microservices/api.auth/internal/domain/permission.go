@@ -53,6 +53,20 @@ type InGetPermissionsFilters struct {
 	IsLinkedToRole *bool  `form:"isLinkedToRole"`
 }
 
+// PermissionFilterRequest define os parâmetros da busca filtrada e paginada de permissões
+// (POST /permissions/filter). Search procura no código e na descrição.
+type PermissionFilterRequest struct {
+	Search         string `json:"search" binding:"omitempty,max=100"`
+	Module         string `json:"module" binding:"omitempty,max=50"`
+	RoleID         uint   `json:"role_id"`
+	IsLinkedToRole *bool  `json:"is_linked_to_role"`
+
+	PageNo        *int   `json:"page_no"`
+	PageSize      *int   `json:"page_size" binding:"omitempty,max=100"`
+	OrderByColumn string `json:"order_by_column" binding:"omitempty,max=50"`
+	IsAsc         *bool  `json:"is_asc"`
+}
+
 // DTOs de Saída
 
 // ApiPermission representa os dados de uma permissão que são seguros para enviar ao frontend

@@ -54,6 +54,19 @@ type CreateUserRequest struct {
 	CompanyID *uint  `json:"company_id"`
 }
 
+// UserFilterRequest define os parâmetros da busca filtrada e paginada de usuários (POST /users/filter).
+// Search procura no nome, no usuário (login) e no e-mail.
+type UserFilterRequest struct {
+	Search   string `json:"search" binding:"omitempty,max=100"`
+	RoleID   *uint  `json:"role_id"`
+	IsActive *bool  `json:"is_active"`
+
+	PageNo        *int   `json:"page_no"`
+	PageSize      *int   `json:"page_size" binding:"omitempty,max=100"`
+	OrderByColumn string `json:"order_by_column" binding:"omitempty,max=50"`
+	IsAsc         *bool  `json:"is_asc"`
+}
+
 // UpdateUserRequest representa os dados para atualizar um usuário
 type UpdateUserRequest struct {
 	Name      string `json:"name" binding:"omitempty,max=100"`

@@ -55,6 +55,30 @@ func (s *UserService) GetUsers(pagination *utils.Pagination, requesterRole strin
 	}, nil
 }
 
+// GetUsersByFilter é o GetUsers com os filtros do POST /users/filter (mesma regra de ocultar o DEVELOP).
+func (s *UserService) GetUsersByFilter(filter domain.UserFilterRequest, requesterRole string) (*domain.ApiUserListPaginated, error) {
+	hideRoleName := ""
+	if requesterRole != utils.RoleDeveloper {
+		hideRoleName = utils.RoleDeveloper
+	}
+
+	pagination := utils.PaginationFromFilter(filter.PageNo, filter.PageSize, filter.OrderByColumn, filter.IsAsc, "id")
+	users, err := s.userRepo.FindByFilter(filter, &pagination, hideRoleName)
+	if err != nil {
+		return nil, err
+	}
+
+	userDTOs := make([]domain.ApiUser, 0, len(users))
+	for _, user := range users {
+		userDTOs = append(userDTOs, domain.ApiUserFromModel(user))
+	}
+
+	return &domain.ApiUserListPaginated{
+		Users:      userDTOs,
+		Pagination: utils.ApiPaginationFromModel(&pagination),
+	}, nil
+}
+
 // GetUserByID busca um usuário pelo ID. Se o usuário encontrado for do
 // perfil DEVELOP e quem está pedindo não for DEVELOP, trata como não
 // encontrado (não revela nem a existência do usuário).

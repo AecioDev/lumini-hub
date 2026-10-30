@@ -47,6 +47,17 @@ func (s *PermissionService) GetPermissions(pagination *utils.Pagination, filters
 	}, nil
 }
 
+// GetPermissionsByFilter é o GetPermissions com os filtros do POST /permissions/filter.
+func (s *PermissionService) GetPermissionsByFilter(filter domain.PermissionFilterRequest, requesterRole string) (*domain.ApiPermissionListPaginated, error) {
+	pagination := utils.PaginationFromFilter(filter.PageNo, filter.PageSize, filter.OrderByColumn, filter.IsAsc, "id")
+	return s.GetPermissions(&pagination, domain.InGetPermissionsFilters{
+		Name:           filter.Search,
+		Module:         filter.Module,
+		RoleId:         filter.RoleID,
+		IsLinkedToRole: filter.IsLinkedToRole,
+	}, requesterRole)
+}
+
 // GetPermissionByID busca uma permissão pelo ID
 func (s *PermissionService) GetPermissionByID(id uint) (*domain.ApiPermissionDetail, error) {
 	permission, err := s.permRepo.FindByID(id)

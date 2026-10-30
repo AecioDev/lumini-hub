@@ -1,40 +1,62 @@
 import { useEffect, useState } from "react";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
-import { Button, Card, Input, Select, Space, Tag } from "antd";
+import { Button, Card, Select, Tag } from "antd";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { permissionService } from "@/services/permissions/permission-service";
 import { getApiErrorMessage } from "@/utils/api-error";
 import { getTagColor } from "@/utils/avatar";
 import { useFeedback } from "@/hooks/useFeedback";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import type { ApiPermission } from "@/types/permission";
-import { BREAKPOINT_TABLET } from "@/components/layout/layout-constants";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { ResponsiveTable, RowActionButtons, type RowAction } from "@/components/common/ResponsiveTable";
+import { ListToolbar } from "@/components/common/ListToolbar";
+import { FilterButton, FilterDrawer } from "@/components/common/FilterDrawer";
+import { FormField } from "@/components/common/FormField";
 
 const PAGE_SIZE = 10;
 
+// Filtros da gaveta (a busca por texto fica no cabeçalho da lista).
+interface PermissionFilters {
+  module?: string;
+}
+
+const NO_FILTERS: PermissionFilters = {};
+
 export function PermissionsTable() {
-  const isPhone = !useMediaQuery(`(min-width: ${BREAKPOINT_TABLET}px)`);
   const { hasPermission, isDeveloper } = useAuth();
   const feedback = useFeedback();
 
   const [permissions, setPermissions] = useState<ApiPermission[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const [name, setName] = useState<string | undefined>();
-  const [module, setModule] = useState<string | undefined>();
+  const [search, setSearch] = useState("");
+  const [filters, setFilters] = useState<PermissionFilters>(NO_FILTERS);
+  const [filterOpen, setFilterOpen] = useState(false);
   const [modules, setModules] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const debouncedSearch = useDebouncedValue(search.trim());
+  const activeFilters = Object.values(filters).filter((value) => value !== undefined).length;
 
   useEffect(() => {
     permissionService.modules().then(setModules).catch(() => undefined);
   }, []);
 
+  // Mudou a busca ou os filtros: volta para a primeira página.
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, filters]);
+
   const load = () => {
     setLoading(true);
     permissionService
-      .list({ page, limit: PAGE_SIZE, name, module })
+      .filter({
+        search: debouncedSearch || undefined,
+        module: filters.module,
+        page_no: page,
+        page_size: PAGE_SIZE,
+      })
       .then((result) => {
         setPermissions(result.data);
         setTotal(result.pagination.totalRows);
@@ -43,7 +65,7 @@ export function PermissionsTable() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(load, [page, name, module, feedback]);
+  useEffect(load, [page, debouncedSearch, filters, feedback]);
 
   const handleDelete = async (permission: ApiPermission) => {
     try {
@@ -83,52 +105,22 @@ export function PermissionsTable() {
       : []),
   ];
 
-  // No celular os filtros não cabem no cabeçalho do cartão: vão para uma linha que quebra, acima da lista.
-  const controls = (
-    <Space wrap>
-      <Select
-        placeholder="Módulo"
-        allowClear
-        style={{ width: "min(160px, 40vw)" }}
-        value={module}
-        onChange={(value) => {
-          setModule(value);
-          setPage(1);
-        }}
-        options={modules.map((m) => ({ value: m, label: m }))}
-      />
-      <Input.Search
-        placeholder="Buscar por código/descrição..."
-        allowClear
-        style={{ width: "min(240px, 42vw)" }}
-        onSearch={(value) => {
-          setName(value || undefined);
-          setPage(1);
-        }}
-      />
-      {hasPermission("permissions.create") && (
-        <Link to="/settings/permissions/create">
-          <Button type="primary" icon={<PlusOutlined />}>
-            Nova Permissão
-          </Button>
-        </Link>
-      )}
-    </Space>
-  );
-
   return (
-    <Card
-      title={
-        <span>
-          Permissões
-          <Tag bordered={false} style={{ marginLeft: 8 }}>
-            {total}
-          </Tag>
-        </span>
-      }
-      extra={isPhone ? undefined : controls}
-    >
-      {isPhone && <div style={{ marginBottom: 12 }}>{controls}</div>}
+    <Card>
+      <ListToolbar
+        searchPlaceholder="Buscar por código ou descrição..."
+        onSearch={setSearch}
+        filter={<FilterButton count={activeFilters} onClick={() => setFilterOpen(true)} />}
+        actions={
+          hasPermission("permissions.create") && (
+            <Link to="/settings/permissions/create">
+              <Button type="primary" icon={<PlusOutlined />}>
+                Nova Permissão
+              </Button>
+            </Link>
+          )
+        }
+      />
       <ResponsiveTable<ApiPermission>
         card={{
           title: (permission) => (isDeveloper ? permission.permission : permission.description),
@@ -174,6 +166,26 @@ export function PermissionsTable() {
             : []),
         ]}
       />
+
+      <FilterDrawer
+        open={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        value={filters}
+        empty={NO_FILTERS}
+        onApply={setFilters}
+      >
+        {(draft, setField) => (
+          <FormField label="Módulo" stacked>
+            <Select
+              allowClear
+              placeholder="Todos os módulos"
+              value={draft.module}
+              onChange={(value) => setField("module", value)}
+              options={modules.map((m) => ({ value: m, label: m }))}
+            />
+          </FormField>
+        )}
+      </FilterDrawer>
     </Card>
   );
 }
