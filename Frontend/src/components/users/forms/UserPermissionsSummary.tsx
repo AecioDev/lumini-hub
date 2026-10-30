@@ -40,7 +40,11 @@ export function UserPermissionsSummary({
                 {moduleLabel(group.module)}:
               </Text>
               {group.items.map((item) => (
-                <Tag key={item.permission.id} style={{ marginBottom: 4 }}>
+                <Tag
+                  key={item.permission.id}
+                  // O Tag do antd não quebra linha por padrão; descrições longas passavam da largura da tela.
+                  style={{ marginBottom: 4, maxWidth: "100%", whiteSpace: "normal", height: "auto" }}
+                >
                   {item.label}
                 </Tag>
               ))}

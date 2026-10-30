@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Tag, theme } from "antd";
+import { Logo } from "@/components/layout/Logo";
+import { useAuth } from "@/contexts/AuthContext";
 import { useThemeMode } from "@/contexts/ThemeContext";
 import { authService } from "@/services/auth/auth-service";
 import { CHROME_BG } from "@/theme/antd-theme";
@@ -18,12 +20,14 @@ const ENVIRONMENTS: Record<string, { label: string; color: string }> = {
   production: { label: "Produção", color: "green" },
 };
 
-// Barra de status fixa no rodapé do app: versão do sistema, versão do banco e ambiente.
-// Outras informações do sistema entram aqui com o tempo. Se a consulta falhar, a barra
+// Barra de status fixa no rodapé do app: versão do sistema, versão do banco, empresa ativa (só leitura:
+// a troca é no pé do menu lateral) e ambiente. Outras informações do sistema entram aqui com o tempo. Se a consulta falhar, a barra
 // continua no lugar, vazia, para o layout não pular.
 export function StatusBar() {
   const { token } = theme.useToken();
   const { mode } = useThemeMode();
+  const { user } = useAuth();
+  const companyName = user?.active_company_name;
   const [info, setInfo] = useState<ApiVersionInfo | null>(null);
 
   useEffect(() => {
@@ -51,16 +55,20 @@ export function StatusBar() {
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
+        gap: 12,
         fontSize: 12,
+        // Uma linha só, em qualquer largura: o que não couber é cortado com "…" (a empresa primeiro).
+        whiteSpace: "nowrap",
         color: token.colorTextSecondary,
         // Mesma cor do menu lateral e do cabeçalho.
         background: CHROME_BG[mode],
         borderTop: `1px solid ${token.colorBorderSecondary}`,
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+        <Logo size={9} showWordmark={false} />
         {info && (
-          <span>
+          <span style={{ flexShrink: 0 }}>
             <a
               href={`${RELEASES_URL}/${encodeURIComponent(info.system_version)}/`}
               target="_blank"
@@ -78,14 +86,26 @@ export function StatusBar() {
           </span>
         )}
         {databaseBehind && (
-          <Tag color="warning" style={{ margin: 0 }}>
+          <Tag color="warning" style={{ margin: 0, flexShrink: 0 }}>
             Banco desatualizado (exige v{info.required_database_version})
           </Tag>
+        )}
+        {companyName && (
+          <>
+            {info && (
+              <span aria-hidden="true" style={{ flexShrink: 0 }}>
+                |
+              </span>
+            )}
+            <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>
+              Empresa: {companyName}
+            </span>
+          </>
         )}
       </div>
 
       {environment && (
-        <Tag color={environment.color} style={{ margin: 0 }}>
+        <Tag color={environment.color} style={{ margin: 0, flexShrink: 0 }}>
           {environment.label}
         </Tag>
       )}

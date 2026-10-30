@@ -7,6 +7,7 @@ import { companyService } from "@/services/companies/company-service";
 import { getApiErrorMessage } from "@/utils/api-error";
 import { useFeedback } from "@/hooks/useFeedback";
 import type { ApiCompany } from "@/types/company";
+import { useActionButtonSize } from "@/hooks/useActionButtonSize";
 
 interface CompanyTreeNode extends ApiCompany {
   children?: CompanyTreeNode[];
@@ -36,6 +37,7 @@ function buildCompanyTree(companies: ApiCompany[]): CompanyTreeNode[] {
 }
 
 export function CompaniesTable() {
+  const actionSize = useActionButtonSize();
   const { hasPermission } = useAuth();
   const feedback = useFeedback();
 
@@ -109,7 +111,7 @@ export function CompaniesTable() {
           <Input.Search
             placeholder="Buscar..."
             allowClear
-            style={{ width: 220 }}
+            style={{ width: "min(220px, 42vw)" }}
             onChange={(e) => setSearch(e.target.value)}
           />
           {hasPermission("companies.create") && (
@@ -122,7 +124,8 @@ export function CompaniesTable() {
         </Space>
       }
     >
-      <Table<CompanyTreeNode>
+      <Table<CompanyTreeNode>
+        scroll={{ x: "max-content" }}
         rowKey="id"
         loading={loading}
         dataSource={dataSource}
@@ -168,7 +171,7 @@ export function CompaniesTable() {
               <Space size={6}>
                 {hasPermission("companies.edit") && (
                   <Link to={`/settings/companies/${company.id}/edit`}>
-                    <Button size="small" icon={<EditOutlined />} />
+                    <Button size={actionSize} icon={<EditOutlined />} />
                   </Link>
                 )}
                 {hasPermission("companies.delete") && (
@@ -180,7 +183,7 @@ export function CompaniesTable() {
                     cancelText="Cancelar"
                     onConfirm={() => void handleDelete(company)}
                   >
-                    <Button size="small" danger icon={<DeleteOutlined />} />
+                    <Button size={actionSize} danger icon={<DeleteOutlined />} />
                   </Popconfirm>
                 )}
               </Space>

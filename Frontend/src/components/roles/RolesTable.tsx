@@ -7,8 +7,10 @@ import { roleService } from "@/services/roles/role-service";
 import { getApiErrorMessage } from "@/utils/api-error";
 import { useFeedback } from "@/hooks/useFeedback";
 import type { ApiRole } from "@/types/role";
+import { useActionButtonSize } from "@/hooks/useActionButtonSize";
 
 export function RolesTable() {
+  const actionSize = useActionButtonSize();
   const { hasPermission } = useAuth();
   const feedback = useFeedback();
 
@@ -62,7 +64,7 @@ export function RolesTable() {
           <Input.Search
             placeholder="Buscar..."
             allowClear
-            style={{ width: 220 }}
+            style={{ width: "min(220px, 42vw)" }}
             onChange={(e) => setSearch(e.target.value)}
           />
           {hasPermission("roles.create") && (
@@ -76,6 +78,7 @@ export function RolesTable() {
       }
     >
       <Table<ApiRole>
+        scroll={{ x: "max-content" }}
         rowKey="id"
         loading={loading}
         dataSource={filtered}
@@ -90,7 +93,7 @@ export function RolesTable() {
               <Space size={6}>
                 {hasPermission("roles.edit") && (
                   <Link to={`/settings/roles/${role.id}/edit`}>
-                    <Button size="small" icon={<EditOutlined />} />
+                    <Button size={actionSize} icon={<EditOutlined />} />
                   </Link>
                 )}
                 {hasPermission("roles.delete") && (
@@ -102,7 +105,7 @@ export function RolesTable() {
                     cancelText="Cancelar"
                     onConfirm={() => void handleDelete(role)}
                   >
-                    <Button size="small" danger icon={<DeleteOutlined />} />
+                    <Button size={actionSize} danger icon={<DeleteOutlined />} />
                   </Popconfirm>
                 )}
               </Space>

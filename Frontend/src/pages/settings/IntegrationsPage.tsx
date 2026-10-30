@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Skeleton, Tabs, Typography } from "antd";
+import { Skeleton, Tabs } from "antd";
 import { useAuth } from "@/contexts/AuthContext";
 import { integrationConfigService } from "@/services/integrations/integration-config-service";
 import { legacyLookupService } from "@/services/integrations/legacy-lookup-service";
@@ -9,8 +9,8 @@ import { SyncLogsTable } from "@/components/integrations/SyncLogsTable";
 import { WebhookEventsTable } from "@/components/integrations/WebhookEventsTable";
 import { useFeedback } from "@/hooks/useFeedback";
 import type { ApiIntegrationSettings, LegacyCompany, LegacyLocation } from "@/types/integration";
+import { PageHeader } from "@/components/common/PageHeader";
 
-const { Title, Paragraph } = Typography;
 
 export function IntegrationsPage() {
   const { hasPermission } = useAuth();
@@ -55,12 +55,10 @@ export function IntegrationsPage() {
 
   return (
     <div>
-      <Title level={4} style={{ margin: "0 0 4px" }}>
-        Integrações
-      </Title>
-      <Paragraph type="secondary" style={{ marginBottom: 20 }}>
-        Sincronização com a Loja Integrada e o ERP legado
-      </Paragraph>
+      <PageHeader
+        title="Integrações"
+        subtitle="Sincronização com a Loja Integrada e o ERP legado"
+      />
 
       <Tabs
         items={[

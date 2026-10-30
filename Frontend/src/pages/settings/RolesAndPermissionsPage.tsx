@@ -1,9 +1,9 @@
-import { Tabs, Typography } from "antd";
+import { Tabs } from "antd";
 import { useSearchParams } from "react-router-dom";
 import { RolesTable } from "@/components/roles/RolesTable";
 import { PermissionsTable } from "@/components/permissions/PermissionsTable";
+import { PageHeader } from "@/components/common/PageHeader";
 
-const { Title, Paragraph } = Typography;
 
 const VALID_TABS = ["perfis", "permissoes"] as const;
 type TabKey = (typeof VALID_TABS)[number];
@@ -21,12 +21,10 @@ export function RolesAndPermissionsPage() {
 
   return (
     <div>
-      <Title level={4} style={{ margin: "0 0 4px" }}>
-        Perfis e Permissões
-      </Title>
-      <Paragraph type="secondary" style={{ marginBottom: 20 }}>
-        Catálogo de perfis de acesso e permissões do sistema
-      </Paragraph>
+      <PageHeader
+        title="Perfis e Permissões"
+        subtitle="Catálogo de perfis de acesso e permissões do sistema"
+      />
 
       <Tabs
         activeKey={activeTab}

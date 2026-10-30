@@ -18,7 +18,8 @@ export function Logo({ size = 26, showWordmark = true }: LogoProps) {
           flexShrink: 0,
           background: BRAND.gradient,
           transform: "rotate(45deg)",
-          borderRadius: 6,
+          // Proporcional ao tamanho (30%): com um valor fixo, o logo pequeno da barra de status virava círculo.
+          borderRadius: Math.round(size * 0.3),
         }}
       />
       {showWordmark && (
