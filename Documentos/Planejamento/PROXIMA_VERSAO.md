@@ -2,33 +2,22 @@
 
 Alterações feitas desde o último envio ao servidor. O Claude acrescenta uma linha aqui ao terminar cada tarefa. Quando você enviar a versão, peça o release: o Claude lê este arquivo, gera `releases/Release_<versão>.md` e zera esta lista.
 
-- **Versão prevista:** a definir (próxima publicação: `2026.2.3.0` se não mexer no banco; `2026.3.3.0` se mexer)
-- **Última versão enviada:** `2026.2.2.0` (versão do banco 2), ambiente da OCI em 2026-10-22
+- **Versão prevista:** a definir (próxima publicação: patch ou nova sequência se não mexer no banco; versão do banco +1 se mexer)
+- **Última versão gerada:** `2026.2.3.0` (versão do banco 2). O ambiente de testes ainda está na `2026.2.2.0` até ser atualizado (CFG-033).
 - **Formato:** `ano.versao_do_banco.sequencia_versao.sequencia_patch`. A versão do banco sobe uma unidade por **publicação** que contém mudanças de banco (quantas tabelas, campos ou triggers forem, na mesma publicação conta uma só); a seção "Mudanças que afetam o banco" abaixo lista o que mudou nessa versão.
 
 ## Mudanças que afetam o banco ou a configuração do servidor
 
-- **CFG-016**: bancos já semeados precisam rodar `deploy/sql/CFG-016_menu_fornecedores_suppliers_view.sql` (idempotente) para que os itens de menu "Fornecedores" usem `suppliers.view`. Já aplicado no ambiente de testes; bancos novos já nascem certos.
-- **CFG-014**: textos e módulo de permissões do catálogo corrigidos no código. Só vale para bancos novos; bancos já semeados (inclusive o da OCI) mantêm os textos antigos, porque o seed nunca altera permissão existente.
+_Nada ainda._
 
 ## Novidades e melhorias
 
-- **CFG-024**: barra de status no rodapé do sistema com a versão do sistema, a versão do banco (com aviso se estiver atrás do exigido) e o ambiente. Endpoint novo `GET /auth/version`, protegido por login.
-- **CFG-026**: o painel de permissões do usuário (editar usuário e o resumo) passa a mostrar sempre a descrição completa de cada permissão, em vez de "Ver"/"Criar"/"Editar"/"Excluir" quando o módulo tinha só uma.
+_Nada ainda._
 
 ## Correções
 
-- **CFG-017**: sem `APP_ENV` definido o sistema passa a subir em modo seguro (log do banco sem valores), em vez de `development`. Quem depende do SQL no log em desenvolvimento precisa ter `APP_ENV=development` no `.env`; o servidor da OCI já usa `staging`.
-- **CFG-027** (segurança): erro do banco de dados deixa de aparecer para o usuário em qualquer resposta de erro (antes, um 400 como "Erro ao criar cliente" mostrava o texto do Postgres, com tipo e tamanho de coluna e o `SQLSTATE`). Agora a resposta traz "Não foi possível concluir a operação." e o erro completo fica no log do servidor.
-- **CFG-031**: Empresas, Configuração fiscal, Itens de menu, Perfis e Usuários passam a recusar, como erro de validação, textos maiores que a coluna do banco (e senhas acima de 72 caracteres), na API e nos formulários das telas existentes (Zod). Antes, só o banco recusava e a resposta era "Não foi possível concluir a operação".
-- **CFG-032**: os erros de validação da API passam a vir em frases legíveis, com o nome do campo no JSON (`first_name: no máximo 100 caracteres`, `cnpj: campo obrigatório`), em vez do texto interno do validador do Go. As rotas de permissões e de itens de menu, que respondiam `{"error": ...}` num formato à parte nos erros de bind, passam a usar o formato padrão (`message` e `validationErrors`).
-- **CFG-030**: o cadastro de Clientes e Fornecedores (API) passa a recusar, como erro de validação, textos maiores que a coluna (nome e sobrenome 100, razão social 100, documento 20, observações 255), em vez de deixar o banco recusar.
-- **CFG-029** (segurança): as listagens deixam de aceitar qualquer texto na ordenação. O `order_by_column` (corpo do `/filter`) e o `sort` (query string) iam direto para o `ORDER BY`, uma injeção de SQL alcançável por usuário logado em Clientes, Fornecedores, Usuários, Permissões, logs de sincronização e eventos de webhook. Agora só vale coluna real do modelo (nunca as escondidas do JSON, como o hash de senha); qualquer outro valor usa a ordenação padrão `id desc`. O `sort`/`order` devolvidos na resposta passam a mostrar a coluna e o sentido realmente usados.
-- **CFG-018**: um erro interno (500) deixa de devolver o texto do erro (que podia trazer nome de tabela, constraint e valores do Postgres) na resposta da API: o erro completo vai para o log do servidor e a resposta leva só a mensagem.
-- **CFG-015**: o item de menu "Financeiro > Contas a Pagar > Fornecedores" passa a usar `suppliers.view` (antes `purchases.view`), como o de Compras; vale só para bancos novos.
-- **CFG-014**: `roles.*` deixam de se chamar "usuários" (agora "perfis"); `permissions.*` e `integrations.*` em minúsculas como as demais; `finance.receive_boleto` vira "Receber boletos"; `dashboard.view_default` passa do módulo `dashboard` para `Dashboard`, que aparece em "Outros" na edição de usuário.
+_Nada ainda._
 
 ## Interno (não afeta o servidor)
 
-- **CFG-023**: os `tasks_*.md` fechados do Módulo 0 foram para `Documentos/Planejamento/Arquivo/`; README do planejamento, `CLAUDE.md`, skill e `plano_empresa.md` atualizados para os novos caminhos. O `CLAUDE.md` e a skill de arquitetura ganharam a regra de defesa contra SQL Injection (valores sempre como parâmetro `?`).
-- **CFG-022**: `CLAUDE.md` e as skills `lumini_hub_backend_architecture` e `lumini_hub_entity_creation` traduzidos para português, com três pontos desatualizados das skills corrigidos. O `CLAUDE.md` também deixou de descrever o banco legado e o login local passou a depender do `BOOTSTRAP_ADMIN_PASSWORD`.
+_Nada ainda._

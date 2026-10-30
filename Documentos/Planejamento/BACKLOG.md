@@ -48,6 +48,7 @@ _Nada aguardando teste no momento._
 
 ## 2. Próximos (Configuração / base)
 
+- [ ] **CFG-033** Atualizar o ambiente de testes para a `2026.2.3.0` (release em `releases/Release_2026.2.3.0.md`): atualizar o código, reconstruir as imagens e reiniciar os serviços, **sem recriar o volume do banco**. Conferir a barra de status com a versão nova e o link da release. Depois, marcar a pendência de atualização na release
 - [ ] **CFG-028** Refatorar o layout principal do sistema (cabeçalho, rodapé/barra de status e menu lateral): a composição das três áreas ainda está inconsistente, porque cada uma foi acrescentada em um momento (por exemplo, o logo no pé do menu lateral fica colado na barra de status, e as cores, bordas e alturas não seguem uma regra única). Redefinir o que fica em cada área, alturas, bordas, cores, o comportamento com o menu recolhido e em telas menores, e aplicar no cabeçalho a mesma ideia discreta da barra de status. Fazer olhando o resultado pronto, como foi o CFG-024
 
 ## 3. Módulos ainda não iniciados

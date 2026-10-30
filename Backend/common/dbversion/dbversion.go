@@ -22,7 +22,7 @@ const (
 	// Required é a versão do banco exigida por este código.
 	Required = 2
 	// AppVersion é a versão do sistema, no formato ano.versao_do_banco.sequencia_versao.sequencia_patch.
-	AppVersion = "2026.2.2.0"
+	AppVersion = "2026.2.3.0"
 )
 
 // SchemaVersion é uma linha do histórico: uma por publicação que chegou a este banco.
