@@ -1,23 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
-import { Button, Card, Input, Popconfirm, Space, Table, Tag } from "antd";
+import { Button, Card, Input, Space, Tag } from "antd";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { roleService } from "@/services/roles/role-service";
 import { getApiErrorMessage } from "@/utils/api-error";
 import { useFeedback } from "@/hooks/useFeedback";
 import type { ApiRole } from "@/types/role";
-import { useActionButtonSize } from "@/hooks/useActionButtonSize";
+import { ResponsiveTable, RowActionButtons, type RowAction } from "@/components/common/ResponsiveTable";
 
 export function RolesTable() {
-  const actionSize = useActionButtonSize();
   const { hasPermission } = useAuth();
   const feedback = useFeedback();
 
   const [roles, setRoles] = useState<ApiRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const load = () => {
     setLoading(true);
@@ -37,17 +35,42 @@ export function RolesTable() {
   }, [roles, search]);
 
   const handleDelete = async (role: ApiRole) => {
-    setDeletingId(role.id);
     try {
       await roleService.remove(role.id);
       feedback.success("Perfil excluído com sucesso.");
       load();
     } catch (error) {
       feedback.error(getApiErrorMessage(error, "Erro ao excluir perfil."));
-    } finally {
-      setDeletingId(null);
     }
   };
+
+  const rowActions = (role: ApiRole): RowAction[] => [
+    ...(hasPermission("roles.edit")
+      ? [
+          {
+            key: "edit",
+            label: "Editar",
+            icon: <EditOutlined />,
+            to: `/settings/roles/${role.id}/edit`,
+          },
+        ]
+      : []),
+    ...(hasPermission("roles.delete")
+      ? [
+          {
+            key: "delete",
+            label: "Excluir",
+            icon: <DeleteOutlined />,
+            danger: true,
+            confirm: {
+              title: "Excluir perfil",
+              description: `Tem certeza que deseja excluir o perfil "${role.name}"?`,
+              onConfirm: () => handleDelete(role),
+            },
+          },
+        ]
+      : []),
+  ];
 
   return (
     <Card
@@ -77,40 +100,22 @@ export function RolesTable() {
         </Space>
       }
     >
-      <Table<ApiRole>
+      <ResponsiveTable<ApiRole>
+        card={{
+          title: (role) => role.name,
+          subtitle: (role) => role.description,
+          actions: rowActions,
+        }}
         scroll={{ x: "max-content" }}
         rowKey="id"
         loading={loading}
         dataSource={filtered}
         pagination={false}
         columns={[
+          { title: "ID", dataIndex: "id", width: 70 },
           { title: "Nome", dataIndex: "name" },
           { title: "Descrição", dataIndex: "description" },
-          {
-            title: "Ações",
-            key: "actions",
-            render: (_, role) => (
-              <Space size={6}>
-                {hasPermission("roles.edit") && (
-                  <Link to={`/settings/roles/${role.id}/edit`}>
-                    <Button size={actionSize} icon={<EditOutlined />} />
-                  </Link>
-                )}
-                {hasPermission("roles.delete") && (
-                  <Popconfirm
-                    title="Excluir perfil"
-                    description={`Tem certeza que deseja excluir o perfil "${role.name}"?`}
-                    okText="Excluir"
-                    okButtonProps={{ danger: true, loading: deletingId === role.id }}
-                    cancelText="Cancelar"
-                    onConfirm={() => void handleDelete(role)}
-                  >
-                    <Button size={actionSize} danger icon={<DeleteOutlined />} />
-                  </Popconfirm>
-                )}
-              </Space>
-            ),
-          },
+          { title: "Ações", key: "actions", render: (_, role) => <RowActionButtons actions={rowActions(role)} /> },
         ]}
       />
     </Card>

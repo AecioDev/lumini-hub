@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
-import { Button, Card, Input, Popconfirm, Space, Table, Tag } from "antd";
+import { Button, Card, Input, Space, Tag } from "antd";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { companyService } from "@/services/companies/company-service";
 import { getApiErrorMessage } from "@/utils/api-error";
 import { useFeedback } from "@/hooks/useFeedback";
 import type { ApiCompany } from "@/types/company";
-import { useActionButtonSize } from "@/hooks/useActionButtonSize";
+import { ResponsiveTable, RowActionButtons, type RowAction } from "@/components/common/ResponsiveTable";
 
 interface CompanyTreeNode extends ApiCompany {
   children?: CompanyTreeNode[];
@@ -37,14 +37,12 @@ function buildCompanyTree(companies: ApiCompany[]): CompanyTreeNode[] {
 }
 
 export function CompaniesTable() {
-  const actionSize = useActionButtonSize();
   const { hasPermission } = useAuth();
   const feedback = useFeedback();
 
   const [companies, setCompanies] = useState<ApiCompany[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [expandedRowKeys, setExpandedRowKeys] = useState<number[]>([]);
 
   const load = () => {
@@ -84,16 +82,53 @@ export function CompaniesTable() {
   const dataSource = search.trim() ? filtered : treeData;
 
   const handleDelete = async (company: ApiCompany) => {
-    setDeletingId(company.id);
     try {
       await companyService.remove(company.id);
       feedback.success("Empresa excluída com sucesso.");
       load();
     } catch (error) {
       feedback.error(getApiErrorMessage(error, "Erro ao excluir empresa."));
-    } finally {
-      setDeletingId(null);
     }
+  };
+
+  const rowActions = (company: ApiCompany): RowAction[] => [
+    ...(hasPermission("companies.edit")
+      ? [
+          {
+            key: "edit",
+            label: "Editar",
+            icon: <EditOutlined />,
+            to: `/settings/companies/${company.id}/edit`,
+          },
+        ]
+      : []),
+    ...(hasPermission("companies.delete")
+      ? [
+          {
+            key: "delete",
+            label: "Excluir",
+            icon: <DeleteOutlined />,
+            danger: true,
+            confirm: {
+              title: "Excluir empresa",
+              description: `Tem certeza que deseja excluir "${company.trade_name || company.legal_name}"?`,
+              onConfirm: () => handleDelete(company),
+            },
+          },
+        ]
+      : []),
+  ];
+
+  const renderType = (company: ApiCompany) =>
+    company.parent_id === null ? <Tag color="blue">Matriz</Tag> : <Tag>Vinculada</Tag>;
+
+  const renderStatus = (company: ApiCompany) =>
+    company.is_active ? <Tag color="success">Ativa</Tag> : <Tag color="default">Inativa</Tag>;
+
+  // No celular a árvore vira lista plana (a vinculada diz de qual matriz é), com a busca já aplicada.
+  const parentName = (company: ApiCompany) => {
+    const parent = companies.find((c) => c.id === company.parent_id);
+    return parent ? parent.trade_name || parent.legal_name : undefined;
   };
 
   return (
@@ -124,7 +159,28 @@ export function CompaniesTable() {
         </Space>
       }
     >
-      <Table<CompanyTreeNode>
+      <ResponsiveTable<CompanyTreeNode>
+        card={{
+          title: (company) => company.trade_name || company.legal_name,
+          subtitle: (company) => (
+            <>
+              <div>
+                {company.parent_id === null
+                  ? company.legal_name
+                  : `Vinculada a ${parentName(company) ?? "—"}`}
+              </div>
+              {company.cnpj && <div>CNPJ: {company.cnpj}</div>}
+            </>
+          ),
+          tags: (company) => (
+            <Space size={4} wrap>
+              {renderType(company)}
+              {renderStatus(company)}
+            </Space>
+          ),
+          actions: rowActions,
+        }}
+        cardDataSource={filtered}
         scroll={{ x: "max-content" }}
         rowKey="id"
         loading={loading}
@@ -144,51 +200,9 @@ export function CompaniesTable() {
             dataIndex: "cnpj",
             render: (cnpj: string | null) => cnpj || <span style={{ opacity: 0.5 }}>—</span>,
           },
-          {
-            title: "Tipo",
-            key: "type",
-            render: (_, company) =>
-              company.parent_id === null ? (
-                <Tag color="blue">Matriz</Tag>
-              ) : (
-                <Tag>Vinculada</Tag>
-              ),
-          },
-          {
-            title: "Status",
-            key: "status",
-            render: (_, company) =>
-              company.is_active ? (
-                <Tag color="success">Ativa</Tag>
-              ) : (
-                <Tag color="default">Inativa</Tag>
-              ),
-          },
-          {
-            title: "Ações",
-            key: "actions",
-            render: (_, company) => (
-              <Space size={6}>
-                {hasPermission("companies.edit") && (
-                  <Link to={`/settings/companies/${company.id}/edit`}>
-                    <Button size={actionSize} icon={<EditOutlined />} />
-                  </Link>
-                )}
-                {hasPermission("companies.delete") && (
-                  <Popconfirm
-                    title="Excluir empresa"
-                    description={`Tem certeza que deseja excluir "${company.trade_name || company.legal_name}"?`}
-                    okText="Excluir"
-                    okButtonProps={{ danger: true, loading: deletingId === company.id }}
-                    cancelText="Cancelar"
-                    onConfirm={() => void handleDelete(company)}
-                  >
-                    <Button size={actionSize} danger icon={<DeleteOutlined />} />
-                  </Popconfirm>
-                )}
-              </Space>
-            ),
-          },
+          { title: "Tipo", key: "type", render: (_, company) => renderType(company) },
+          { title: "Status", key: "status", render: (_, company) => renderStatus(company) },
+          { title: "Ações", key: "actions", render: (_, company) => <RowActionButtons actions={rowActions(company)} /> },
         ]}
       />
     </Card>
