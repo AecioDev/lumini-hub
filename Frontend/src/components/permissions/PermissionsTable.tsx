@@ -8,10 +8,12 @@ import { getApiErrorMessage } from "@/utils/api-error";
 import { getTagColor } from "@/utils/avatar";
 import { useFeedback } from "@/hooks/useFeedback";
 import type { ApiPermission } from "@/types/permission";
+import { useActionButtonSize } from "@/hooks/useActionButtonSize";
 
 const PAGE_SIZE = 10;
 
 export function PermissionsTable() {
+  const actionSize = useActionButtonSize();
   const { hasPermission, isDeveloper } = useAuth();
   const feedback = useFeedback();
 
@@ -81,7 +83,7 @@ export function PermissionsTable() {
           <Input.Search
             placeholder="Buscar por código/descrição..."
             allowClear
-            style={{ width: 240 }}
+            style={{ width: "min(240px, 42vw)" }}
             onSearch={(value) => {
               setName(value || undefined);
               setPage(1);
@@ -131,7 +133,7 @@ export function PermissionsTable() {
                     <Space size={6}>
                       {hasPermission("permissions.edit") && (
                         <Link to={`/settings/permissions/${permission.id}/edit`}>
-                          <Button size="small" icon={<EditOutlined />} />
+                          <Button size={actionSize} icon={<EditOutlined />} />
                         </Link>
                       )}
                       {hasPermission("permissions.delete") && (
@@ -143,7 +145,7 @@ export function PermissionsTable() {
                           cancelText="Cancelar"
                           onConfirm={() => void handleDelete(permission)}
                         >
-                          <Button size="small" danger icon={<DeleteOutlined />} />
+                          <Button size={actionSize} danger icon={<DeleteOutlined />} />
                         </Popconfirm>
                       )}
                     </Space>

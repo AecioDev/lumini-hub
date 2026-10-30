@@ -43,23 +43,35 @@ export function AppHeader({ onToggleMenu }: AppHeaderProps) {
         borderBottom: `1px solid ${token.colorBorderSecondary}`,
       }}
     >
-      <Button type="text" icon={<MenuOutlined />} onClick={onToggleMenu} />
+      <Button
+        type="text"
+        icon={<MenuOutlined />}
+        onClick={onToggleMenu}
+        aria-label="Abrir ou recolher o menu"
+      />
 
       <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
         <ThemeToggle />
         <Badge dot offset={[-2, 2]}>
-          <Button shape="circle" icon={<BellOutlined />} />
+          <Button shape="circle" icon={<BellOutlined />} aria-label="Notificações" />
         </Badge>
         <Dropdown menu={{ items: userMenuItems }} trigger={["click"]}>
-          <Avatar
-            style={{
-              background: getAvatarGradient(user?.name ?? ""),
-              cursor: "pointer",
-            }}
-            icon={!user?.name ? <UserOutlined /> : undefined}
+          {/* Um <button> de verdade (e não só o Avatar): recebe foco pelo teclado e abre com Enter. */}
+          <button
+            type="button"
+            aria-label="Menu do usuário"
+            style={{ padding: 0, border: "none", background: "none", borderRadius: "50%", cursor: "pointer", lineHeight: 0 }}
           >
-            {user?.name ? getInitials(user.name) : undefined}
-          </Avatar>
+            <Avatar
+              style={{
+                background: getAvatarGradient(user?.name ?? ""),
+                cursor: "pointer",
+              }}
+              icon={!user?.name ? <UserOutlined /> : undefined}
+            >
+              {user?.name ? getInitials(user.name) : undefined}
+            </Avatar>
+          </button>
         </Dropdown>
       </div>
     </Header>

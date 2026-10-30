@@ -64,6 +64,20 @@ export function ActiveCompanySwitcher({ collapsed }: ActiveCompanySwitcherProps)
     <>
       <div
         onClick={canSwitch ? () => setDrawerOpen(true) : undefined}
+        // Só vira botão (foco pelo teclado, leitor de tela) quando há mais de uma empresa para trocar.
+        role={canSwitch ? "button" : undefined}
+        tabIndex={canSwitch ? 0 : undefined}
+        aria-label={canSwitch ? `Trocar de empresa (atual: ${user?.active_company_name ?? "nenhuma"})` : undefined}
+        onKeyDown={
+          canSwitch
+            ? (event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  setDrawerOpen(true);
+                }
+              }
+            : undefined
+        }
         style={{
           display: "flex",
           alignItems: "center",

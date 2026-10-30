@@ -1,11 +1,14 @@
-import { useState } from "react";
-import { Outlet } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Outlet, useLocation } from "react-router-dom";
 import { Layout } from "antd";
 import { useAuth } from "@/contexts/AuthContext";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { AppSider } from "@/components/layout/AppSider";
+import { MobileMenu } from "@/components/layout/MobileMenu";
 import { StatusBar } from "@/components/layout/StatusBar";
+import { BREAKPOINT_DESKTOP, BREAKPOINT_TABLET } from "@/components/layout/layout-constants";
 
 const { Content } = Layout;
 
@@ -21,11 +24,29 @@ function readCollapsed(): boolean {
 }
 
 // Casca do app: menu lateral, cabeçalho, caminho da tela, corpo (a única área que rola) e a barra de status.
+//
+// O menu depende da largura (ver layout-constants.ts): em tela grande é o menu fixo, completo ou recolhido
+// por preferência; em tela média é o menu fixo só com ícones; em tela estreita não há menu fixo. Abaixo da
+// tela grande, o botão do cabeçalho abre uma gaveta com o menu completo.
 export function AppLayout() {
   const [collapsed, setCollapsed] = useState(readCollapsed);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const { menuItems } = useAuth();
+  const { pathname } = useLocation();
 
-  const toggleMenu = () =>
+  const isDesktop = useMediaQuery(`(min-width: ${BREAKPOINT_DESKTOP}px)`);
+  const hasSider = useMediaQuery(`(min-width: ${BREAKPOINT_TABLET}px)`);
+
+  // Ao escolher uma tela no menu da gaveta, ela se fecha.
+  useEffect(() => {
+    setDrawerOpen(false);
+  }, [pathname]);
+
+  const handleMenuButton = () => {
+    if (!isDesktop) {
+      setDrawerOpen(true);
+      return;
+    }
     setCollapsed((prev) => {
       const next = !prev;
       try {
@@ -35,14 +56,15 @@ export function AppLayout() {
       }
       return next;
     });
+  };
 
   return (
     <Layout style={{ height: "100vh", overflow: "hidden" }}>
-      <Layout hasSider style={{ flex: 1, minHeight: 0 }}>
-        <AppSider collapsed={collapsed} menuItems={menuItems} />
+      <Layout hasSider={hasSider} style={{ flex: 1, minHeight: 0 }}>
+        {hasSider && <AppSider collapsed={isDesktop ? collapsed : true} menuItems={menuItems} />}
 
         <Layout>
-          <AppHeader onToggleMenu={toggleMenu} />
+          <AppHeader onToggleMenu={handleMenuButton} />
           <AppBreadcrumb menuItems={menuItems} />
 
           {/* Sem padding no Content: o PageHeader é sticky e precisa grudar no topo da área que rola.
@@ -55,6 +77,12 @@ export function AppLayout() {
         </Layout>
       </Layout>
       <StatusBar />
+
+      <MobileMenu
+        open={drawerOpen && !isDesktop}
+        onClose={() => setDrawerOpen(false)}
+        menuItems={menuItems}
+      />
     </Layout>
   );
 }

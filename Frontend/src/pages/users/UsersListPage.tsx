@@ -18,11 +18,13 @@ import { useFeedback } from "@/hooks/useFeedback";
 import { getAvatarGradient, getInitials, getTagColor } from "@/utils/avatar";
 import type { ApiUser } from "@/types/auth";
 import { PageHeader } from "@/components/common/PageHeader";
+import { useActionButtonSize } from "@/hooks/useActionButtonSize";
 
 
 const PAGE_SIZE = 10;
 
 export function UsersListPage() {
+  const actionSize = useActionButtonSize();
   const { hasPermission } = useAuth();
   const feedback = useFeedback();
 
@@ -83,12 +85,13 @@ export function UsersListPage() {
           <Input.Search
             placeholder="Buscar na página atual..."
             allowClear
-            style={{ width: 240 }}
+            style={{ width: "min(240px, 42vw)" }}
             onChange={(e) => setSearch(e.target.value)}
           />
         }
       >
         <Table<ApiUser>
+          scroll={{ x: "max-content" }}
           rowKey="id"
           loading={loading}
           dataSource={filteredUsers}
@@ -137,7 +140,7 @@ export function UsersListPage() {
                 <Space size={6}>
                   <Tooltip title="Ver detalhes">
                     <Button
-                      size="small"
+                      size={actionSize}
                       icon={<EyeOutlined />}
                       onClick={() => setDetailUserId(user.id)}
                     />
@@ -145,7 +148,7 @@ export function UsersListPage() {
                   {hasPermission("users.edit") && (
                     <Tooltip title="Editar">
                       <Link to={`/settings/users/${user.id}/edit`}>
-                        <Button size="small" icon={<EditOutlined />} />
+                        <Button size={actionSize} icon={<EditOutlined />} />
                       </Link>
                     </Tooltip>
                   )}

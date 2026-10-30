@@ -55,17 +55,20 @@ export function StatusBar() {
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
+        gap: 12,
         fontSize: 12,
+        // Uma linha só, em qualquer largura: o que não couber é cortado com "…" (a empresa primeiro).
+        whiteSpace: "nowrap",
         color: token.colorTextSecondary,
         // Mesma cor do menu lateral e do cabeçalho.
         background: CHROME_BG[mode],
         borderTop: `1px solid ${token.colorBorderSecondary}`,
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
         <Logo size={9} showWordmark={false} />
         {info && (
-          <span>
+          <span style={{ flexShrink: 0 }}>
             <a
               href={`${RELEASES_URL}/${encodeURIComponent(info.system_version)}/`}
               target="_blank"
@@ -83,20 +86,26 @@ export function StatusBar() {
           </span>
         )}
         {databaseBehind && (
-          <Tag color="warning" style={{ margin: 0 }}>
+          <Tag color="warning" style={{ margin: 0, flexShrink: 0 }}>
             Banco desatualizado (exige v{info.required_database_version})
           </Tag>
         )}
         {companyName && (
           <>
-            {info && <span aria-hidden="true">|</span>}
-            <span>Empresa: {companyName}</span>
+            {info && (
+              <span aria-hidden="true" style={{ flexShrink: 0 }}>
+                |
+              </span>
+            )}
+            <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>
+              Empresa: {companyName}
+            </span>
           </>
         )}
       </div>
 
       {environment && (
-        <Tag color={environment.color} style={{ margin: 0 }}>
+        <Tag color={environment.color} style={{ margin: 0, flexShrink: 0 }}>
           {environment.label}
         </Tag>
       )}

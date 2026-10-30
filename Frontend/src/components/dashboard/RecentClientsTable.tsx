@@ -35,12 +35,13 @@ export function RecentClientsTable({ clients }: { clients: RecentClient[] }) {
         <Input.Search
           placeholder="Buscar..."
           allowClear
-          style={{ width: 200 }}
+          style={{ width: "min(200px, 42vw)" }}
           onChange={(e) => setSearch(e.target.value)}
         />
       }
     >
       <Table<RecentClient>
+        scroll={{ x: "max-content" }}
         rowKey="id"
         dataSource={filtered}
         pagination={false}

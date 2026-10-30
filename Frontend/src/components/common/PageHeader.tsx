@@ -2,6 +2,8 @@ import { ArrowLeftOutlined } from "@ant-design/icons";
 import { Button, Typography, theme } from "antd";
 import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
+import { BREAKPOINT_TABLET } from "@/components/layout/layout-constants";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 const { Title, Paragraph } = Typography;
 
@@ -24,11 +26,14 @@ interface PageHeaderProps {
 export function PageHeader({ title, subtitle, backTo, actions }: PageHeaderProps) {
   const navigate = useNavigate();
   const { token } = theme.useToken();
+  // No celular o cabeçalho (título, descrição e botões em linhas separadas) ocuparia muito da tela se
+  // ficasse fixo: ele só gruda no topo a partir do tablet.
+  const sticky = useMediaQuery(`(min-width: ${BREAKPOINT_TABLET}px)`);
 
   return (
     <div
       style={{
-        position: "sticky",
+        position: sticky ? "sticky" : "static",
         top: 0,
         zIndex: 10,
         display: "flex",

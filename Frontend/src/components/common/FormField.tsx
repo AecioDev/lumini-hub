@@ -1,4 +1,6 @@
 import { Form } from "antd";
+import { BREAKPOINT_TABLET } from "@/components/layout/layout-constants";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import type { ReactNode } from "react";
 import type { FieldError } from "react-hook-form";
 
@@ -21,10 +23,16 @@ interface FormFieldProps {
   stacked?: boolean;
 }
 
+// Abaixo do tablet o rótulo fica sempre em cima, em todos os campos (padrão do celular): com o rótulo ao
+// lado, Input e Select/Switch se comportavam diferente na mesma tela, porque só o Input (largura 100%)
+// forçava o rótulo a quebrar para cima.
+
 // Wrapper fino em cima de Form.Item para exibir label + mensagem de erro do
 // react-hook-form de forma consistente em todos os formulários da aplicação.
 export function FormField({ label, error, required, children, stacked }: FormFieldProps) {
-  if (stacked) {
+  const narrow = !useMediaQuery(`(min-width: ${BREAKPOINT_TABLET}px)`);
+
+  if (stacked || narrow) {
     return (
       <div style={{ marginBottom: 16 }}>
         {label && (

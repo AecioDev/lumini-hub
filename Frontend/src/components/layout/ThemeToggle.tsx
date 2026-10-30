@@ -9,6 +9,7 @@ export function ThemeToggle() {
     <Tooltip title={mode === "dark" ? "Tema claro" : "Tema escuro"}>
       <Switch
         checked={mode === "dark"}
+        aria-label={mode === "dark" ? "Mudar para o tema claro" : "Mudar para o tema escuro"}
         onChange={toggleTheme}
         checkedChildren={<MoonOutlined />}
         unCheckedChildren={<SunOutlined />}
