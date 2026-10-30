@@ -45,8 +45,12 @@ export function AppLayout() {
           <AppHeader onToggleMenu={toggleMenu} />
           <AppBreadcrumb menuItems={menuItems} />
 
-          <Content style={{ padding: 24, overflowY: "auto", minHeight: 0 }}>
-            <Outlet />
+          {/* Sem padding no Content: o PageHeader é sticky e precisa grudar no topo da área que rola.
+              O espaçamento fica neste wrapper, que rola junto com a página. */}
+          <Content style={{ overflowY: "auto", minHeight: 0 }}>
+            <div style={{ padding: "8px 24px 24px" }}>
+              <Outlet />
+            </div>
           </Content>
         </Layout>
       </Layout>

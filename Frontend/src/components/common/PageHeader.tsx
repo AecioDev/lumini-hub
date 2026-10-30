@@ -1,5 +1,6 @@
 import { ArrowLeftOutlined } from "@ant-design/icons";
 import { Button, Typography, theme } from "antd";
+import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 
 const { Title, Paragraph } = Typography;
@@ -7,53 +8,37 @@ const { Title, Paragraph } = Typography;
 interface PageHeaderProps {
   title: string;
   subtitle?: string;
-  /** Rota de destino do botão "Voltar" — geralmente a listagem que originou esta página. */
-  backTo: string;
+  /** Rota do botão "Voltar" (telas de cadastro e edição): geralmente a listagem de origem. */
+  backTo?: string;
+  /** Botões de ação à direita (ex.: "Novo Usuário"); o "Voltar", se houver, vem depois deles. */
+  actions?: ReactNode;
 }
 
-// Cabeçalho padrão das páginas de Cadastro/Edição — título + descrição à
-// esquerda, botão "Voltar" à direita. Existe pra sempre ter uma saída da
-// página mesmo quando o formulário abaixo não tem seu próprio botão
-// Cancelar (ex.: aba "Permissões" de Editar Perfil, que não tem).
+// Cabeçalho padrão de toda página do app: título e descrição à esquerda; à direita, os botões de ação
+// da página e o "Voltar" (quando a tela tem uma saída óbvia, como o formulário de cadastro).
 //
-// Fixo no topo (position: sticky) em relação ao <Content> rolável de
-// AppLayout.tsx — pedido do usuário pra não perder o título/Voltar ao
-// rolar formulários longos (ex.: Identidade Visual). `background` precisa
-// ser explícito com o token colorBgLayout, senão o conteúdo por trás
-// aparece atravessando o cabeçalho fixo durante o scroll.
-//
-// `top: -24` (não 0) compensa o padding:24 do <Content> (AppLayout.tsx) —
-// o browser calcula o "grudado" do sticky relativo à padding-edge do
-// scrollport, então `top: 0` gruda 24px abaixo do topo visível de verdade
-// (esse padding não é um espaço fixo, ele rola junto com o conteúdo).
-// Sem esse ajuste sobra uma faixa de ~24px onde conteúdo já rolado ainda
-// aparece por trás do cabeçalho (achado pelo revisor-codigo-lumini-hub
-// testando Editar Empresa). Acoplamento numérico com o padding do
-// Content — se aquele valor mudar, ajustar aqui também.
-//
-// paddingTop:24 acompanha o top:-24 pra dar um respiro visual ao
-// cabeçalho quando ele está de fato grudado — sem isso ele fica colado
-// rente ao topo, sem folga nenhuma, o que o usuário achou pior
-// visualmente do que ter um pouco de espaço (mesmo que esse espaço
-// também apareça, um pouco redundante, quando a tela nem chega a rolar).
-export function PageHeader({ title, subtitle, backTo }: PageHeaderProps) {
+// Fica fixo no topo da área que rola (o Content do AppLayout), para não perder o título e os botões ao
+// rolar um formulário longo. O Content não tem padding próprio (o espaçamento fica num wrapper dentro
+// dele), por isso `top: 0` gruda exatamente no topo; o `background` precisa ser explícito, senão o
+// conteúdo que rola aparece atravessando o cabeçalho.
+export function PageHeader({ title, subtitle, backTo, actions }: PageHeaderProps) {
   const navigate = useNavigate();
   const { token } = theme.useToken();
 
   return (
     <div
       style={{
+        position: "sticky",
+        top: 0,
+        zIndex: 10,
         display: "flex",
         justifyContent: "space-between",
         alignItems: "flex-start",
-        gap: 16,
-        marginBottom: 20,
-        position: "sticky",
-        top: -24,
-        zIndex: 10,
+        flexWrap: "wrap",
+        gap: 12,
+        padding: "12px 0",
+        marginBottom: 8,
         background: token.colorBgLayout,
-        paddingTop: 24,
-        paddingBottom: 12,
       }}
     >
       <div>
@@ -66,9 +51,17 @@ export function PageHeader({ title, subtitle, backTo }: PageHeaderProps) {
           </Paragraph>
         )}
       </div>
-      <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(backTo)}>
-        Voltar
-      </Button>
+
+      {(actions || backTo) && (
+        <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
+          {actions}
+          {backTo && (
+            <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(backTo)}>
+              Voltar
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

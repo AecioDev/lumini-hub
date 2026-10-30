@@ -9,7 +9,6 @@ import {
   Table,
   Tag,
   Tooltip,
-  Typography,
 } from "antd";
 import { Link } from "react-router-dom";
 import { userService } from "@/services/users/user-service";
@@ -18,8 +17,8 @@ import { UserDetailDrawer } from "@/components/users/UserDetailDrawer";
 import { useFeedback } from "@/hooks/useFeedback";
 import { getAvatarGradient, getInitials, getTagColor } from "@/utils/avatar";
 import type { ApiUser } from "@/types/auth";
+import { PageHeader } from "@/components/common/PageHeader";
 
-const { Title, Paragraph } = Typography;
 
 const PAGE_SIZE = 10;
 
@@ -59,32 +58,17 @@ export function UsersListPage() {
 
   return (
     <div>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 20,
-          flexWrap: "wrap",
-          gap: 12,
-        }}
-      >
-        <div>
-          <Title level={4} style={{ margin: "0 0 4px" }}>
-            Usuários do Sistema
-          </Title>
-          <Paragraph type="secondary" style={{ margin: 0 }}>
-            Gerencie contas, perfis e permissões da sua equipe
-          </Paragraph>
-        </div>
-        {hasPermission("users.create") && (
+      <PageHeader
+        title="Usuários do Sistema"
+        subtitle="Gerencie contas, perfis e permissões da sua equipe"
+        actions={hasPermission("users.create") && (
           <Link to="/settings/users/create">
             <Button type="primary" icon={<PlusOutlined />}>
               Novo Usuário
             </Button>
           </Link>
         )}
-      </div>
+      />
 
       <Card
         title={
