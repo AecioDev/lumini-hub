@@ -8,16 +8,13 @@ import (
 	"lumini-hub/common/middlewares"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
-// SetupRoutes registra as rotas do api.integrations. sqlServerDB pode ser nil se a conexão com
-// o ERP legado estiver indisponível — os endpoints que dependem dela retornam 503 nesse caso.
-func SetupRoutes(router *gin.RouterGroup, uow repository.UnitOfWork, configService *service.ConfigService, sqlServerDB *gorm.DB, cfg *config.Config) {
+// SetupRoutes registra as rotas do api.integrations.
+func SetupRoutes(router *gin.RouterGroup, uow repository.UnitOfWork, configService *service.ConfigService, cfg *config.Config) {
 	configHandler := handlers.NewConfigHandler(configService)
 	syncLogHandler := handlers.NewSyncLogHandler(uow)
 	webhookEventHandler := handlers.NewWebhookEventHandler(uow)
-	legacyLookupHandler := handlers.NewLegacyLookupHandler(sqlServerDB)
 	webhookHandler := handlers.NewWebhookHandler(service.NewWebhookService(uow, configService))
 
 	integrations := router.Group("/integrations")
@@ -30,9 +27,6 @@ func SetupRoutes(router *gin.RouterGroup, uow repository.UnitOfWork, configServi
 
 		protected.POST("/sync-logs/filter", middlewares.RequirePermission("integrations.view"), syncLogHandler.PostSyncLogFilter)
 		protected.POST("/webhook-events/filter", middlewares.RequirePermission("integrations.view"), webhookEventHandler.PostWebhookEventFilter)
-
-		protected.GET("/legacy/locations", middlewares.RequirePermission("integrations.view"), legacyLookupHandler.GetLocations)
-		protected.GET("/legacy/companies", middlewares.RequirePermission("integrations.view"), legacyLookupHandler.GetCompanies)
 	}
 
 	// Grupo público (sem AuthMiddleware) — autenticado por segredo compartilhado dentro do handler

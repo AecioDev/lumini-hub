@@ -2,13 +2,12 @@ import { useEffect, useState } from "react";
 import { Skeleton, Tabs } from "antd";
 import { useAuth } from "@/contexts/AuthContext";
 import { integrationConfigService } from "@/services/integrations/integration-config-service";
-import { legacyLookupService } from "@/services/integrations/legacy-lookup-service";
 import { IntegrationsOverview } from "@/components/integrations/IntegrationsOverview";
 import { IntegrationSettingsForm } from "@/components/integrations/IntegrationSettingsForm";
 import { SyncLogsTable } from "@/components/integrations/SyncLogsTable";
 import { WebhookEventsTable } from "@/components/integrations/WebhookEventsTable";
 import { useFeedback } from "@/hooks/useFeedback";
-import type { ApiIntegrationSettings, LegacyCompany, LegacyLocation } from "@/types/integration";
+import type { ApiIntegrationSettings } from "@/types/integration";
 import { PageHeader } from "@/components/common/PageHeader";
 
 
@@ -18,9 +17,6 @@ export function IntegrationsPage() {
 
   const [settings, setSettings] = useState<ApiIntegrationSettings | null>(null);
   const [loadingSettings, setLoadingSettings] = useState(true);
-  const [locations, setLocations] = useState<LegacyLocation[]>([]);
-  const [companies, setCompanies] = useState<LegacyCompany[]>([]);
-  const [legacyAvailable, setLegacyAvailable] = useState<boolean | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -35,17 +31,6 @@ export function IntegrationsPage() {
         if (!cancelled) setLoadingSettings(false);
       });
 
-    Promise.all([legacyLookupService.getLocations(), legacyLookupService.getCompanies()])
-      .then(([locationsResult, companiesResult]) => {
-        if (cancelled) return;
-        setLocations(locationsResult);
-        setCompanies(companiesResult);
-        setLegacyAvailable(true);
-      })
-      .catch(() => {
-        if (!cancelled) setLegacyAvailable(false);
-      });
-
     return () => {
       cancelled = true;
     };
@@ -57,7 +42,7 @@ export function IntegrationsPage() {
     <div>
       <PageHeader
         title="Integrações"
-        subtitle="Sincronização com a Loja Integrada e o ERP legado"
+        subtitle="Sincronização com a Loja Integrada"
       />
 
       <Tabs
@@ -65,7 +50,7 @@ export function IntegrationsPage() {
           {
             key: "overview",
             label: "Visão Geral",
-            children: <IntegrationsOverview legacyAvailable={legacyAvailable} />,
+            children: <IntegrationsOverview />,
           },
           {
             key: "settings",
@@ -75,9 +60,6 @@ export function IntegrationsPage() {
             ) : (
               <IntegrationSettingsForm
                 settings={settings}
-                locations={locations}
-                companies={companies}
-                legacyAvailable={legacyAvailable}
                 canEdit={canEdit}
                 onSaved={setSettings}
               />

@@ -52,16 +52,11 @@ services:
     depends_on: { postgres: { condition: service_healthy } }
 
   api-integrations:
-    profiles: ["integrations"]   # desligado por padrão: depende do SQL Server legado
+    profiles: ["integrations"]   # desligado por padrão: o módulo de Integrações está pausado
     build: { context: .., dockerfile: deploy/Dockerfile.backend, args: { SERVICE: api.integrations } }
     restart: unless-stopped
     environment:
       <<: *backend-env
-      MSSQL_HOST: ${MSSQL_HOST:-}
-      MSSQL_PORT: ${MSSQL_PORT:-1433}
-      MSSQL_USER: ${MSSQL_USER:-}
-      MSSQL_PASSWORD: ${MSSQL_PASSWORD:-}
-      MSSQL_NAME: ${MSSQL_NAME:-FOCCO_ERP}
     depends_on: { postgres: { condition: service_healthy } }
 
   gateway:

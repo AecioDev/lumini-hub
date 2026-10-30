@@ -7,9 +7,6 @@ export interface ApiIntegrationSettings {
   li_app_key: string;
   li_webhook_secret: string;
   codtipnot: string;
-  codlocarm_oficial: string;
-  codlocarm_reserva: string;
-  codemp: string;
 }
 
 export interface UpdateIntegrationSettingsRequest {
@@ -17,9 +14,6 @@ export interface UpdateIntegrationSettingsRequest {
   li_app_key?: string;
   li_webhook_secret?: string;
   codtipnot?: string;
-  codlocarm_oficial?: string;
-  codlocarm_reserva?: string;
-  codemp?: string;
 }
 
 // Espelha .../internal/domain/sync_log.go
@@ -81,22 +75,4 @@ export interface WebhookEventFilterRequest {
 export interface ApiWebhookEventListPaginated {
   data: ApiWebhookEvent[];
   pagination: ApiPagination;
-}
-
-// Espelha .../internal/legacy/domain/{loc_arm_model,cencus}.go — consultas de apoio ao
-// ERP legado (SQL Server), usadas só pros selects da tela de configuração. Podem não estar
-// disponíveis (503) se a conexão com o SQL Server legado não estiver configurada.
-
-export interface LegacyLocation {
-  cod_loc_am: number;
-  des_loc_am: string;
-  v_mais_local_empresa: number;
-  tip_estoque: string;
-  tipe_rc: string;
-}
-
-export interface LegacyCompany {
-  cod_cencus: number;
-  des_cencus: string;
-  cgc_cencus: string;
 }

@@ -7,9 +7,6 @@ export const integrationSettingsSchema = z.object({
   li_app_key: z.string().optional(),
   li_webhook_secret: z.string().optional(),
   codtipnot: z.string().optional(),
-  codlocarm_oficial: z.string().optional(),
-  codlocarm_reserva: z.string().optional(),
-  codemp: z.string().optional(),
 });
 
 export type IntegrationSettingsFormValues = z.infer<typeof integrationSettingsSchema>;

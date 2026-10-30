@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Alert, Card, Col, Row, Skeleton, Statistic, Tag } from "antd";
+import { Card, Col, Row, Skeleton, Statistic, Tag } from "antd";
 import { syncLogService } from "@/services/integrations/sync-log-service";
 import { webhookEventService } from "@/services/integrations/webhook-event-service";
 import type { ApiSyncLog } from "@/types/integration";
@@ -23,15 +23,11 @@ const STATUS_COLOR: Record<string, string> = {
   pending: "processing",
 };
 
-interface IntegrationsOverviewProps {
-  legacyAvailable: boolean | null;
-}
-
 // "Dashboard simples" da tela de Integrações: nada aqui é mock — os números
 // vêm dos próprios endpoints de filtro (POST /sync-logs/filter e
 // /webhook-events/filter) usando page_size=1 só para ler o total da
 // paginação, sem precisar de um endpoint de estatísticas dedicado.
-export function IntegrationsOverview({ legacyAvailable }: IntegrationsOverviewProps) {
+export function IntegrationsOverview() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -66,16 +62,6 @@ export function IntegrationsOverview({ legacyAvailable }: IntegrationsOverviewPr
 
   return (
     <div>
-      {legacyAvailable === false && (
-        <Alert
-          type="warning"
-          showIcon
-          style={{ marginBottom: 16 }}
-          message="ERP legado indisponível"
-          description="Não foi possível conectar ao SQL Server do ERP legado agora. Os selects de local/empresa na aba Configurações vão ficar vazios até a conexão voltar."
-        />
-      )}
-
       {loading || !stats ? (
         <Skeleton active paragraph={{ rows: 4 }} />
       ) : (
