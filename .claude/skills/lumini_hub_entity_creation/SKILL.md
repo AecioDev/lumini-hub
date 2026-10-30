@@ -43,7 +43,7 @@ Descoberto em 2026-09-05 ao construir o `CompanyFiscalConfig`: uma linha com sof
 ### Passo 1: Modelo de domínio base
 Crie a estrutura do modelo base em `internal/models/<entity>.go`.
 *   Defina a struct que representa a tabela do banco com as tags do GORM (por exemplo, `gorm:"primaryKey"`, `gorm:"type:varchar(100)"`, `gorm:"uniqueIndex"`).
-*   Crie os payloads de criação e atualização (por exemplo, `Create<Entity>Request`, `Update<Entity>Request`) com tags de validação (por exemplo, `binding:"required,min=2,max=100"`). Todo campo de texto com `gorm:"size:N"` precisa de `max=N` no `binding` (e no schema Zod do formulário); inclua a entidade no `request_size_test.go` do `api.core`.
+*   Crie os payloads de criação e atualização (por exemplo, `Create<Entity>Request`, `Update<Entity>Request`) com tags de validação (por exemplo, `binding:"required,min=2,max=100"`). Todo campo de texto com `gorm:"size:N"` precisa de `max=N` no `binding` (e no schema Zod do formulário); inclua a entidade no `request_size_test.go` do serviço dela (`api.core` ou `api.auth`), que usa o helper `testutil.AssertRequestMaxMatchesColumnSize`.
 
 ### Passo 2: DTOs e mapeadores do modelo
 Crie a estrutura de DTO em `internal/models/<entity>_dto.go`.

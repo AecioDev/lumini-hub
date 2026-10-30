@@ -7,9 +7,12 @@ import { z } from "zod";
 export const companySchema = z
   .object({
     parent_id: z.number().nullable(),
-    legal_name: z.string().min(3, "Informe a razão social"),
-    trade_name: z.string().optional(),
-    cnpj: z.string().optional(),
+    legal_name: z
+      .string()
+      .min(3, "Informe a razão social")
+      .max(150, "Máximo 150 caracteres"),
+    trade_name: z.string().max(150, "Máximo 150 caracteres").optional(),
+    cnpj: z.string().max(20, "Máximo 20 caracteres").optional(),
     is_active: z.boolean(),
   })
   .superRefine((values, ctx) => {

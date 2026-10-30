@@ -3044,6 +3044,7 @@ const docTemplate = `{
                 },
                 "new_password": {
                     "type": "string",
+                    "maxLength": 72,
                     "minLength": 6
                 }
             }
@@ -3155,19 +3156,23 @@ const docTemplate = `{
             ],
             "properties": {
                 "accountant_contact": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 150
                 },
                 "accountant_document": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 },
                 "accountant_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 150
                 },
                 "company_id": {
                     "type": "integer"
                 },
                 "tax_regime": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 }
             }
         },
@@ -3178,17 +3183,20 @@ const docTemplate = `{
             ],
             "properties": {
                 "cnpj": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 },
                 "legal_name": {
                     "type": "string",
+                    "maxLength": 150,
                     "minLength": 3
                 },
                 "parent_id": {
                     "type": "integer"
                 },
                 "trade_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 150
                 }
             }
         },
@@ -3201,22 +3209,27 @@ const docTemplate = `{
             ],
             "properties": {
                 "company_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "document_number": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 },
                 "first_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "is_active": {
                     "type": "boolean"
                 },
                 "last_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "notes": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 255
                 },
                 "person_type": {
                     "type": "string"
@@ -3233,25 +3246,30 @@ const docTemplate = `{
             ],
             "properties": {
                 "company_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "created_by": {
                     "type": "integer"
                 },
                 "document_number": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 },
                 "first_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "is_active": {
                     "type": "boolean"
                 },
                 "last_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "notes": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 255
                 },
                 "person_type": {
                     "type": "string"
@@ -3272,17 +3290,21 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "password": {
                     "type": "string",
+                    "maxLength": 72,
                     "minLength": 6
                 },
                 "phone": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 },
                 "role_id": {
                     "type": "integer"
@@ -3433,16 +3455,20 @@ const docTemplate = `{
             ],
             "properties": {
                 "accountant_contact": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 150
                 },
                 "accountant_document": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 },
                 "accountant_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 150
                 },
                 "tax_regime": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 }
             }
         },
@@ -3453,7 +3479,8 @@ const docTemplate = `{
             ],
             "properties": {
                 "cnpj": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 },
                 "is_active": {
                     "description": "Sem ` + "`" + `binding:\"required\"` + "`" + ` de propósito: num bool, \"required\" exige true\n(zero value é false), o que impediria desativar uma empresa via PUT.",
@@ -3461,13 +3488,15 @@ const docTemplate = `{
                 },
                 "legal_name": {
                     "type": "string",
+                    "maxLength": 150,
                     "minLength": 3
                 },
                 "parent_id": {
                     "type": "integer"
                 },
                 "trade_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 150
                 }
             }
         },
@@ -3480,22 +3509,27 @@ const docTemplate = `{
             ],
             "properties": {
                 "company_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "document_number": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 },
                 "first_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "is_active": {
                     "type": "boolean"
                 },
                 "last_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "notes": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 255
                 }
             }
         },
@@ -3514,7 +3548,8 @@ const docTemplate = `{
                     }
                 },
                 "company_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "contacts_ids": {
                     "type": "array",
@@ -3523,7 +3558,8 @@ const docTemplate = `{
                     }
                 },
                 "document_number": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 },
                 "documents_ids": {
                     "description": "Relacionamentos",
@@ -3533,16 +3569,19 @@ const docTemplate = `{
                     }
                 },
                 "first_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "is_active": {
                     "type": "boolean"
                 },
                 "last_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "notes": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 255
                 }
             }
         },
@@ -3567,16 +3606,19 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "is_active": {
                     "type": "boolean"
                 },
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "phone": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 },
                 "role_id": {
                     "type": "integer"

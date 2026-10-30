@@ -46,19 +46,19 @@ func (User) TableName() string {
 // CreateUserRequest representa os dados para criar um novo usuário
 type CreateUserRequest struct {
 	Username  string `json:"username" binding:"required,min=3,max=50"`
-	Password  string `json:"password" binding:"required,min=6"`
-	Name      string `json:"name" binding:"required"`
-	Email     string `json:"email" binding:"required,email"`
-	Phone     string `json:"phone"`
+	Password  string `json:"password" binding:"required,min=6,max=72"`
+	Name      string `json:"name" binding:"required,max=100"`
+	Email     string `json:"email" binding:"required,email,max=100"`
+	Phone     string `json:"phone" binding:"omitempty,max=20"`
 	RoleID    uint   `json:"role_id" binding:"required"`
 	CompanyID *uint  `json:"company_id"`
 }
 
 // UpdateUserRequest representa os dados para atualizar um usuário
 type UpdateUserRequest struct {
-	Name      string `json:"name"`
-	Email     string `json:"email" binding:"omitempty,email"`
-	Phone     string `json:"phone"`
+	Name      string `json:"name" binding:"omitempty,max=100"`
+	Email     string `json:"email" binding:"omitempty,email,max=100"`
+	Phone     string `json:"phone" binding:"omitempty,max=20"`
 	RoleID    uint   `json:"role_id"`
 	IsActive  *bool  `json:"is_active"`
 	CompanyID *uint  `json:"company_id"`
@@ -67,7 +67,7 @@ type UpdateUserRequest struct {
 // ChangePasswordRequest representa os dados para alterar a senha
 type ChangePasswordRequest struct {
 	CurrentPassword string `json:"current_password" binding:"required"`
-	NewPassword     string `json:"new_password" binding:"required,min=6"`
+	NewPassword     string `json:"new_password" binding:"required,min=6,max=72"`
 }
 
 // ApiUser representa os dados de um usuário que são seguros para enviar ao frontend

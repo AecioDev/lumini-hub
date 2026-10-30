@@ -8,9 +8,9 @@ export const companyFiscalConfigSchema = z.object({
   tax_regime: z.enum(["SIMPLES", "PRESUMIDO", "REAL"], {
     message: "Selecione o tipo de tributação",
   }),
-  accountant_name: z.string().optional(),
-  accountant_document: z.string().optional(),
-  accountant_contact: z.string().optional(),
+  accountant_name: z.string().max(150, "Máximo 150 caracteres").optional(),
+  accountant_document: z.string().max(20, "Máximo 20 caracteres").optional(),
+  accountant_contact: z.string().max(150, "Máximo 150 caracteres").optional(),
 });
 
 export type CompanyFiscalConfigFormValues = z.infer<typeof companyFiscalConfigSchema>;

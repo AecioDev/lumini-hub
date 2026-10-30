@@ -33,8 +33,8 @@ func (MenuItem) TableName() string {
 // CreateMenuItemRequest representa os dados para criar um item de menu
 type CreateMenuItemRequest struct {
 	Name         string `json:"name" binding:"required,min=1,max=100"`
-	Icon         string `json:"icon"`
-	Href         string `json:"href"`
+	Icon         string `json:"icon" binding:"omitempty,max=100"`
+	Href         string `json:"href" binding:"omitempty,max=255"`
 	ParentID     *uint  `json:"parent_id"`
 	PermissionID *uint  `json:"permission_id"`
 	Position     int    `json:"position"`
@@ -43,8 +43,8 @@ type CreateMenuItemRequest struct {
 // UpdateMenuItemRequest representa os dados para atualizar um item de menu
 type UpdateMenuItemRequest struct {
 	Name         string `json:"name" binding:"required,min=1,max=100"`
-	Icon         string `json:"icon"`
-	Href         string `json:"href"`
+	Icon         string `json:"icon" binding:"omitempty,max=100"`
+	Href         string `json:"href" binding:"omitempty,max=255"`
 	ParentID     *uint  `json:"parent_id"`
 	PermissionID *uint  `json:"permission_id"`
 	Position     int    `json:"position"`

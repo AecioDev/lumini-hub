@@ -20,13 +20,13 @@ func (Role) TableName() string {
 
 // CreateRoleRequest representa os dados para criar um novo perfil
 type CreateRoleRequest struct {
-	Name        string `json:"name" binding:"required"`
+	Name        string `json:"name" binding:"required,max=50"`
 	Description string `json:"description"`
 }
 
 // UpdateRoleRequest representa os dados para atualizar um perfil
 type UpdateRoleRequest struct {
-	Name        string `json:"name"`
+	Name        string `json:"name" binding:"omitempty,max=50"`
 	Description string `json:"description"`
 }
 

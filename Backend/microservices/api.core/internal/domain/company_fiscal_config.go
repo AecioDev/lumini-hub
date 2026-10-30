@@ -62,18 +62,18 @@ func (CompanyFiscalConfig) TableName() string {
 // CreateCompanyFiscalConfigRequest representa os dados para criar a configuração fiscal de uma empresa
 type CreateCompanyFiscalConfigRequest struct {
 	CompanyID          uint   `json:"company_id" binding:"required"`
-	TaxRegime          string `json:"tax_regime" binding:"required"`
-	AccountantName     string `json:"accountant_name"`
-	AccountantDocument string `json:"accountant_document"`
-	AccountantContact  string `json:"accountant_contact"`
+	TaxRegime          string `json:"tax_regime" binding:"required,max=20"`
+	AccountantName     string `json:"accountant_name" binding:"omitempty,max=150"`
+	AccountantDocument string `json:"accountant_document" binding:"omitempty,max=20"`
+	AccountantContact  string `json:"accountant_contact" binding:"omitempty,max=150"`
 }
 
 // UpdateCompanyFiscalConfigRequest representa os dados para atualizar a configuração fiscal de uma empresa
 type UpdateCompanyFiscalConfigRequest struct {
-	TaxRegime          string `json:"tax_regime" binding:"required"`
-	AccountantName     string `json:"accountant_name"`
-	AccountantDocument string `json:"accountant_document"`
-	AccountantContact  string `json:"accountant_contact"`
+	TaxRegime          string `json:"tax_regime" binding:"required,max=20"`
+	AccountantName     string `json:"accountant_name" binding:"omitempty,max=150"`
+	AccountantDocument string `json:"accountant_document" binding:"omitempty,max=20"`
+	AccountantContact  string `json:"accountant_contact" binding:"omitempty,max=150"`
 }
 
 // ApiCompanyFiscalConfig representa os dados de configuração fiscal para exibição

@@ -3,9 +3,13 @@ import { z } from "zod";
 // Espelha UpdateUserRequest (Backend/microservices/api.auth/internal/domain/user.go).
 // Sem senha: troca de senha é um fluxo separado (PUT /users/:id/password), fora do escopo desta tela.
 export const updateUserSchema = z.object({
-  name: z.string().min(1, "Informe o nome"),
-  email: z.string().min(1, "Informe o e-mail").email("E-mail inválido"),
-  phone: z.string().optional(),
+  name: z.string().min(1, "Informe o nome").max(100, "Máximo 100 caracteres"),
+  email: z
+    .string()
+    .min(1, "Informe o e-mail")
+    .email("E-mail inválido")
+    .max(100, "Máximo 100 caracteres"),
+  phone: z.string().max(20, "Máximo 20 caracteres").optional(),
   role_id: z
     .number({ invalid_type_error: "Selecione um perfil" })
     .int()

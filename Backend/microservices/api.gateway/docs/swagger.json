@@ -3038,6 +3038,7 @@
                 },
                 "new_password": {
                     "type": "string",
+                    "maxLength": 72,
                     "minLength": 6
                 }
             }
@@ -3149,19 +3150,23 @@
             ],
             "properties": {
                 "accountant_contact": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 150
                 },
                 "accountant_document": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 },
                 "accountant_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 150
                 },
                 "company_id": {
                     "type": "integer"
                 },
                 "tax_regime": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 }
             }
         },
@@ -3172,17 +3177,20 @@
             ],
             "properties": {
                 "cnpj": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 },
                 "legal_name": {
                     "type": "string",
+                    "maxLength": 150,
                     "minLength": 3
                 },
                 "parent_id": {
                     "type": "integer"
                 },
                 "trade_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 150
                 }
             }
         },
@@ -3195,22 +3203,27 @@
             ],
             "properties": {
                 "company_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "document_number": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 },
                 "first_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "is_active": {
                     "type": "boolean"
                 },
                 "last_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "notes": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 255
                 },
                 "person_type": {
                     "type": "string"
@@ -3227,25 +3240,30 @@
             ],
             "properties": {
                 "company_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "created_by": {
                     "type": "integer"
                 },
                 "document_number": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 },
                 "first_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "is_active": {
                     "type": "boolean"
                 },
                 "last_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "notes": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 255
                 },
                 "person_type": {
                     "type": "string"
@@ -3266,17 +3284,21 @@
                     "type": "integer"
                 },
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "password": {
                     "type": "string",
+                    "maxLength": 72,
                     "minLength": 6
                 },
                 "phone": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 },
                 "role_id": {
                     "type": "integer"
@@ -3427,16 +3449,20 @@
             ],
             "properties": {
                 "accountant_contact": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 150
                 },
                 "accountant_document": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 },
                 "accountant_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 150
                 },
                 "tax_regime": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 }
             }
         },
@@ -3447,7 +3473,8 @@
             ],
             "properties": {
                 "cnpj": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 },
                 "is_active": {
                     "description": "Sem `binding:\"required\"` de propósito: num bool, \"required\" exige true\n(zero value é false), o que impediria desativar uma empresa via PUT.",
@@ -3455,13 +3482,15 @@
                 },
                 "legal_name": {
                     "type": "string",
+                    "maxLength": 150,
                     "minLength": 3
                 },
                 "parent_id": {
                     "type": "integer"
                 },
                 "trade_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 150
                 }
             }
         },
@@ -3474,22 +3503,27 @@
             ],
             "properties": {
                 "company_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "document_number": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 },
                 "first_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "is_active": {
                     "type": "boolean"
                 },
                 "last_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "notes": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 255
                 }
             }
         },
@@ -3508,7 +3542,8 @@
                     }
                 },
                 "company_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "contacts_ids": {
                     "type": "array",
@@ -3517,7 +3552,8 @@
                     }
                 },
                 "document_number": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 },
                 "documents_ids": {
                     "description": "Relacionamentos",
@@ -3527,16 +3563,19 @@
                     }
                 },
                 "first_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "is_active": {
                     "type": "boolean"
                 },
                 "last_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "notes": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 255
                 }
             }
         },
@@ -3561,16 +3600,19 @@
                     "type": "integer"
                 },
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "is_active": {
                     "type": "boolean"
                 },
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "phone": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 },
                 "role_id": {
                     "type": "integer"

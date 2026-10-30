@@ -53,17 +53,17 @@ func (Company) TableName() string {
 // empresa vinculada pode não ter CNPJ próprio).
 type CreateCompanyRequest struct {
 	ParentID  *uint  `json:"parent_id"`
-	LegalName string `json:"legal_name" binding:"required,min=3"`
-	TradeName string `json:"trade_name"`
-	CNPJ      string `json:"cnpj"`
+	LegalName string `json:"legal_name" binding:"required,min=3,max=150"`
+	TradeName string `json:"trade_name" binding:"omitempty,max=150"`
+	CNPJ      string `json:"cnpj" binding:"omitempty,max=20"`
 }
 
 // UpdateCompanyRequest representa os dados para atualizar uma empresa
 type UpdateCompanyRequest struct {
 	ParentID  *uint  `json:"parent_id"`
-	LegalName string `json:"legal_name" binding:"required,min=3"`
-	TradeName string `json:"trade_name"`
-	CNPJ      string `json:"cnpj"`
+	LegalName string `json:"legal_name" binding:"required,min=3,max=150"`
+	TradeName string `json:"trade_name" binding:"omitempty,max=150"`
+	CNPJ      string `json:"cnpj" binding:"omitempty,max=20"`
 	// Sem `binding:"required"` de propósito: num bool, "required" exige true
 	// (zero value é false), o que impediria desativar uma empresa via PUT.
 	IsActive bool `json:"is_active"`

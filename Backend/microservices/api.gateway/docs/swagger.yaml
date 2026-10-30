@@ -400,6 +400,7 @@ definitions:
       current_password:
         type: string
       new_password:
+        maxLength: 72
         minLength: 6
         type: string
     required:
@@ -475,14 +476,18 @@ definitions:
   domain.CreateCompanyFiscalConfigRequest:
     properties:
       accountant_contact:
+        maxLength: 150
         type: string
       accountant_document:
+        maxLength: 20
         type: string
       accountant_name:
+        maxLength: 150
         type: string
       company_id:
         type: integer
       tax_regime:
+        maxLength: 20
         type: string
     required:
     - company_id
@@ -491,13 +496,16 @@ definitions:
   domain.CreateCompanyRequest:
     properties:
       cnpj:
+        maxLength: 20
         type: string
       legal_name:
+        maxLength: 150
         minLength: 3
         type: string
       parent_id:
         type: integer
       trade_name:
+        maxLength: 150
         type: string
     required:
     - legal_name
@@ -505,16 +513,21 @@ definitions:
   domain.CreateCustomerRequest:
     properties:
       company_name:
+        maxLength: 100
         type: string
       document_number:
+        maxLength: 20
         type: string
       first_name:
+        maxLength: 100
         type: string
       is_active:
         type: boolean
       last_name:
+        maxLength: 100
         type: string
       notes:
+        maxLength: 255
         type: string
       person_type:
         type: string
@@ -526,18 +539,23 @@ definitions:
   domain.CreateSupplierRequest:
     properties:
       company_name:
+        maxLength: 100
         type: string
       created_by:
         type: integer
       document_number:
+        maxLength: 20
         type: string
       first_name:
+        maxLength: 100
         type: string
       is_active:
         type: boolean
       last_name:
+        maxLength: 100
         type: string
       notes:
+        maxLength: 255
         type: string
       person_type:
         type: string
@@ -552,13 +570,17 @@ definitions:
       company_id:
         type: integer
       email:
+        maxLength: 100
         type: string
       name:
+        maxLength: 100
         type: string
       password:
+        maxLength: 72
         minLength: 6
         type: string
       phone:
+        maxLength: 20
         type: string
       role_id:
         type: integer
@@ -662,12 +684,16 @@ definitions:
   domain.UpdateCompanyFiscalConfigRequest:
     properties:
       accountant_contact:
+        maxLength: 150
         type: string
       accountant_document:
+        maxLength: 20
         type: string
       accountant_name:
+        maxLength: 150
         type: string
       tax_regime:
+        maxLength: 20
         type: string
     required:
     - tax_regime
@@ -675,6 +701,7 @@ definitions:
   domain.UpdateCompanyRequest:
     properties:
       cnpj:
+        maxLength: 20
         type: string
       is_active:
         description: |-
@@ -682,11 +709,13 @@ definitions:
           (zero value é false), o que impediria desativar uma empresa via PUT.
         type: boolean
       legal_name:
+        maxLength: 150
         minLength: 3
         type: string
       parent_id:
         type: integer
       trade_name:
+        maxLength: 150
         type: string
     required:
     - legal_name
@@ -694,16 +723,21 @@ definitions:
   domain.UpdateCustomerRequest:
     properties:
       company_name:
+        maxLength: 100
         type: string
       document_number:
+        maxLength: 20
         type: string
       first_name:
+        maxLength: 100
         type: string
       is_active:
         type: boolean
       last_name:
+        maxLength: 100
         type: string
       notes:
+        maxLength: 255
         type: string
     required:
     - document_number
@@ -717,12 +751,14 @@ definitions:
           type: integer
         type: array
       company_name:
+        maxLength: 100
         type: string
       contacts_ids:
         items:
           type: integer
         type: array
       document_number:
+        maxLength: 20
         type: string
       documents_ids:
         description: Relacionamentos
@@ -730,12 +766,15 @@ definitions:
           type: integer
         type: array
       first_name:
+        maxLength: 100
         type: string
       is_active:
         type: boolean
       last_name:
+        maxLength: 100
         type: string
       notes:
+        maxLength: 255
         type: string
     required:
     - document_number
@@ -756,12 +795,15 @@ definitions:
       company_id:
         type: integer
       email:
+        maxLength: 100
         type: string
       is_active:
         type: boolean
       name:
+        maxLength: 100
         type: string
       phone:
+        maxLength: 20
         type: string
       role_id:
         type: integer
