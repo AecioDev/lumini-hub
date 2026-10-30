@@ -33,9 +33,8 @@ func main() {
 	}
 	middlewares.InitPermissionChecker(db)
 
-	// AutoMigrate só das tabelas Postgres do api.integrations (DB_AUTO_MIGRATE,
-	// ligado por padrão; em produção com dados reais, desligar). As structs de
-	// internal/legacy são do SQL Server legado e nunca migram.
+	// AutoMigrate das tabelas Postgres do api.integrations (DB_AUTO_MIGRATE,
+	// ligado por padrão; em produção com dados reais, desligar).
 	if cfg.Database.AutoMigrate {
 		if err := db.AutoMigrate(
 			&domain.IntegrationConfig{},
@@ -48,14 +47,6 @@ func main() {
 	} else if err := dbversion.Check(db); err != nil {
 		// Flag desligada: o operador cuida do schema; só confere se o banco é novo o bastante.
 		log.Fatalf("Banco incompatível com este sistema: %v", err)
-	}
-
-	// A conexão com o SQL Server legado é best-effort: se estiver indisponível, o serviço sobe
-	// mesmo assim e os endpoints que dependem dela retornam 503.
-	sqlServerDB, err := database.InitSQLServerDB(cfg)
-	if err != nil {
-		log.Printf("Aviso: SQL Server indisponível, endpoints legados retornarão 503: %v", err)
-		sqlServerDB = nil
 	}
 
 	uow := repository.NewUnitOfWork(db)
@@ -71,7 +62,7 @@ func main() {
 	router := gin.Default()
 	api := router.Group("/api")
 
-	routes.SetupRoutes(api, uow, configService, sqlServerDB, cfg)
+	routes.SetupRoutes(api, uow, configService, cfg)
 
 	port := "4007"
 	srv := &http.Server{

@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -15,7 +14,6 @@ import (
 type Config struct {
 	Server    ServerConfig
 	Database  DatabaseConfig
-	SQLServer SQLServerConfig
 	JWT       JWTConfig
 	Security  SecurityConfig
 	Bootstrap BootstrapAdminConfig
@@ -48,15 +46,6 @@ type DatabaseConfig struct {
 	// Ligado por padrão pra um banco vazio subir sozinho; em produção com dados
 	// reais o operador desliga explicitamente (DB_AUTO_MIGRATE=false).
 	AutoMigrate bool
-}
-
-// SQLServerConfig armazena configurações do banco de dados SQL Server
-type SQLServerConfig struct {
-	Host     string
-	Port     string
-	User     string
-	Password string
-	DBName   string
 }
 
 // JWTConfig armazena configurações do JWT
@@ -122,13 +111,6 @@ func Load() (*Config, error) {
 		return nil, err
 	}
 
-	// Configurações do SQL Server
-	mssqlHost := getEnv("MSSQL_HOST", "localhost")
-	mssqlPort := getEnv("MSSQL_PORT", "1433")
-	mssqlUser := getEnv("MSSQL_USER", "sa")
-	mssqlPassword := getEnv("MSSQL_PASSWORD", "")
-	mssqlName := getEnv("MSSQL_NAME", "FOCCO_ERP")
-
 	// Configurações do JWT
 	jwtSecret := getEnv("JWT_SECRET", "your-secret-key")
 	jwtAccessExp, _ := strconv.Atoi(getEnv("JWT_ACCESS_EXP", "15"))      // 15 minutos
@@ -165,13 +147,6 @@ func Load() (*Config, error) {
 			DatabaseLink: dbLink,
 			AutoMigrate:  dbAutoMigrate,
 		},
-		SQLServer: SQLServerConfig{
-			Host:     mssqlHost,
-			Port:     mssqlPort,
-			User:     mssqlUser,
-			Password: mssqlPassword,
-			DBName:   mssqlName,
-		},
 		JWT: JWTConfig{
 			Secret:          jwtSecret,
 			AccessTokenExp:  time.Duration(jwtAccessExp) * time.Minute,
@@ -197,20 +172,6 @@ func (c *DatabaseConfig) DSN() string {
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		c.Host, c.Port, c.User, c.Password, c.DBName, c.SSLMode,
 	)
-}
-
-// DSN retorna a string de conexão para SQL Server
-func (c *SQLServerConfig) DSN() string {
-	query := url.Values{}
-	query.Add("database", c.DBName)
-
-	u := &url.URL{
-		Scheme:   "sqlserver",
-		User:     url.UserPassword(c.User, c.Password),
-		Host:     fmt.Sprintf("%s:%s", c.Host, c.Port),
-		RawQuery: query.Encode(),
-	}
-	return u.String()
 }
 
 // getEnv retorna o valor da variável de ambiente ou o valor padrão

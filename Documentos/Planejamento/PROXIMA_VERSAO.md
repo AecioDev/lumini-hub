@@ -8,13 +8,15 @@ Alterações feitas desde o último envio ao servidor. O Claude acrescenta uma l
 
 ## Mudanças que afetam o banco ou a configuração do servidor
 
-_Nada ainda._
+- Configuração: as variáveis `MSSQL_HOST`, `MSSQL_PORT`, `MSSQL_USER`, `MSSQL_PASSWORD` e `MSSQL_NAME` não são mais lidas; podem sair do `.env` do servidor (INT-002). Sem mudança de banco.
 
 ## Novidades e melhorias
 
 - **CFG-028** (fases A a D, na `develop` desde 29/10/2026): o logo da marca sobe para o topo do menu lateral, na mesma altura do cabeçalho; a empresa ativa fica no pé do menu (ícone de troca, que abre a gaveta) e o nome dela também aparece na barra de status; o título sai do cabeçalho e o caminho da tela (breadcrumb) ganha uma faixa entre o cabeçalho e o corpo; a busca do cabeçalho sai; todas as páginas passam a usar o mesmo cabeçalho de página (título, descrição, botões de ação e Voltar), fixo no topo ao rolar; o sistema passa a funcionar em tablet e celular: o menu lateral vira só ícones em tela média e uma gaveta em tela estreita, as tabelas rolam por dentro do cartão e a barra de status cabe numa linha; no celular o rótulo dos campos dos formulários fica sempre em cima, os botões de ação das tabelas ficam maiores para o toque, e os botões do cabeçalho ganham rótulos de acessibilidade; as bordas do menu seguem o tema claro e escuro; o menu recolhido é lembrado ao recarregar.
 
 - **CFG-035**: listas de cadastro em cartões no celular (novo componente `ResponsiveTable`): Usuários, Empresas, Perfis e Permissões mostram Perfil, Status e ações sem rolar para o lado, com as ações (editar, excluir) num menu de barras no canto do cartão; a coluna ID passou a aparecer em Usuários e em Perfis; os filtros de Permissões quebram de linha no celular.
+
+- **INT-002**: o `api.integrations` deixou de ler o SQL Server legado: removidos a camada `internal/legacy`, as rotas `/integrations/legacy/*`, o driver SQL Server e as variáveis `MSSQL_*` (configuração e compose); a tela Configurações → Integrações perdeu o bloco "ERP Legado" e o aviso de indisponibilidade.
 
 ## Correções
 
