@@ -6,6 +6,7 @@ import type {
   ApiPermissionsByModule,
   CreatePermissionRequest,
   GetPermissionsFilters,
+  PermissionFilterRequest,
   UpdatePermissionRequest,
 } from "@/types/permission";
 
@@ -14,6 +15,14 @@ export const permissionService = {
     const { data } = await api.get<ApiResponse<ApiPermissionListPaginated>>(
       "/permissions",
       { params: filters }
+    );
+    return data.data!;
+  },
+
+  async filter(payload: PermissionFilterRequest): Promise<ApiPermissionListPaginated> {
+    const { data } = await api.post<ApiResponse<ApiPermissionListPaginated>>(
+      "/permissions/filter",
+      payload
     );
     return data.data!;
   },

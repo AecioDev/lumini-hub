@@ -18,9 +18,11 @@ Alterações feitas desde o último envio ao servidor. O Claude acrescenta uma l
 
 - **INT-002**: o `api.integrations` deixou de ler o SQL Server legado: removidos a camada `internal/legacy`, as rotas `/integrations/legacy/*`, o driver SQL Server e as variáveis `MSSQL_*` (configuração e compose); a tela Configurações → Integrações perdeu o bloco "ERP Legado" e o aviso de indisponibilidade.
 
+- **CFG-036**: a busca de Usuários e de Permissões passa a ser feita no servidor (`POST /users/filter` e `POST /permissions/filter`), em todas as páginas, e não só na página aberta; nova gaveta de filtros (Perfil e Status em Usuários, Módulo em Permissões) aberta pelo botão Filtros.
+
 ## Correções
 
-_Nada ainda._
+- **CFG-036**: a busca de Permissões por \"código/descrição\" só procurava no código; agora procura nos dois.
 
 ## Interno (não afeta o servidor)
 

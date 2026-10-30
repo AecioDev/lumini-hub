@@ -96,13 +96,18 @@ interface ResponsiveTableProps<T> extends TableProps<T> {
   card: CardLayout<T>;
   /** Dados do celular, quando diferem dos da tabela (ex.: a árvore de empresas vira lista plana). */
   cardDataSource?: T[];
+  /** Total de registros mostrado no pé; sem ele vale o `pagination.total` ou a quantidade de linhas. */
+  total?: number;
 }
+
+const totalLabel = (total: number) => `${total} ${total === 1 ? "registro" : "registros"}`;
 
 // Lista de cadastro: tabela do antd a partir do tablet e cartões no celular (abaixo de BREAKPOINT_TABLET).
 // Toda tela de lista usa este componente, para os módulos novos já nascerem com a versão de celular.
 export function ResponsiveTable<T extends object>({
   card,
   cardDataSource,
+  total,
   ...tableProps
 }: ResponsiveTableProps<T>) {
   const isPhone = !useMediaQuery(`(min-width: ${BREAKPOINT_TABLET}px)`);
@@ -134,10 +139,28 @@ export function ResponsiveTable<T extends object>({
     })),
   });
 
-  if (!isPhone) return <Table<T> {...tableProps} />;
-
-  const rows = (cardDataSource ?? tableProps.dataSource ?? []) as T[];
   const pagination = tableProps.pagination === false ? undefined : tableProps.pagination;
+  const rows = (cardDataSource ?? tableProps.dataSource ?? []) as T[];
+  const totalCount = total ?? pagination?.total ?? rows.length;
+  const totalText = (
+    <span style={{ color: token.colorTextSecondary, fontSize: 13 }}>{totalLabel(totalCount)}</span>
+  );
+
+  if (!isPhone) {
+    // Com paginação o total vai à esquerda dela (showTotal); sem paginação, numa linha abaixo da tabela.
+    return (
+      <>
+        <Table<T>
+          {...tableProps}
+          pagination={
+            pagination ? { ...pagination, showTotal: () => totalText } : tableProps.pagination
+          }
+        />
+        {!pagination && <div style={{ marginTop: 12 }}>{totalText}</div>}
+      </>
+    );
+  }
+
   const rowKey = tableProps.rowKey;
   const keyOf = (row: T, index: number): Key => {
     if (typeof rowKey === "function") return rowKey(row);
@@ -197,17 +220,30 @@ export function ResponsiveTable<T extends object>({
           })}
         </div>
       )}
-      {pagination && (
-        <Pagination
-          simple
-          style={{ marginTop: 16, textAlign: "center" }}
-          current={pagination.current}
-          pageSize={pagination.pageSize}
-          total={pagination.total}
-          showSizeChanger={false}
-          onChange={pagination.onChange}
-        />
-      )}
+      {/* Mesmo desenho da tabela: total à esquerda e paginação à direita (compacta no celular). */}
+      <div
+        style={{
+          marginTop: 16,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: 8,
+        }}
+      >
+        {totalText}
+        {pagination && (
+          <Pagination
+            size="small"
+            showLessItems
+            current={pagination.current}
+            pageSize={pagination.pageSize}
+            total={pagination.total}
+            showSizeChanger={false}
+            onChange={pagination.onChange}
+          />
+        )}
+      </div>
     </Spin>
   );
 }

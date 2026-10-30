@@ -84,6 +84,27 @@ func Paginate(value interface{}, pagination *Pagination, db *gorm.DB) (*gorm.DB,
 	return paginated, nil
 }
 
+// PaginationFromFilter monta a paginação de uma busca POST .../filter (page_no, page_size,
+// order_by_column, is_asc). Sem página vira 1, sem tamanho 10 e sem coluna `defaultSort` em ordem
+// decrescente; a coluna enviada só é aceita por Paginate se for uma coluna real do modelo.
+func PaginationFromFilter(pageNo, pageSize *int, orderByColumn string, isAsc *bool, defaultSort string) Pagination {
+	pagination := Pagination{Page: 1, Limit: 10, Sort: defaultSort, Order: "desc"}
+	if pageNo != nil && *pageNo > 0 {
+		pagination.Page = *pageNo
+	}
+	if pageSize != nil && *pageSize > 0 {
+		pagination.Limit = *pageSize
+	}
+	if orderByColumn != "" {
+		pagination.Sort = orderByColumn
+		pagination.Order = "asc"
+		if isAsc != nil && !*isAsc {
+			pagination.Order = "desc"
+		}
+	}
+	return pagination
+}
+
 // ApiPagination representa informações de paginação para a API (usado em DTOs)
 type ApiPagination struct {
 	Page       int    `json:"page"`

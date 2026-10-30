@@ -2097,6 +2097,75 @@ const docTemplate = `{
                 }
             }
         },
+        "/users/filter": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Busca usuários por texto (nome, usuário ou e-mail), perfil e status, com paginação e ordenação",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Usuários"
+                ],
+                "summary": "Filtra usuários com paginação (PostFilter)",
+                "parameters": [
+                    {
+                        "description": "Filtros e dados de paginação",
+                        "name": "filter",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.UserFilterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ApiUserListPaginated"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/users/{id}": {
             "get": {
                 "security": [
@@ -3622,6 +3691,35 @@ const docTemplate = `{
                 },
                 "role_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "domain.UserFilterRequest": {
+            "type": "object",
+            "properties": {
+                "is_active": {
+                    "type": "boolean"
+                },
+                "is_asc": {
+                    "type": "boolean"
+                },
+                "order_by_column": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "page_no": {
+                    "type": "integer"
+                },
+                "page_size": {
+                    "type": "integer",
+                    "maximum": 100
+                },
+                "role_id": {
+                    "type": "integer"
+                },
+                "search": {
+                    "type": "string",
+                    "maxLength": 100
                 }
             }
         },

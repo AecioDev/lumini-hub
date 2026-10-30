@@ -57,7 +57,8 @@ func (r *GormPermissionRepository) FindAllFiltered(pagination *utils.Pagination,
 
 	// Aplicar filtros
 	if filters.Name != "" {
-		query = query.Where("permission ILIKE ?", "%"+filters.Name+"%")
+		like := "%" + filters.Name + "%"
+		query = query.Where("(permission ILIKE ? OR description ILIKE ?)", like, like)
 	}
 	if filters.Module != "" {
 		query = query.Where("module = ?", filters.Module)

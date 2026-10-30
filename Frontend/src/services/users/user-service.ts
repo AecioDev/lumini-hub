@@ -6,6 +6,7 @@ import type {
   CreateUserRequest,
   UpdateUserPermissionsRequest,
   UpdateUserRequest,
+  UserFilterRequest,
 } from "@/types/user";
 
 export interface ListUsersParams {
@@ -19,6 +20,11 @@ export const userService = {
     const { data } = await api.get<ApiResponse<ApiUserListPaginated>>("/users", {
       params,
     });
+    return data.data!;
+  },
+
+  async filter(payload: UserFilterRequest): Promise<ApiUserListPaginated> {
+    const { data } = await api.post<ApiResponse<ApiUserListPaginated>>("/users/filter", payload);
     return data.data!;
   },
 

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
-import { Button, Card, Input, Space, Tag } from "antd";
+import { Button, Card, Space, Tag } from "antd";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { companyService } from "@/services/companies/company-service";
@@ -8,6 +8,7 @@ import { getApiErrorMessage } from "@/utils/api-error";
 import { useFeedback } from "@/hooks/useFeedback";
 import type { ApiCompany } from "@/types/company";
 import { ResponsiveTable, RowActionButtons, type RowAction } from "@/components/common/ResponsiveTable";
+import { ListToolbar } from "@/components/common/ListToolbar";
 
 interface CompanyTreeNode extends ApiCompany {
   children?: CompanyTreeNode[];
@@ -132,34 +133,22 @@ export function CompaniesTable() {
   };
 
   return (
-    <Card
-      title={
-        <span>
-          Empresas
-          <Tag bordered={false} style={{ marginLeft: 8 }}>
-            {companies.length}
-          </Tag>
-        </span>
-      }
-      extra={
-        <Space>
-          <Input.Search
-            placeholder="Buscar..."
-            allowClear
-            style={{ width: "min(220px, 42vw)" }}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          {hasPermission("companies.create") && (
+    <Card>
+      <ListToolbar
+        searchPlaceholder="Buscar por nome ou CNPJ..."
+        onSearch={setSearch}
+        actions={
+          hasPermission("companies.create") && (
             <Link to="/settings/companies/create">
               <Button type="primary" icon={<PlusOutlined />}>
                 Nova Empresa
               </Button>
             </Link>
-          )}
-        </Space>
-      }
-    >
+          )
+        }
+      />
       <ResponsiveTable<CompanyTreeNode>
+        total={search.trim() ? filtered.length : companies.length}
         card={{
           title: (company) => company.trade_name || company.legal_name,
           subtitle: (company) => (

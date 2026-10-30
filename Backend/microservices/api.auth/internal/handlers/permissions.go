@@ -47,6 +47,23 @@ func (h *PermissionHandler) GetPermissions(c *gin.Context) {
 	utils.SuccessResponse(c, http.StatusOK, "Permissões encontradas", permissions, nil)
 }
 
+// PostPermissionFilter busca permissões aplicando os filtros recebidos no corpo (PostFilter)
+func (h *PermissionHandler) PostPermissionFilter(c *gin.Context) {
+	var req domain.PermissionFilterRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.ValidationErrorResponse(c, "Parâmetros de filtro inválidos", err)
+		return
+	}
+
+	permissions, err := h.permService.GetPermissionsByFilter(req, utils.RoleFromGinContext(c))
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Erro ao buscar permissões", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "Permissões encontradas", permissions, nil)
+}
+
 // GetPermission retorna uma permissão específica pelo ID
 func (h *PermissionHandler) GetPermission(c *gin.Context) {
 	id, err := path.IdFromPathParamOrSendError(c)

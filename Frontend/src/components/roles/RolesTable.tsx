@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
-import { Button, Card, Input, Space, Tag } from "antd";
+import { Button, Card } from "antd";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { roleService } from "@/services/roles/role-service";
@@ -8,6 +8,7 @@ import { getApiErrorMessage } from "@/utils/api-error";
 import { useFeedback } from "@/hooks/useFeedback";
 import type { ApiRole } from "@/types/role";
 import { ResponsiveTable, RowActionButtons, type RowAction } from "@/components/common/ResponsiveTable";
+import { ListToolbar } from "@/components/common/ListToolbar";
 
 export function RolesTable() {
   const { hasPermission } = useAuth();
@@ -73,33 +74,20 @@ export function RolesTable() {
   ];
 
   return (
-    <Card
-      title={
-        <span>
-          Perfis
-          <Tag bordered={false} style={{ marginLeft: 8 }}>
-            {roles.length}
-          </Tag>
-        </span>
-      }
-      extra={
-        <Space>
-          <Input.Search
-            placeholder="Buscar..."
-            allowClear
-            style={{ width: "min(220px, 42vw)" }}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          {hasPermission("roles.create") && (
+    <Card>
+      <ListToolbar
+        searchPlaceholder="Buscar perfil..."
+        onSearch={setSearch}
+        actions={
+          hasPermission("roles.create") && (
             <Link to="/settings/roles/create">
               <Button type="primary" icon={<PlusOutlined />}>
                 Novo Perfil
               </Button>
             </Link>
-          )}
-        </Space>
-      }
-    >
+          )
+        }
+      />
       <ResponsiveTable<ApiRole>
         card={{
           title: (role) => role.name,
