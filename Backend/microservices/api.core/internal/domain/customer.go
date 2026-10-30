@@ -43,23 +43,23 @@ func (Customer) TableName() string {
 
 // CreateCustomerRequest representa os dados para criar um novo cliente
 type CreateCustomerRequest struct {
-	FirstName      string `json:"first_name" binding:"required"`
-	LastName       string `json:"last_name" binding:"omitempty"`
+	FirstName      string `json:"first_name" binding:"required,max=100"`
+	LastName       string `json:"last_name" binding:"omitempty,max=100"`
 	PersonType     string `json:"person_type" binding:"required"`
-	DocumentNumber string `json:"document_number" binding:"required"`
-	CompanyName    string `json:"company_name" binding:"omitempty"`
+	DocumentNumber string `json:"document_number" binding:"required,max=20"`
+	CompanyName    string `json:"company_name" binding:"omitempty,max=100"`
 	IsActive       bool   `json:"is_active"`
-	Notes          string `json:"notes"`
+	Notes          string `json:"notes" binding:"omitempty,max=255"`
 }
 
 // UpdateCustomerRequest representa os dados para atualizar um cliente
 type UpdateCustomerRequest struct {
-	FirstName      string `json:"first_name" binding:"required"`
-	LastName       string `json:"last_name" binding:"omitempty"`
-	DocumentNumber string `json:"document_number" binding:"required"`
-	CompanyName    string `json:"company_name" binding:"omitempty"`
+	FirstName      string `json:"first_name" binding:"required,max=100"`
+	LastName       string `json:"last_name" binding:"omitempty,max=100"`
+	DocumentNumber string `json:"document_number" binding:"required,max=20"`
+	CompanyName    string `json:"company_name" binding:"omitempty,max=100"`
 	IsActive       bool   `json:"is_active" binding:"required"`
-	Notes          string `json:"notes"`
+	Notes          string `json:"notes" binding:"omitempty,max=255"`
 }
 
 // ApiCustomer representa os dados de cliente para exibição

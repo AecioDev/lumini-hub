@@ -36,24 +36,24 @@ func (Supplier) TableName() string {
 
 // CreateSupplierRequest representa os dados para criar um novo fornecedor
 type CreateSupplierRequest struct {
-	FirstName      string `json:"first_name" binding:"required"`
-	LastName       string `json:"last_name" binding:"omitempty"`
+	FirstName      string `json:"first_name" binding:"required,max=100"`
+	LastName       string `json:"last_name" binding:"omitempty,max=100"`
 	PersonType     string `json:"person_type" binding:"required"`
-	DocumentNumber string `json:"document_number" binding:"required"`
-	CompanyName    string `json:"company_name" binding:"omitempty"`
+	DocumentNumber string `json:"document_number" binding:"required,max=20"`
+	CompanyName    string `json:"company_name" binding:"omitempty,max=100"`
 	IsActive       bool   `json:"is_active" binding:"required"`
-	Notes          string `json:"notes"`
+	Notes          string `json:"notes" binding:"omitempty,max=255"`
 	CreatedByID    uint   `json:"created_by"`
 }
 
 // UpdateSupplierRequest representa os dados para atualizar um fornecedor
 type UpdateSupplierRequest struct {
-	FirstName      string `json:"first_name" binding:"required"`
-	LastName       string `json:"last_name" binding:"omitempty"`
-	DocumentNumber string `json:"document_number" binding:"required"`
-	CompanyName    string `json:"company_name" binding:"omitempty"`
+	FirstName      string `json:"first_name" binding:"required,max=100"`
+	LastName       string `json:"last_name" binding:"omitempty,max=100"`
+	DocumentNumber string `json:"document_number" binding:"required,max=20"`
+	CompanyName    string `json:"company_name" binding:"omitempty,max=100"`
 	IsActive       bool   `json:"is_active" binding:"required"`
-	Notes          string `json:"notes"`
+	Notes          string `json:"notes" binding:"omitempty,max=255"`
 
 	// Relacionamentos
 	DocumentsIDs []uint `json:"documents_ids" binding:"omitempty"`
