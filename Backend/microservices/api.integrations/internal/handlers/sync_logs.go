@@ -37,7 +37,7 @@ func NewSyncLogHandler(uow repository.UnitOfWork) *SyncLogHandler {
 func (h *SyncLogHandler) PostSyncLogFilter(c *gin.Context) {
 	var req domain.SyncLogFilterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ValidationErrorResponse(c, "Parâmetros de filtro inválidos", err.Error())
+		utils.ValidationErrorResponse(c, "Parâmetros de filtro inválidos", err)
 		return
 	}
 

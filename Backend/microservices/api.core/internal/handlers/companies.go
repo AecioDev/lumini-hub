@@ -102,7 +102,7 @@ func (h *CompanyHandler) GetCompany(c *gin.Context) {
 func (h *CompanyHandler) CreateCompany(c *gin.Context) {
 	var req domain.CreateCompanyRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+		utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		return
 	}
 
@@ -115,7 +115,7 @@ func (h *CompanyHandler) CreateCompany(c *gin.Context) {
 	company, err := h.companyService.CreateCompany(req, userID)
 	if err != nil {
 		if validator.IsValidationError(err) {
-			utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+			utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		} else {
 			utils.ErrorResponse(c, http.StatusBadRequest, "Erro ao criar empresa", err.Error())
 		}
@@ -148,7 +148,7 @@ func (h *CompanyHandler) UpdateCompany(c *gin.Context) {
 
 	var req domain.UpdateCompanyRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+		utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		return
 	}
 
@@ -163,7 +163,7 @@ func (h *CompanyHandler) UpdateCompany(c *gin.Context) {
 		if err == utils.ErrNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Empresa não encontrada", err.Error())
 		} else if validator.IsValidationError(err) {
-			utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+			utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		} else {
 			utils.ErrorResponse(c, http.StatusBadRequest, "Erro ao atualizar empresa", err.Error())
 		}
@@ -197,7 +197,7 @@ func (h *CompanyHandler) DeleteCompany(c *gin.Context) {
 		if err == utils.ErrNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Empresa não encontrada", err.Error())
 		} else if validator.IsValidationError(err) {
-			utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+			utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		} else {
 			utils.ErrorResponse(c, http.StatusBadRequest, "Erro ao excluir empresa", err.Error())
 		}
@@ -259,7 +259,7 @@ func (h *CompanyHandler) UploadLogo(c *gin.Context) {
 		if err == utils.ErrNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Empresa não encontrada", err.Error())
 		} else if validator.IsValidationError(err) {
-			utils.ValidationErrorResponse(c, "Não foi possível processar o logo", err.Error())
+			utils.ValidationErrorResponse(c, "Não foi possível processar o logo", err)
 		} else {
 			utils.ErrorResponse(c, http.StatusBadRequest, "Erro ao salvar logo", err.Error())
 		}

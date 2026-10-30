@@ -70,7 +70,7 @@ func (h *MenuItemHandler) CreateMenuItem(c *gin.Context) {
 	item, err := h.menuItemService.CreateMenuItem(body)
 	if err != nil {
 		if validator.IsValidationError(err) {
-			utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+			utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		} else {
 			utils.ErrorResponse(c, http.StatusInternalServerError, "Erro ao criar item de menu", err.Error())
 		}
@@ -97,7 +97,7 @@ func (h *MenuItemHandler) UpdateMenuItem(c *gin.Context) {
 		if err == utils.ErrNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Item de menu não encontrado", err.Error())
 		} else if validator.IsValidationError(err) {
-			utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+			utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		} else {
 			utils.ErrorResponse(c, http.StatusInternalServerError, "Erro ao atualizar item de menu", err.Error())
 		}
@@ -118,7 +118,7 @@ func (h *MenuItemHandler) DeleteMenuItem(c *gin.Context) {
 		if err == utils.ErrNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Item de menu não encontrado", err.Error())
 		} else if validator.IsValidationError(err) {
-			utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+			utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		} else {
 			utils.ErrorResponse(c, http.StatusInternalServerError, "Erro ao excluir item de menu", err.Error())
 		}

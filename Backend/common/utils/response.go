@@ -5,8 +5,6 @@ import (
 	"log"
 	"net/http"
 
-	"lumini-hub/common/utils/ginutils"
-
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 )
@@ -60,7 +58,8 @@ func ErrorResponse(c *gin.Context, statusCode int, message string, err string) {
 	})
 }
 
-// ValidationErrorResponse envia uma resposta de erro de validação
+// ValidationErrorResponse envia uma resposta de erro de validação. Passe o próprio erro (não
+// err.Error()): assim erros de bind/validação viram frases como "first_name: no máximo 100 caracteres".
 func ValidationErrorResponse(c *gin.Context, message string, errors interface{}) {
 	var validationErrors []string
 
@@ -68,6 +67,14 @@ func ValidationErrorResponse(c *gin.Context, message string, errors interface{})
 		switch v := errors.(type) {
 		case string:
 			validationErrors = []string{v}
+		case error:
+			// Erro de bind/validação vira frases legíveis (sem nome de struct nem de campo em Go);
+			// qualquer outro erro (regra de negócio nossa) usa o próprio texto.
+			if messages, ok := describeRequestError(v); ok {
+				validationErrors = messages
+			} else {
+				validationErrors = []string{v.Error()}
+			}
 		case []string:
 			validationErrors = append([]string(nil), v...)
 		default:
@@ -88,7 +95,7 @@ func ValidationErrorResponse(c *gin.Context, message string, errors interface{})
 
 func handleBindError(c *gin.Context, err error) error {
 	if err != nil {
-		ginutils.Res(c).StatusBadRequest().SendError(err)
+		ValidationErrorResponse(c, "Dados inválidos", err)
 	}
 
 	return err

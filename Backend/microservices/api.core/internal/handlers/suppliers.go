@@ -67,7 +67,7 @@ func (h *SupplierHandler) GetSuppliers(c *gin.Context) {
 func (h *SupplierHandler) PostSupplierFilter(c *gin.Context) {
 	var req domain.SupplierFilterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ValidationErrorResponse(c, "Parâmetros de filtro inválidos", err.Error())
+		utils.ValidationErrorResponse(c, "Parâmetros de filtro inválidos", err)
 		return
 	}
 
@@ -128,7 +128,7 @@ func (h *SupplierHandler) GetSupplier(c *gin.Context) {
 func (h *SupplierHandler) CreateSupplier(c *gin.Context) {
 	var req domain.CreateSupplierRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+		utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		return
 	}
 
@@ -137,7 +137,7 @@ func (h *SupplierHandler) CreateSupplier(c *gin.Context) {
 	supplier, err := h.supplierService.CreateSupplier(req, userID)
 	if err != nil {
 		if validator.IsValidationError(err) {
-			utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+			utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		} else {
 			utils.ErrorResponse(c, http.StatusBadRequest, "Erro ao criar fornecedor", err.Error())
 		}
@@ -170,7 +170,7 @@ func (h *SupplierHandler) UpdateSupplier(c *gin.Context) {
 
 	var req domain.UpdateSupplierRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+		utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		return
 	}
 
@@ -181,7 +181,7 @@ func (h *SupplierHandler) UpdateSupplier(c *gin.Context) {
 		if err == utils.ErrNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Fornecedor não encontrado", err.Error())
 		} else if validator.IsValidationError(err) {
-			utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+			utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		} else {
 			utils.ErrorResponse(c, http.StatusBadRequest, "Erro ao atualizar fornecedor", err.Error())
 		}

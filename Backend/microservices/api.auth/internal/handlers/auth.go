@@ -47,7 +47,7 @@ type LoginRequest struct {
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ValidationErrorResponse(c, "Dados de login inválidos", err.Error())
+		utils.ValidationErrorResponse(c, "Dados de login inválidos", err)
 		return
 	}
 
@@ -224,7 +224,7 @@ func (h *AuthHandler) SetActiveCompany(c *gin.Context) {
 
 	var req SetActiveCompanyRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+		utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		return
 	}
 

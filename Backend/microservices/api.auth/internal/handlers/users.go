@@ -105,14 +105,14 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 func (h *UserHandler) CreateUser(c *gin.Context) {
 	var req domain.CreateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+		utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		return
 	}
 
 	user, err := h.userService.CreateUser(req, utils.RoleFromGinContext(c))
 	if err != nil {
 		if validator.IsValidationError(err) {
-			utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+			utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		} else {
 			utils.ErrorResponse(c, http.StatusBadRequest, "Erro ao criar usuário", err.Error())
 		}
@@ -145,7 +145,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 
 	var req domain.UpdateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+		utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		return
 	}
 
@@ -154,7 +154,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 		if err == utils.ErrNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Usuário não encontrado", err.Error())
 		} else if validator.IsValidationError(err) {
-			utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+			utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		} else {
 			utils.ErrorResponse(c, http.StatusBadRequest, "Erro ao atualizar usuário", err.Error())
 		}
@@ -187,7 +187,7 @@ func (h *UserHandler) ChangePassword(c *gin.Context) {
 
 	var req domain.ChangePasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+		utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		return
 	}
 
@@ -213,7 +213,7 @@ func (h *UserHandler) ChangePassword(c *gin.Context) {
 		} else if err == utils.ErrInvalidCredentials {
 			utils.ErrorResponse(c, http.StatusBadRequest, "Senha atual incorreta", err.Error())
 		} else if validator.IsValidationError(err) {
-			utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+			utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		} else {
 			utils.ErrorResponse(c, http.StatusBadRequest, "Erro ao alterar senha", err.Error())
 		}
@@ -283,7 +283,7 @@ func (h *UserHandler) UpdateUserPermissions(c *gin.Context) {
 
 	var req domain.UpdateUserPermissionsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+		utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		return
 	}
 
@@ -292,7 +292,7 @@ func (h *UserHandler) UpdateUserPermissions(c *gin.Context) {
 		if err == utils.ErrNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Usuário não encontrado", err.Error())
 		} else if validator.IsValidationError(err) {
-			utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+			utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		} else {
 			utils.ErrorResponse(c, http.StatusBadRequest, "Erro ao atualizar permissões do usuário", err.Error())
 		}

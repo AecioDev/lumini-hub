@@ -99,7 +99,7 @@ func (h *PermissionHandler) CreatePermission(c *gin.Context) {
 	permission, err := h.permService.CreatePermission(body)
 	if err != nil {
 		if validator.IsValidationError(err) {
-			utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+			utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		} else if err.Error() == "permissão informada já está em uso" {
 			utils.ErrorResponse(c, http.StatusConflict, "Conflito ao criar permissão", err.Error())
 		} else {
@@ -128,7 +128,7 @@ func (h *PermissionHandler) UpdatePermission(c *gin.Context) {
 		if err == utils.ErrNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Permissão não encontrada", err.Error())
 		} else if validator.IsValidationError(err) {
-			utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+			utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		} else if err.Error() == "permissão informada já está em uso" {
 			utils.ErrorResponse(c, http.StatusConflict, "Conflito ao atualizar permissão", err.Error())
 		} else {
@@ -151,7 +151,7 @@ func (h *PermissionHandler) DeletePermission(c *gin.Context) {
 		if err == utils.ErrNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Permissão não encontrada", err.Error())
 		} else if validator.IsValidationError(err) {
-			utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+			utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		} else {
 			utils.ErrorResponse(c, http.StatusInternalServerError, "Erro ao excluir permissão", err.Error())
 		}

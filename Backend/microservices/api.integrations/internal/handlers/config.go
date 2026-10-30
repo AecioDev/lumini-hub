@@ -50,7 +50,7 @@ func (h *ConfigHandler) GetSettings(c *gin.Context) {
 func (h *ConfigHandler) UpdateSettings(c *gin.Context) {
 	var req domain.UpdateIntegrationSettingsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+		utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		return
 	}
 

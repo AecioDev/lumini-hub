@@ -67,7 +67,7 @@ func (h *CustomerHandler) GetCustomers(c *gin.Context) {
 func (h *CustomerHandler) PostCustomerFilter(c *gin.Context) {
 	var req domain.CustomerFilterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ValidationErrorResponse(c, "Parâmetros de filtro inválidos", err.Error())
+		utils.ValidationErrorResponse(c, "Parâmetros de filtro inválidos", err)
 		return
 	}
 
@@ -128,7 +128,7 @@ func (h *CustomerHandler) GetCustomer(c *gin.Context) {
 func (h *CustomerHandler) CreateCustomer(c *gin.Context) {
 	var req domain.CreateCustomerRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+		utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		return
 	}
 
@@ -141,7 +141,7 @@ func (h *CustomerHandler) CreateCustomer(c *gin.Context) {
 	customer, err := h.customerService.CreateCustomer(req, userID)
 	if err != nil {
 		if validator.IsValidationError(err) {
-			utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+			utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		} else {
 			utils.ErrorResponse(c, http.StatusBadRequest, "Erro ao criar cliente", err.Error())
 		}
@@ -174,7 +174,7 @@ func (h *CustomerHandler) UpdateCustomer(c *gin.Context) {
 
 	var req domain.UpdateCustomerRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+		utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		return
 	}
 
@@ -183,7 +183,7 @@ func (h *CustomerHandler) UpdateCustomer(c *gin.Context) {
 		if err == utils.ErrNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Cliente não encontrado", err.Error())
 		} else if validator.IsValidationError(err) {
-			utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+			utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		} else {
 			utils.ErrorResponse(c, http.StatusBadRequest, "Erro ao atualizar cliente", err.Error())
 		}

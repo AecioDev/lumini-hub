@@ -37,7 +37,7 @@ func NewWebhookEventHandler(uow repository.UnitOfWork) *WebhookEventHandler {
 func (h *WebhookEventHandler) PostWebhookEventFilter(c *gin.Context) {
 	var req domain.WebhookEventFilterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ValidationErrorResponse(c, "Parâmetros de filtro inválidos", err.Error())
+		utils.ValidationErrorResponse(c, "Parâmetros de filtro inválidos", err)
 		return
 	}
 

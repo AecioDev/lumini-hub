@@ -65,14 +65,14 @@ func (h *RoleHandler) GetRole(c *gin.Context) {
 func (h *RoleHandler) CreateRole(c *gin.Context) {
 	var req domain.CreateRoleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+		utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		return
 	}
 
 	role, err := h.roleService.CreateRole(req, utils.RoleFromGinContext(c))
 	if err != nil {
 		if validator.IsValidationError(err) {
-			utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+			utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		} else {
 			utils.ErrorResponse(c, http.StatusBadRequest, "Erro ao criar perfil", err.Error())
 		}
@@ -91,7 +91,7 @@ func (h *RoleHandler) UpdateRole(c *gin.Context) {
 
 	var req domain.UpdateRoleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+		utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		return
 	}
 
@@ -100,7 +100,7 @@ func (h *RoleHandler) UpdateRole(c *gin.Context) {
 		if err == utils.ErrNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Perfil não encontrado", err.Error())
 		} else if validator.IsValidationError(err) {
-			utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+			utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		} else {
 			utils.ErrorResponse(c, http.StatusBadRequest, "Erro ao atualizar perfil", err.Error())
 		}
@@ -121,7 +121,7 @@ func (h *RoleHandler) DeleteRole(c *gin.Context) {
 		if err == utils.ErrNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Perfil não encontrado", err.Error())
 		} else if validator.IsValidationError(err) {
-			utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+			utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		} else {
 			utils.ErrorResponse(c, http.StatusBadRequest, "Erro ao excluir perfil", err.Error())
 		}
@@ -140,7 +140,7 @@ func (h *RoleHandler) UpdateRolePermissions(c *gin.Context) {
 
 	var req domain.UpdateRolePermissionsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+		utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		return
 	}
 
@@ -149,7 +149,7 @@ func (h *RoleHandler) UpdateRolePermissions(c *gin.Context) {
 		if err == utils.ErrNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Perfil não encontrado", err.Error())
 		} else if validator.IsValidationError(err) {
-			utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+			utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		} else {
 			utils.ErrorResponse(c, http.StatusBadRequest, "Erro ao atualizar permissões", err.Error())
 		}

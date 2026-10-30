@@ -42,7 +42,7 @@ func NewCompanyFiscalConfigHandler(uow repository.UnitOfWork, encryptionKey stri
 func (h *CompanyFiscalConfigHandler) GetCompanyFiscalConfigByCompany(c *gin.Context) {
 	companyID, err := path.UintFromPathParam(c, "companyId")
 	if err != nil {
-		utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+		utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		return
 	}
 
@@ -75,14 +75,14 @@ func (h *CompanyFiscalConfigHandler) GetCompanyFiscalConfigByCompany(c *gin.Cont
 func (h *CompanyFiscalConfigHandler) CreateCompanyFiscalConfig(c *gin.Context) {
 	var req domain.CreateCompanyFiscalConfigRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+		utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		return
 	}
 
 	config, err := h.fiscalConfigService.CreateCompanyFiscalConfig(req)
 	if err != nil {
 		if validator.IsValidationError(err) {
-			utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+			utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		} else {
 			utils.ErrorResponse(c, http.StatusBadRequest, "Erro ao criar configuração fiscal", err.Error())
 		}
@@ -115,7 +115,7 @@ func (h *CompanyFiscalConfigHandler) UpdateCompanyFiscalConfig(c *gin.Context) {
 
 	var req domain.UpdateCompanyFiscalConfigRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+		utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		return
 	}
 
@@ -124,7 +124,7 @@ func (h *CompanyFiscalConfigHandler) UpdateCompanyFiscalConfig(c *gin.Context) {
 		if err == utils.ErrNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Configuração fiscal não encontrada", err.Error())
 		} else if validator.IsValidationError(err) {
-			utils.ValidationErrorResponse(c, "Dados inválidos", err.Error())
+			utils.ValidationErrorResponse(c, "Dados inválidos", err)
 		} else {
 			utils.ErrorResponse(c, http.StatusBadRequest, "Erro ao atualizar configuração fiscal", err.Error())
 		}
@@ -189,7 +189,7 @@ func (h *CompanyFiscalConfigHandler) UploadCertificate(c *gin.Context) {
 		if err == utils.ErrNotFound {
 			utils.ErrorResponse(c, http.StatusNotFound, "Configuração fiscal não encontrada", err.Error())
 		} else if validator.IsValidationError(err) {
-			utils.ValidationErrorResponse(c, "Não foi possível processar o certificado", err.Error())
+			utils.ValidationErrorResponse(c, "Não foi possível processar o certificado", err)
 		} else {
 			utils.ErrorResponse(c, http.StatusBadRequest, "Erro ao salvar certificado", err.Error())
 		}

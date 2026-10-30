@@ -53,15 +53,15 @@ Todos os handlers **DEVEM** usar a struct padrão `utils.Response` de [response.
   ```
   Num **500**, o `ErrorResponse` nunca devolve o texto do erro ao cliente: grava o erro completo no log do servidor (método, caminho e erro) e a resposta leva só a `message`, sem o campo `error`. Pode passar o `err.Error()` cru num 500. Em qualquer outro status, texto de erro do banco (`SQLSTATE`, falha de conexão) é trocado por "Não foi possível concluir a operação." e o original vai para o log; por isso valide tamanho, duplicidade e formato antes do banco e não dependa do erro dele para dar mensagem ao usuário.
 - **Erros de validação (`ValidationErrorResponse`)**:
-  Aceita uma única string ou uma lista de strings (`[]string`).
+  Aceita um `error`, uma string ou uma lista de strings (`[]string`). Nos handlers passe o **próprio erro** do `ShouldBindJSON` (`err`, não `err.Error()`): ele é traduzido para frases com o nome do campo no JSON, sem expor struct nem regra interna do validador.
   ```json
   {
     "success": false,
     "statusCode": 400,
     "message": "Dados inválidos",
     "validationErrors": [
-      "o nome é obrigatório",
-      "formato de documento inválido"
+      "first_name: campo obrigatório",
+      "document_number: no máximo 20 caracteres"
     ]
   }
   ```
