@@ -16,6 +16,7 @@ type PermissionSeed struct {
 var PermissionCatalog = []PermissionSeed{
 	// Admin
 	{Permission: "dashboard.admin.view", Description: "Visualizar o dashboard do administrador", Module: "Admin"},
+	{Permission: "audit.view", Description: "Visualizar a auditoria do sistema", Module: "Admin"},
 	// Compras
 	{Permission: "purchases.create", Description: "Criar compras", Module: "Compras"},
 	{Permission: "purchases.delete", Description: "Excluir compras", Module: "Compras"},

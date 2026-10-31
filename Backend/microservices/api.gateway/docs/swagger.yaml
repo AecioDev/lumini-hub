@@ -31,6 +31,42 @@ definitions:
         description: CEP com 8 dígitos
         type: string
     type: object
+  domain.ApiAuditLog:
+    properties:
+      action:
+        type: string
+      created_at:
+        type: string
+      details:
+        additionalProperties: {}
+        description: |-
+          Detalhes do que mudou: "changes" (campo -> de/para, numa alteração), "after" (objeto criado),
+          "before" (objeto excluído) ou "truncated" (campos de um conteúdo grande demais para guardar).
+        type: object
+      entity_id:
+        type: string
+      entity_type:
+        type: string
+      id:
+        type: integer
+      ip_address:
+        type: string
+      status:
+        type: integer
+      user_id:
+        type: integer
+      username:
+        type: string
+    type: object
+  domain.ApiAuditLogListPaginated:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/domain.ApiAuditLog'
+        type: array
+      pagination:
+        $ref: '#/definitions/utils.ApiPagination'
+    type: object
   domain.ApiCompany:
     properties:
       cnpj:
@@ -401,6 +437,38 @@ definitions:
         type: integer
       system_version:
         type: string
+    type: object
+  domain.AuditLogFilterRequest:
+    properties:
+      date_from:
+        type: string
+      date_to:
+        type: string
+      entity_type:
+        maxLength: 50
+        type: string
+      is_asc:
+        type: boolean
+      method:
+        enum:
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        type: string
+      order_by_column:
+        maxLength: 50
+        type: string
+      page_no:
+        type: integer
+      page_size:
+        maximum: 100
+        type: integer
+      search:
+        maxLength: 100
+        type: string
+      user_id:
+        type: integer
     type: object
   domain.ChangePasswordRequest:
     properties:
@@ -945,6 +1013,45 @@ info:
   title: Lumini Hub ERP - API Gateway
   version: "1.0"
 paths:
+  /audit-logs/entity-types:
+    get:
+      description: Valores distintos de entidade (users, companies...) para o filtro
+        da tela.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: string
+            type: array
+      summary: Tipos de entidade da auditoria
+      tags:
+      - Auditoria
+  /audit-logs/filter:
+    post:
+      consumes:
+      - application/json
+      description: Lista paginada das escritas feitas no sistema (quem, o quê, quando),
+        com filtros por texto, entidade, método, usuário e período.
+      parameters:
+      - description: Filtros e paginação
+        in: body
+        name: filter
+        required: true
+        schema:
+          $ref: '#/definitions/domain.AuditLogFilterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.ApiAuditLogListPaginated'
+      summary: Busca a auditoria
+      tags:
+      - Auditoria
   /auth/active-company:
     put:
       consumes:

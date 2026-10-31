@@ -15,6 +15,63 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/audit-logs/entity-types": {
+            "get": {
+                "description": "Valores distintos de entidade (users, companies...) para o filtro da tela.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auditoria"
+                ],
+                "summary": "Tipos de entidade da auditoria",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/audit-logs/filter": {
+            "post": {
+                "description": "Lista paginada das escritas feitas no sistema (quem, o quê, quando), com filtros por texto, entidade, método, usuário e período.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auditoria"
+                ],
+                "summary": "Busca a auditoria",
+                "parameters": [
+                    {
+                        "description": "Filtros e paginação",
+                        "name": "filter",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.AuditLogFilterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ApiAuditLogListPaginated"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/active-company": {
             "put": {
                 "security": [
@@ -2613,6 +2670,57 @@ const docTemplate = `{
                 }
             }
         },
+        "domain.ApiAuditLog": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "details": {
+                    "description": "Detalhes do que mudou: \"changes\" (campo -\u003e de/para, numa alteração), \"after\" (objeto criado),\n\"before\" (objeto excluído) ou \"truncated\" (campos de um conteúdo grande demais para guardar).",
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "entity_id": {
+                    "type": "string"
+                },
+                "entity_type": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "ip_address": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "integer"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.ApiAuditLogListPaginated": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.ApiAuditLog"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/utils.ApiPagination"
+                }
+            }
+        },
         "domain.ApiCompany": {
             "type": "object",
             "properties": {
@@ -3156,6 +3264,51 @@ const docTemplate = `{
                 },
                 "system_version": {
                     "type": "string"
+                }
+            }
+        },
+        "domain.AuditLogFilterRequest": {
+            "type": "object",
+            "properties": {
+                "date_from": {
+                    "type": "string"
+                },
+                "date_to": {
+                    "type": "string"
+                },
+                "entity_type": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "is_asc": {
+                    "type": "boolean"
+                },
+                "method": {
+                    "type": "string",
+                    "enum": [
+                        "POST",
+                        "PUT",
+                        "PATCH",
+                        "DELETE"
+                    ]
+                },
+                "order_by_column": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "page_no": {
+                    "type": "integer"
+                },
+                "page_size": {
+                    "type": "integer",
+                    "maximum": 100
+                },
+                "search": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "user_id": {
+                    "type": "integer"
                 }
             }
         },

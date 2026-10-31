@@ -44,6 +44,7 @@ func main() {
 
 	// Configurar engine do Gin
 	router := gin.Default()
+	router.Use(middlewares.LoggerMiddleware(db, router)) // auditoria das escritas
 
 	// Grupo base da API
 	api := router.Group("/api")
@@ -124,6 +125,7 @@ func prepareDatabase(db *gorm.DB, cfg *config.Config) error {
 		&domain.User{},
 		&domain.MenuItem{},
 		&domain.UserMenuFavorite{},
+		&database.SystemLog{}, // auditoria: gravada por todos os serviços, lida pelo api.auth
 	); err != nil {
 		return fmt.Errorf("migrando tabelas do api.auth: %w", err)
 	}

@@ -11,6 +11,7 @@ import { UsersListPage } from "@/pages/users/UsersListPage";
 import { CreateUserPage } from "@/pages/users/CreateUserPage";
 import { EditUserPage } from "@/pages/users/EditUserPage";
 import { IntegrationsPage } from "@/pages/settings/IntegrationsPage";
+import { AuditLogsPage } from "@/pages/settings/audit/AuditLogsPage";
 import { RolesAndPermissionsPage } from "@/pages/settings/RolesAndPermissionsPage";
 import { CreateRolePage } from "@/pages/settings/roles/CreateRolePage";
 import { EditRolePage } from "@/pages/settings/roles/EditRolePage";
@@ -77,6 +78,12 @@ export const router = createBrowserRouter([
             path: "settings/integrations",
             element: <RequirePermission permission="integrations.view" />,
             children: [{ index: true, element: <IntegrationsPage /> }],
+          },
+          {
+            // Precisa bater com o href real semeado em menu_items ("Auditoria" -> /settings/audit).
+            path: "settings/audit",
+            element: <RequirePermission permission="audit.view" />,
+            children: [{ index: true, element: <AuditLogsPage /> }],
           },
           {
             // Precisa bater com o href real semeado em menu_items

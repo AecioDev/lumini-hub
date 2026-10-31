@@ -17,6 +17,7 @@ func SetupRoutes(router *gin.RouterGroup, db *gorm.DB, cfg *config.Config) {
 	roleHandler := handlers.NewRoleHandler(db)
 	permHandler := handlers.NewPermissionHandler(db)
 	menuItemHandler := handlers.NewMenuItemHandler(db)
+	auditHandler := handlers.NewAuditLogHandler(db)
 
 	// Rotas de Autenticação
 	auth := router.Group("/auth")
@@ -77,6 +78,14 @@ func SetupRoutes(router *gin.RouterGroup, db *gorm.DB, cfg *config.Config) {
 	}
 
 	// Rotas de Itens de Menu (todas protegidas, dev-only)
+	// Auditoria (somente leitura): quem fez qual escrita e quando
+	audit := router.Group("/audit-logs")
+	audit.Use(middlewares.AuthMiddleware(cfg))
+	{
+		audit.POST("/filter", middlewares.RequirePermission("audit.view"), auditHandler.PostAuditLogFilter)
+		audit.GET("/entity-types", middlewares.RequirePermission("audit.view"), auditHandler.GetAuditEntityTypes)
+	}
+
 	menuItems := router.Group("/menu-items")
 	menuItems.Use(middlewares.AuthMiddleware(cfg))
 	{

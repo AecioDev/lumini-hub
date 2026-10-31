@@ -60,6 +60,7 @@ func main() {
 	}
 
 	router := gin.Default()
+	router.Use(middlewares.LoggerMiddleware(db, router)) // auditoria das escritas (a tabela é migrada pelo api.auth)
 	api := router.Group("/api")
 
 	routes.SetupRoutes(api, uow, configService, cfg)

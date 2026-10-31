@@ -61,6 +61,7 @@ func main() {
 
 	// Configurar engine do Gin
 	router := gin.Default()
+	router.Use(middlewares.LoggerMiddleware(db, router)) // auditoria das escritas (a tabela é migrada pelo api.auth)
 
 	// Grupo base da API
 	api := router.Group("/api")
