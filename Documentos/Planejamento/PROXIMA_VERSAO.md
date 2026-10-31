@@ -3,29 +3,20 @@
 Alterações feitas desde o último envio ao servidor. O Claude acrescenta uma linha aqui ao terminar cada tarefa. Quando você enviar a versão, peça o release: o Claude lê este arquivo, gera `releases/Release_<versão>.md` e zera esta lista.
 
 - **Versão prevista:** a definir (próxima publicação: patch ou nova sequência se não mexer no banco; versão do banco +1 se mexer)
-- **Última versão publicada:** `2026.2.3.0` (versão do banco 2). O ambiente de testes foi atualizado para ela em 2026-10-29 (CFG-033, conferido no navegador).
+- **Última versão gerada:** `2026.3.4.0` (versão do banco 3), release em `releases/Release_2026.3.4.0.md`. Ainda não enviada ao ambiente de testes (que está na `2026.2.3.0`).
 - **Formato:** `ano.versao_do_banco.sequencia_versao.sequencia_patch`. A versão do banco sobe uma unidade por **publicação** que contém mudanças de banco (quantas tabelas, campos ou triggers forem, na mesma publicação conta uma só); a seção "Mudanças que afetam o banco" abaixo lista o que mudou nessa versão.
 
 ## Mudanças que afetam o banco ou a configuração do servidor
 
-- **Banco (CFG-034):** nova tabela `user_menu_favorites` (`id`, `user_id`, `menu_item_id`, `position`, `created_at`; índice único em `user_id` + `menu_item_id`), criada pelo `AutoMigrate` do `api.auth`. Esta publicação passa a **mudar o banco**: a versão do banco sobe de 2 para 3 (`dbversion.Required`), e o número da versão do sistema muda junto (2026.3.x.x) na hora do release.
-- Configuração: as variáveis `MSSQL_HOST`, `MSSQL_PORT`, `MSSQL_USER`, `MSSQL_PASSWORD` e `MSSQL_NAME` não são mais lidas; podem sair do `.env` do servidor (INT-002). Sem mudança de banco.
+_Nada ainda._
 
 ## Novidades e melhorias
 
-- **CFG-028** (fases A a D, na `develop` desde 29/10/2026): o logo da marca sobe para o topo do menu lateral, na mesma altura do cabeçalho; a empresa ativa fica no pé do menu (ícone de troca, que abre a gaveta) e o nome dela também aparece na barra de status; o título sai do cabeçalho e o caminho da tela (breadcrumb) ganha uma faixa entre o cabeçalho e o corpo; a busca do cabeçalho sai; todas as páginas passam a usar o mesmo cabeçalho de página (título, descrição, botões de ação e Voltar), fixo no topo ao rolar; o sistema passa a funcionar em tablet e celular: o menu lateral vira só ícones em tela média e uma gaveta em tela estreita, as tabelas rolam por dentro do cartão e a barra de status cabe numa linha; no celular o rótulo dos campos dos formulários fica sempre em cima, os botões de ação das tabelas ficam maiores para o toque, e os botões do cabeçalho ganham rótulos de acessibilidade; as bordas do menu seguem o tema claro e escuro; o menu recolhido é lembrado ao recarregar.
-
-- **CFG-035**: listas de cadastro em cartões no celular (novo componente `ResponsiveTable`): Usuários, Empresas, Perfis e Permissões mostram Perfil, Status e ações sem rolar para o lado, com as ações (editar, excluir) num menu de barras no canto do cartão; a coluna ID passou a aparecer em Usuários e em Perfis; os filtros de Permissões quebram de linha no celular.
-
-- **INT-002**: o `api.integrations` deixou de ler o SQL Server legado: removidos a camada `internal/legacy`, as rotas `/integrations/legacy/*`, o driver SQL Server e as variáveis `MSSQL_*` (configuração e compose); a tela Configurações → Integrações perdeu o bloco "ERP Legado" e o aviso de indisponibilidade.
-
-- **CFG-036**: a busca de Usuários e de Permissões passa a ser feita no servidor (`POST /users/filter` e `POST /permissions/filter`), em todas as páginas, e não só na página aberta; nova gaveta de filtros (Perfil e Status em Usuários, Módulo em Permissões) aberta pelo botão Filtros.
-
-- **CFG-034**: favoritos do menu. Cada tela do menu lateral ganha uma estrela (aparece ao passar o mouse; fixa e dourada quando favorita; sempre visível no toque); até 5 favoritos por usuário, gravados no banco (valem em qualquer máquina) por `PUT /auth/favorites` e devolvidos no login/me. Aparecem centralizados no cabeçalho (ícone e nome em tela larga, só o ícone com dica em tela média), com animação ao passar o mouse (sobe, o ícone cresce e uma linha se abre embaixo); abaixo do tablet aparecem no topo da gaveta do menu. Ao marcar o sexto, um aviso pede para remover um antes.
+_Nada ainda._
 
 ## Correções
 
-- **CFG-036**: a busca de Permissões por \"código/descrição\" só procurava no código; agora procura nos dois.
+_Nada ainda._
 
 ## Interno (não afeta o servidor)
 
