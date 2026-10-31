@@ -20,4 +20,4 @@ Alterações feitas desde o último envio ao servidor. O Claude acrescenta uma l
 
 ## Interno (não afeta o servidor)
 
-_Nada ainda._
+- **CFG-041:** script `deploy/sql/CFG-041_textos_permissoes.sql` corrige os textos e módulos das permissões em bancos semeados antes do CFG-014 (só altera linhas que ainda têm o texto antigo exato, idempotente). Já aplicado no ambiente de testes (12 linhas); não muda a versão do banco. Qualquer outro banco semeado antigo precisa rodá-lo uma vez.
