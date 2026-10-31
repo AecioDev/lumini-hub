@@ -20,4 +20,5 @@ Alterações feitas desde o último envio ao servidor. O Claude acrescenta uma l
 
 ## Interno (não afeta o servidor)
 
+- **CFG-044:** testes do `api.core` (`internal/service`, precisam de `TEST_DATABASE_URL`): empresa (CNPJ só com dígitos e único, matriz exige CNPJ, filial sem CNPJ, vínculo e ciclo, exclusão, logo, visibilidade por usuário), configuração fiscal (uma por empresa, tributação, certificado A1 com senha criptografada) e cliente/fornecedor (documento único com ou sem máscara, nome mínimo, busca com filtro, ordenação e paginação). Certificado autoassinado só de teste em `testdata/`.
 - **CFG-041:** script `deploy/sql/CFG-041_textos_permissoes.sql` corrige os textos e módulos das permissões em bancos semeados antes do CFG-014 (só altera linhas que ainda têm o texto antigo exato, idempotente). Já aplicado no ambiente de testes (12 linhas); não muda a versão do banco. Qualquer outro banco semeado antigo precisa rodá-lo uma vez.
