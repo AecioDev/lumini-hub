@@ -1,5 +1,6 @@
 import { theme } from "antd";
 import { ActiveCompanySwitcher } from "@/components/layout/ActiveCompanySwitcher";
+import { FavoritesShortcuts } from "@/components/layout/FavoritesShortcuts";
 import { Logo } from "@/components/layout/Logo";
 import { SidebarMenu } from "@/components/layout/SidebarMenu";
 import { TOP_BAR_HEIGHT } from "@/components/layout/layout-constants";
@@ -9,12 +10,14 @@ interface SiderContentProps {
   /** Só ícones/logo (menu lateral recolhido). Na gaveta é sempre `false`. */
   collapsed: boolean;
   menuItems: ApiUserMenuItem[];
+  /** Mostra os favoritos no topo do menu (só na gaveta; no menu fixo eles ficam no cabeçalho). */
+  showFavorites?: boolean;
 }
 
 // Conteúdo do menu: logo da marca no topo (mesma altura do cabeçalho), o menu, que é a única parte que rola,
 // e no pé a empresa ativa (clicar abre a troca de empresa). É o mesmo no menu lateral fixo (AppSider) e na
 // gaveta que o substitui em telas menores (MobileMenu).
-export function SiderContent({ collapsed, menuItems }: SiderContentProps) {
+export function SiderContent({ collapsed, menuItems, showFavorites = false }: SiderContentProps) {
   const { token } = theme.useToken();
 
   return (
@@ -35,6 +38,7 @@ export function SiderContent({ collapsed, menuItems }: SiderContentProps) {
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
+        {showFavorites && <FavoritesShortcuts />}
         <SidebarMenu items={menuItems} />
       </div>
 

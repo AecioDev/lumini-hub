@@ -90,6 +90,57 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/favorites": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Troca a lista de favoritos do usuário logado pela enviada, na ordem do cabeçalho. Aceita até 5 telas que ele enxerga no menu, sem repetição.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Autenticação"
+                ],
+                "summary": "Define os favoritos do menu",
+                "parameters": [
+                    {
+                        "description": "IDs dos itens do menu, em ordem",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.SetMenuFavoritesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/login": {
             "post": {
                 "description": "Autentica o usuário no ERP Lumini Hub, definindo cookies seguros HTTP-Only",
@@ -2977,6 +3028,13 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
+                "favorite_menu_item_ids": {
+                    "description": "FavoriteMenuItemIDs: itens do menu que o usuário marcou como favoritos, na ordem do cabeçalho\n(só preenchido no login/refresh/me). Sem omitempty: a lista vazia chega como [].",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -3436,6 +3494,18 @@ const docTemplate = `{
             "properties": {
                 "user": {
                     "$ref": "#/definitions/domain.ApiUserDetail"
+                }
+            }
+        },
+        "domain.SetMenuFavoritesRequest": {
+            "type": "object",
+            "properties": {
+                "menu_item_ids": {
+                    "type": "array",
+                    "maxItems": 5,
+                    "items": {
+                        "type": "integer"
+                    }
                 }
             }
         },

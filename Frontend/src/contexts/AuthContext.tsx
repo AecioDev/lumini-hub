@@ -14,6 +14,10 @@ import type { ApiUserMenuItem } from "@/types/menu";
 interface AuthContextValue {
   user: ApiUserDetail | null;
   menuItems: ApiUserMenuItem[];
+  // Telas favoritas do usuário (ids de itens do menu), na ordem do cabeçalho.
+  favoriteMenuItemIds: number[];
+  // Grava a lista inteira de favoritos no banco e atualiza a sessão.
+  saveFavorites: (menuItemIds: number[]) => Promise<void>;
   isBootstrapping: boolean;
   isAuthenticated: boolean;
   // Identidade de papel "crua" — pra UI que precisa saber se é literalmente
@@ -94,6 +98,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(updatedUser);
   }, []);
 
+  const saveFavorites = useCallback(async (menuItemIds: number[]) => {
+    const saved = await authService.setFavorites(menuItemIds);
+    setUser((prev) => (prev ? { ...prev, favorite_menu_item_ids: saved } : prev));
+  }, []);
+
   const refreshUser = useCallback(async () => {
     const refreshedUser = await authService.me();
     setUser(refreshedUser);
@@ -116,6 +125,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       user,
       menuItems: user?.menu_items ?? [],
+      favoriteMenuItemIds: user?.favorite_menu_item_ids ?? [],
+      saveFavorites,
       isBootstrapping,
       isAuthenticated: user !== null,
       isDeveloper,
@@ -125,7 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setActiveCompany,
       refreshUser,
     }),
-    [user, isBootstrapping, isDeveloper, login, logout, hasPermission, setActiveCompany, refreshUser]
+    [user, isBootstrapping, isDeveloper, login, logout, hasPermission, setActiveCompany, saveFavorites, refreshUser]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

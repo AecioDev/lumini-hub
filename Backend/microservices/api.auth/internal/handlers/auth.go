@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"time"
 
@@ -181,6 +182,7 @@ func (h *AuthHandler) GetMe(c *gin.Context) {
 	if menuItems, err := h.authService.GetMenuItemsForUser(*user); err == nil {
 		userDetail.MenuItems = menuItems
 	}
+	h.authService.FillFavorites(&userDetail)
 	if err := h.authService.ResolveActiveCompany(&userDetail); err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Erro ao resolver empresa ativa", err.Error())
 		return
@@ -262,4 +264,42 @@ func (h *AuthHandler) GetVersion(c *gin.Context) {
 		return
 	}
 	utils.SuccessResponse(c, http.StatusOK, "Versão do sistema", info, nil)
+}
+
+// SetMenuFavorites grava os itens do menu favoritos do usuário logado (aparecem no cabeçalho)
+// @Summary      Define os favoritos do menu
+// @Description  Troca a lista de favoritos do usuário logado pela enviada, na ordem do cabeçalho. Aceita até 5 telas que ele enxerga no menu, sem repetição.
+// @Tags         Autenticação
+// @Accept       json
+// @Produce      json
+// @Param        body  body      domain.SetMenuFavoritesRequest  true  "IDs dos itens do menu, em ordem"
+// @Success      200   {object}  utils.Response
+// @Failure      400   {object}  utils.Response
+// @Failure      401   {object}  utils.Response
+// @Router       /auth/favorites [put]
+// @Security     ApiKeyAuth
+func (h *AuthHandler) SetMenuFavorites(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		utils.ErrorResponse(c, http.StatusUnauthorized, "Não autorizado", "Usuário não autenticado")
+		return
+	}
+
+	var req domain.SetMenuFavoritesRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.ValidationErrorResponse(c, "Dados inválidos", err)
+		return
+	}
+
+	ids, err := h.authService.SetMenuFavorites(userID.(uint), req.MenuItemIDs)
+	if err != nil {
+		if errors.Is(err, service.ErrInvalidFavorites) {
+			utils.ErrorResponse(c, http.StatusBadRequest, "Favoritos inválidos", "Escolha até 5 telas diferentes do seu menu.")
+			return
+		}
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Erro ao salvar favoritos", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "Favoritos salvos", domain.SetMenuFavoritesResponse{FavoriteMenuItemIDs: ids}, nil)
 }

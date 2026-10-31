@@ -314,6 +314,13 @@ definitions:
         type: string
       email:
         type: string
+      favorite_menu_item_ids:
+        description: |-
+          FavoriteMenuItemIDs: itens do menu que o usuário marcou como favoritos, na ordem do cabeçalho
+          (só preenchido no login/refresh/me). Sem omitempty: a lista vazia chega como [].
+        items:
+          type: integer
+        type: array
       id:
         type: integer
       is_active:
@@ -629,6 +636,14 @@ definitions:
     properties:
       user:
         $ref: '#/definitions/domain.ApiUserDetail'
+    type: object
+  domain.SetMenuFavoritesRequest:
+    properties:
+      menu_item_ids:
+        items:
+          type: integer
+        maxItems: 5
+        type: array
     type: object
   domain.State:
     properties:
@@ -974,6 +989,39 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Define a empresa ativa do usuário logado
+      tags:
+      - Autenticação
+  /auth/favorites:
+    put:
+      consumes:
+      - application/json
+      description: Troca a lista de favoritos do usuário logado pela enviada, na ordem
+        do cabeçalho. Aceita até 5 telas que ele enxerga no menu, sem repetição.
+      parameters:
+      - description: IDs dos itens do menu, em ordem
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.SetMenuFavoritesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Define os favoritos do menu
       tags:
       - Autenticação
   /auth/login:
