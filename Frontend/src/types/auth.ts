@@ -50,6 +50,8 @@ export interface ApiUserDetail {
   visible_companies?: ApiCompanyOption[];
   permissions?: ApiPermission[];
   menu_items?: ApiUserMenuItem[];
+  // Favoritos do menu (ids de itens de menu), na ordem do cabeçalho; só vêm no login/refresh/me.
+  favorite_menu_item_ids?: number[];
   created_at: string;
   updated_at: string;
 }

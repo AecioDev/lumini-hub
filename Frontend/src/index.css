@@ -57,3 +57,80 @@ body {
   background: rgba(37, 99, 235, 0.06) !important;
   color: #2563eb !important;
 }
+
+/* Favoritos do menu (CFG-034). Estrela no fim de cada tela do menu lateral: discreta em repouso, cheia ao
+   passar o mouse no item e sempre visível (dourada) quando a tela é favorita. Em tela de toque não há hover,
+   então a estrela fica visível o tempo todo. */
+.menu-item-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.menu-item-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.menu-favorite-star {
+  flex-shrink: 0;
+  padding: 2px 4px;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: inherit;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, transform 0.15s, color 0.15s;
+}
+.ant-menu-item:hover .menu-favorite-star,
+.menu-favorite-star:focus-visible,
+.menu-favorite-star[data-marked] {
+  opacity: 1;
+}
+.menu-favorite-star[data-marked] {
+  color: #faad14;
+}
+.menu-favorite-star:hover {
+  transform: scale(1.2);
+}
+@media (hover: none) {
+  .menu-favorite-star {
+    opacity: 0.6;
+  }
+  .menu-favorite-star[data-marked] {
+    opacity: 1;
+  }
+}
+
+/* Favoritos no cabeçalho: ao passar o mouse o ícone dá um saltinho para cima com zoom (a curva com
+   "mola" faz ele passar um pouco do ponto e assentar) e uma linha do azul do tema se abre embaixo; a tela
+   atual fica com a linha fixa. Sem exceção para "reduzir movimento": é um efeito curto, só ao passar o
+   mouse, e com a exceção ele não aparecia em quem tem as animações do Windows desligadas. */
+.header-favorite {
+  position: relative;
+}
+.header-favorite-icon {
+  display: inline-flex;
+  transition: transform 0.4s cubic-bezier(0.34, 1.9, 0.64, 1);
+}
+.header-favorite::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 2px;
+  height: 2px;
+  border-radius: 2px;
+  background: #2563eb;
+  transform: scaleX(0);
+  transition: transform 0.18s ease;
+}
+.header-favorite:hover .header-favorite-icon {
+  transform: translateY(-4px) scale(1.3);
+}
+.header-favorite:hover::after,
+.header-favorite[data-active]::after {
+  transform: scaleX(1);
+}

@@ -8,6 +8,7 @@ Alterações feitas desde o último envio ao servidor. O Claude acrescenta uma l
 
 ## Mudanças que afetam o banco ou a configuração do servidor
 
+- **Banco (CFG-034):** nova tabela `user_menu_favorites` (`id`, `user_id`, `menu_item_id`, `position`, `created_at`; índice único em `user_id` + `menu_item_id`), criada pelo `AutoMigrate` do `api.auth`. Esta publicação passa a **mudar o banco**: a versão do banco sobe de 2 para 3 (`dbversion.Required`), e o número da versão do sistema muda junto (2026.3.x.x) na hora do release.
 - Configuração: as variáveis `MSSQL_HOST`, `MSSQL_PORT`, `MSSQL_USER`, `MSSQL_PASSWORD` e `MSSQL_NAME` não são mais lidas; podem sair do `.env` do servidor (INT-002). Sem mudança de banco.
 
 ## Novidades e melhorias
@@ -19,6 +20,8 @@ Alterações feitas desde o último envio ao servidor. O Claude acrescenta uma l
 - **INT-002**: o `api.integrations` deixou de ler o SQL Server legado: removidos a camada `internal/legacy`, as rotas `/integrations/legacy/*`, o driver SQL Server e as variáveis `MSSQL_*` (configuração e compose); a tela Configurações → Integrações perdeu o bloco "ERP Legado" e o aviso de indisponibilidade.
 
 - **CFG-036**: a busca de Usuários e de Permissões passa a ser feita no servidor (`POST /users/filter` e `POST /permissions/filter`), em todas as páginas, e não só na página aberta; nova gaveta de filtros (Perfil e Status em Usuários, Módulo em Permissões) aberta pelo botão Filtros.
+
+- **CFG-034**: favoritos do menu. Cada tela do menu lateral ganha uma estrela (aparece ao passar o mouse; fixa e dourada quando favorita; sempre visível no toque); até 5 favoritos por usuário, gravados no banco (valem em qualquer máquina) por `PUT /auth/favorites` e devolvidos no login/me. Aparecem centralizados no cabeçalho (ícone e nome em tela larga, só o ícone com dica em tela média), com animação ao passar o mouse (sobe, o ícone cresce e uma linha se abre embaixo); abaixo do tablet aparecem no topo da gaveta do menu. Ao marcar o sexto, um aviso pede para remover um antes.
 
 ## Correções
 

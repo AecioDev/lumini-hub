@@ -27,7 +27,7 @@ export function MobileMenu({ open, onClose, menuItems }: MobileMenuProps) {
         body: { padding: 0, background: CHROME_BG[mode] },
       }}
     >
-      <SiderContent collapsed={false} menuItems={menuItems} />
+      <SiderContent collapsed={false} menuItems={menuItems} showFavorites />
     </Drawer>
   );
 }

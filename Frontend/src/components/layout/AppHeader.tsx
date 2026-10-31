@@ -5,6 +5,7 @@ import {
   UserOutlined,
 } from "@ant-design/icons";
 import { Avatar, Badge, Button, Dropdown, Layout, theme, type MenuProps } from "antd";
+import { HeaderFavorites } from "@/components/layout/HeaderFavorites";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { TOP_BAR_HEIGHT } from "@/components/layout/layout-constants";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,7 +17,7 @@ interface AppHeaderProps {
   onToggleMenu: () => void;
 }
 
-// Cabeçalho do app: botão do menu à esquerda; tema, avisos e usuário à direita. Não há busca global por
+// Cabeçalho do app: botão do menu à esquerda; favoritos do menu no centro; tema, avisos e usuário à direita. Não há busca global por
 // enquanto. O nome da tela não fica aqui (está no caminho, AppBreadcrumb, e no título da página) nem a
 // empresa ativa (fica no pé do menu lateral e na barra de status).
 export function AppHeader({ onToggleMenu }: AppHeaderProps) {
@@ -49,6 +50,11 @@ export function AppHeader({ onToggleMenu }: AppHeaderProps) {
         onClick={onToggleMenu}
         aria-label="Abrir ou recolher o menu"
       />
+
+      {/* Favoritos centralizados no espaço livre entre o botão do menu e o grupo da direita. */}
+      <div style={{ flex: 1, minWidth: 0, display: "flex", justifyContent: "center", padding: "0 16px" }}>
+        <HeaderFavorites />
+      </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
         <ThemeToggle />

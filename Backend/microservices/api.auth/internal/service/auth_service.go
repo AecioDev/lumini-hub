@@ -101,6 +101,7 @@ func (s *AuthService) Login(username, password string) (*LoginResponse, error) {
 	if menuItems, err := s.GetMenuItemsForUser(user); err == nil {
 		userDetail.MenuItems = menuItems
 	}
+	s.FillFavorites(&userDetail)
 	if err := s.ResolveActiveCompany(&userDetail); err != nil {
 		return nil, err
 	}
@@ -149,6 +150,7 @@ func (s *AuthService) RefreshToken(refreshToken string) (*LoginResponse, error) 
 	if menuItems, err := s.GetMenuItemsForUser(user); err == nil {
 		userDetail.MenuItems = menuItems
 	}
+	s.FillFavorites(&userDetail)
 	if err := s.ResolveActiveCompany(&userDetail); err != nil {
 		return nil, err
 	}
@@ -223,6 +225,7 @@ func (s *AuthService) SetActiveCompany(userID uint, companyID uint) (*domain.Api
 	if menuItems, err := s.GetMenuItemsForUser(user); err == nil {
 		userDetail.MenuItems = menuItems
 	}
+	s.FillFavorites(&userDetail)
 	if err := s.ResolveActiveCompany(&userDetail); err != nil {
 		return nil, err
 	}

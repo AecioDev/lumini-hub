@@ -32,6 +32,7 @@ func SetupRoutes(router *gin.RouterGroup, db *gorm.DB, cfg *config.Config) {
 			protected.GET("/me", authHandler.GetMe)
 			protected.GET("/version", authHandler.GetVersion)
 			protected.PUT("/active-company", authHandler.SetActiveCompany)
+			protected.PUT("/favorites", authHandler.SetMenuFavorites)
 		}
 	}
 

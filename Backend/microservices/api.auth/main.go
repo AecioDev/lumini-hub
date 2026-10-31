@@ -123,6 +123,7 @@ func prepareDatabase(db *gorm.DB, cfg *config.Config) error {
 		&domain.Role{},
 		&domain.User{},
 		&domain.MenuItem{},
+		&domain.UserMenuFavorite{},
 	); err != nil {
 		return fmt.Errorf("migrando tabelas do api.auth: %w", err)
 	}

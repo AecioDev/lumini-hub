@@ -33,6 +33,14 @@ export const authService = {
     await api.post("/auth/logout");
   },
 
+  async setFavorites(menuItemIds: number[]): Promise<number[]> {
+    const { data } = await api.put<ApiResponse<{ favorite_menu_item_ids: number[] }>>(
+      "/auth/favorites",
+      { menu_item_ids: menuItemIds }
+    );
+    return data.data!.favorite_menu_item_ids;
+  },
+
   async setActiveCompany(companyId: number): Promise<ApiUserDetail> {
     const { data } = await api.put<ApiResponse<LoginSuccessResponse>>(
       "/auth/active-company",

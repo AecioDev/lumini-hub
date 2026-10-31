@@ -132,6 +132,9 @@ type ApiUserDetail struct {
 	VisibleCompanies         []utils.CompanyOption `json:"visible_companies,omitempty"`
 	Permissions              []ApiPermission       `json:"permissions,omitempty"`
 	MenuItems                []ApiUserMenuItem     `json:"menu_items,omitempty"`
+	// FavoriteMenuItemIDs: itens do menu que o usuário marcou como favoritos, na ordem do cabeçalho
+	// (só preenchido no login/refresh/me). Sem omitempty: a lista vazia chega como [].
+	FavoriteMenuItemIDs      []uint                `json:"favorite_menu_item_ids"`
 	CreatedAt                string                `json:"created_at"`
 	UpdatedAt                string                `json:"updated_at"`
 }
