@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"errors"
 	"testing"
 
@@ -28,6 +29,28 @@ func TestFornecedor_CriacaoGravaSoDigitos(t *testing.T) {
 	}
 	if f.DocumentNumber != "11222333000181" {
 		t.Errorf("documento gravado = %q, quer só os dígitos 11222333000181", f.DocumentNumber)
+	}
+}
+
+// A autoria vem sempre do usuário autenticado: um "created_by" no corpo da requisição é ignorado.
+func TestFornecedor_AutoriaVemDoLogin(t *testing.T) {
+	s := NewSupplierService(newTestUow(t))
+
+	var req domain.CreateSupplierRequest
+	corpo := `{"first_name":"Madeireira","person_type":"J","document_number":"11222333000181","is_active":true,"created_by":999}`
+	if err := json.Unmarshal([]byte(corpo), &req); err != nil {
+		t.Fatalf("corpo: %v", err)
+	}
+	f, err := s.CreateSupplier(req, 7)
+	if err != nil {
+		t.Fatalf("criar: %v", err)
+	}
+	detalhe, err := s.GetSupplierByID(f.ID)
+	if err != nil {
+		t.Fatalf("buscar: %v", err)
+	}
+	if detalhe.CreatedBy == nil || detalhe.CreatedBy.ID != 7 {
+		t.Errorf("CreatedBy = %+v, quer o usuário autenticado (7), nunca o 999 do corpo", detalhe.CreatedBy)
 	}
 }
 

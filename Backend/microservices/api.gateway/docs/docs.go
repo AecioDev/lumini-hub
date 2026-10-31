@@ -3529,9 +3529,6 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 100
                 },
-                "created_by": {
-                    "type": "integer"
-                },
                 "document_number": {
                     "type": "string",
                     "maxLength": 20

@@ -111,11 +111,6 @@ func (s *SupplierService) CreateSupplier(req domain.CreateSupplierRequest, userI
 
 	document := strings.NewReplacer(".", "", "-", "", "/", "").Replace(req.DocumentNumber)
 
-	creatorID := userID
-	if req.CreatedByID > 0 {
-		creatorID = req.CreatedByID
-	}
-
 	supplier := domain.Supplier{
 		FirstName:      req.FirstName,
 		LastName:       req.LastName,
@@ -123,7 +118,7 @@ func (s *SupplierService) CreateSupplier(req domain.CreateSupplierRequest, userI
 		DocumentNumber: document,
 		CompanyName:    req.CompanyName,
 		Notes:          req.Notes,
-		CreatedByID:    &creatorID,
+		CreatedByID:    &userID,
 		IsActive:       true,
 	}
 

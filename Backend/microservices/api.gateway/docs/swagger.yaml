@@ -616,8 +616,6 @@ definitions:
       company_name:
         maxLength: 100
         type: string
-      created_by:
-        type: integer
       document_number:
         maxLength: 20
         type: string

@@ -43,7 +43,6 @@ type CreateSupplierRequest struct {
 	CompanyName    string `json:"company_name" binding:"omitempty,max=100"`
 	IsActive       bool   `json:"is_active" binding:"required"`
 	Notes          string `json:"notes" binding:"omitempty,max=255"`
-	CreatedByID    uint   `json:"created_by"`
 }
 
 // UpdateSupplierRequest representa os dados para atualizar um fornecedor

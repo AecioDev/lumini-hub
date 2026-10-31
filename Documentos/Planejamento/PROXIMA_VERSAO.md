@@ -16,6 +16,7 @@ Alterações feitas desde o último envio ao servidor. O Claude acrescenta uma l
 
 ## Correções
 
+- **CFG-049 (segurança):** o cadastro de fornecedor deixou de aceitar `created_by` no corpo da requisição; o autor do registro é sempre o usuário logado (antes, quem chamasse a API podia atribuir a criação a outro usuário). Sem mudança de banco; o campo some do Swagger da criação.
 - O `LoggerMiddleware` existia mas não estava ligado em nenhum serviço, e a tabela `system_logs` nunca era criada: agora é (ver Auditoria).
 
 ## Interno (não afeta o servidor)
