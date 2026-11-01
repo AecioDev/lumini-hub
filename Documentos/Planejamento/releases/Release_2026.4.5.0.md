@@ -84,6 +84,6 @@ A versão do banco sobe de **3 para 4**. Há duas tabelas novas, índices novos 
 | **VND-001 / COM-001** Telas de Clientes e de Fornecedores | ⏳ |
 | **Recuperar senha** de ponta a ponta (a tela existe, falta o endpoint e o canal de e-mail) | ⏳ |
 | **Retenção da auditoria**: limpeza automática de registros antigos de `system_logs`, e auditar login e logout | ⏳ |
-| **`DB_AUTO_MIGRATE=false`** recusando subir com banco atrás da versão ou com migração pendente | ⚠️ passou nos testes automáticos, ainda não testado num servidor real |
+| **`DB_AUTO_MIGRATE=false`** recusando subir com banco atrás da versão ou com migração pendente | ✅ testado no ambiente de homologação: sobe com o banco em dia, recusa com migração pendente e com banco atrás da versão (a mensagem diz o que fazer) e o banco é atualizado subindo o `api-auth` uma vez com a flag ligada |
 | **Integrações, Fase 2** (cliente da Loja Integrada e processamento dos webhooks) | ⏳ pausado |
 | **HTTPS e domínio** no ambiente de testes | ⏳ Hoje o acesso é por IP, em HTTP |
