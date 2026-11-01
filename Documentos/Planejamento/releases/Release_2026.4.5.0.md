@@ -2,7 +2,7 @@
 
 **Versão do sistema:** 2026.4.5.0 · **Versão do banco de dados:** 4 (novas tabelas `system_logs` e `schema_migrations`, índices únicos parciais; `dbversion.Required = 4`)
 **Tema da versão:** **auditoria** de tudo que é criado, alterado ou excluído (com o valor antes e depois), **migrações SQL versionadas** para o que o `AutoMigrate` não cobre, **integridade dos cadastros** (documento e CNPJ de registros excluídos voltam a ficar livres) e **testes** do `api.core`.
-*Documento gerado em 2026-10-31. Legenda:* ✅ testado · ⚠️ implementado, ainda não testado · ⏳ pendente / não incluído.
+*Documento gerado em 2026-10-31, atualizado após os testes no ambiente de homologação. Legenda:* ✅ testado · ⚠️ implementado, ainda não testado · ⏳ pendente / não incluído.
 
 ---
 
@@ -13,10 +13,10 @@ A versão do banco sobe de **3 para 4**. Há duas tabelas novas, índices novos 
 | Tabela | Mudança | Detalhe |
 |---|---|---|
 | `system_logs` | **nova** ✅ | Auditoria (CFG-037): `id`, `created_at`, `user_id`, `action`, `entity_type`, `entity_id`, `details` (jsonb), `ip_address`. Índices em data, usuário e entidade. Sem exclusão lógica e sem chave estrangeira. |
-| `schema_migrations` | **nova** ⚠️ | Migrações SQL já aplicadas (CFG-051): `name` e `applied_at`. |
+| `schema_migrations` | **nova** ✅ | Migrações SQL já aplicadas (CFG-051): `name` e `applied_at`. |
 | `customers` | índice ⚠️ | A constraint única comum de `document_number` (`uni_customers_document_number`) é trocada pelo índice único parcial `idx_customers_document_number` (`WHERE deleted_at IS NULL`). |
 | `suppliers` | índice ⚠️ | Idem: `uni_suppliers_document_number` dá lugar a `idx_suppliers_document_number`. |
-| `companies` | índice ⚠️ | Novo índice único parcial `idx_companies_cnpj` (antes só o validador conferia o CNPJ). |
+| `companies` | índice ✅ | Novo índice único parcial `idx_companies_cnpj` (antes só o validador conferia o CNPJ). |
 | `permissions` | dados ✅ | Permissão nova `audit.view` (módulo Admin), vinculada ao ADMIN no boot. A migração `0001` corrige os textos de 12 permissões de bancos semeados antes do CFG-014 (só linhas com o texto antigo exato; sem efeito em banco que já recebeu a correção). |
 | `menu_items` | dados ✅ | Item novo "Auditoria" (`/settings/audit`), semeado sozinho em bancos já existentes. |
 
@@ -33,7 +33,7 @@ A versão do banco sobe de **3 para 4**. Há duas tabelas novas, índices novos 
 - Tela nova **Configurações → Auditoria**, só leitura, com busca por usuário e ação, filtros de entidade, ação e período, e a gaveta "Ver detalhes". Endpoints `POST /audit-logs/filter` e `GET /audit-logs/entity-types`, com a permissão `audit.view`.
 - O que usuários do Perfil DEVELOP fazem só aparece para o próprio DEVELOP.
 
-### 2.2 Migrações SQL versionadas (CFG-051) ⚠️
+### 2.2 Migrações SQL versionadas (CFG-051) ✅
 - Arquivos `NNNN_*.sql` em `Backend/common/dbversion/migrations/`, embutidos no binário, aplicados pelo `api.auth` no boot, **uma vez por banco**, em ordem e cada um numa transação (se falhar, desfaz e o `api.auth` não sobe, citando a migração).
 - Substituem os scripts soltos em `deploy/sql/` para tudo o que o `AutoMigrate` não faz (remover constraint ou índice antigo, corrigir dados existentes). Nesta versão: `0001` (textos das permissões) e `0002` (índices únicos parciais).
 
@@ -41,7 +41,7 @@ A versão do banco sobe de **3 para 4**. Há duas tabelas novas, índices novos 
 
 ## 3. Correções
 
-- **Recadastro após exclusão (CFG-050)** ⚠️: recadastrar o documento de um cliente ou fornecedor excluído, ou o CNPJ de uma empresa excluída, agora funciona (antes passava na validação e falhava no banco com "Não foi possível concluir a operação."). Duas criações simultâneas com o mesmo CNPJ de empresa também deixam de duplicar.
+- **Recadastro após exclusão (CFG-050)**: recadastrar o CNPJ de uma empresa excluída agora funciona ✅ (testado: empresa ativa com o mesmo CNPJ continua sendo recusada); o mesmo vale para o documento de cliente e de fornecedor excluídos ⚠️ (coberto por testes automáticos; as telas desses cadastros ainda não existem). Antes, o recadastro passava na validação e falhava no banco com "Não foi possível concluir a operação."; duas criações simultâneas com o mesmo CNPJ de empresa também deixam de duplicar.
 - **Autoria do fornecedor (CFG-049, segurança)** ✅: o cadastro de fornecedor deixou de aceitar `created_by` no corpo da requisição; o autor é sempre o usuário logado (antes, quem chamasse a API podia atribuir a criação a outro usuário).
 - **`LoggerMiddleware`** ✅: existia mas não estava ligado em nenhum serviço, e a tabela `system_logs` nunca era criada; agora é (ver Auditoria).
 
