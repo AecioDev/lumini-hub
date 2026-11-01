@@ -16,6 +16,8 @@ type PermissionSeed struct {
 var PermissionCatalog = []PermissionSeed{
 	// Admin
 	{Permission: "dashboard.admin.view", Description: "Visualizar o dashboard do administrador", Module: "Admin"},
+	{Permission: "system_settings.edit", Description: "Editar os parâmetros globais do sistema (e-mail padrão) e enviar e-mail de teste", Module: "Admin"},
+	{Permission: "system_settings.view", Description: "Visualizar os parâmetros globais do sistema (e-mail padrão)", Module: "Admin"},
 	{Permission: "audit.view", Description: "Visualizar a auditoria do sistema", Module: "Admin"},
 	// Compras
 	{Permission: "purchases.create", Description: "Criar compras", Module: "Compras"},
@@ -43,6 +45,8 @@ var PermissionCatalog = []PermissionSeed{
 	{Permission: "companies.create", Description: "Criar empresas", Module: "Empresas"},
 	{Permission: "companies.delete", Description: "Excluir empresas", Module: "Empresas"},
 	{Permission: "companies.edit", Description: "Editar empresas", Module: "Empresas"},
+	{Permission: "companies.email_config.edit", Description: "Editar o e-mail (SMTP) próprio de empresas e enviar e-mail de teste", Module: "Empresas"},
+	{Permission: "companies.email_config.view", Description: "Visualizar o e-mail (SMTP) próprio de empresas", Module: "Empresas"},
 	{Permission: "companies.fiscal_config.create", Description: "Criar configuração fiscal de empresas", Module: "Empresas"},
 	{Permission: "companies.fiscal_config.edit", Description: "Editar configuração fiscal de empresas (inclui upload de certificado)", Module: "Empresas"},
 	{Permission: "companies.fiscal_config.view", Description: "Visualizar configuração fiscal de empresas", Module: "Empresas"},

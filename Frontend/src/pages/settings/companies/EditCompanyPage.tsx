@@ -4,6 +4,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { PageHeader } from "@/components/common/PageHeader";
 import { CompanyForm } from "@/components/companies/forms/CompanyForm";
 import { CompanyFiscalConfigForm } from "@/components/companies/forms/CompanyFiscalConfigForm";
+import { CompanyEmailConfigForm } from "@/components/companies/forms/CompanyEmailConfigForm";
+import { useAuth } from "@/contexts/AuthContext";
 import { companyService } from "@/services/companies/company-service";
 import { getApiErrorMessage } from "@/utils/api-error";
 import { useFeedback } from "@/hooks/useFeedback";
@@ -15,6 +17,7 @@ export function EditCompanyPage() {
   const companyId = Number(id);
   const navigate = useNavigate();
   const feedback = useFeedback();
+  const { hasPermission } = useAuth();
 
   const [company, setCompany] = useState<ApiCompanyDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -110,6 +113,15 @@ export function EditCompanyPage() {
                 <CompanyFiscalConfigForm companyId={company.id} companyCnpj={company.cnpj ?? undefined} />
               ),
             },
+            ...(hasPermission("companies.email_config.view")
+              ? [
+                  {
+                    key: "email",
+                    label: "Configuração de E-mail",
+                    children: <CompanyEmailConfigForm companyId={company.id} />,
+                  },
+                ]
+              : []),
           ]}
         />
       )}

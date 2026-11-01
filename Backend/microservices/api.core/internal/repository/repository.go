@@ -10,6 +10,8 @@ type UnitOfWork interface {
 	Suppliers() SupplierRepository
 	Companies() CompanyRepository
 	CompanyFiscalConfigs() CompanyFiscalConfigRepository
+	CompanyEmailConfigs() CompanyEmailConfigRepository
+	SystemSettings() SystemSettingsRepository
 	Execute(fn func(uow UnitOfWork) error) error
 	GetDB() *gorm.DB
 }
@@ -42,6 +44,16 @@ func (u *GormUnitOfWork) Companies() CompanyRepository {
 // CompanyFiscalConfigs fornece acesso ao repositório de configuração fiscal de empresas sob o escopo atual (banco ou transação ativa)
 func (u *GormUnitOfWork) CompanyFiscalConfigs() CompanyFiscalConfigRepository {
 	return NewCompanyFiscalConfigRepository(u.db)
+}
+
+// CompanyEmailConfigs fornece acesso ao repositório de configuração de e-mail de empresas sob o escopo atual (banco ou transação ativa)
+func (u *GormUnitOfWork) CompanyEmailConfigs() CompanyEmailConfigRepository {
+	return NewCompanyEmailConfigRepository(u.db)
+}
+
+// SystemSettings fornece acesso aos parâmetros globais do sistema sob o escopo atual (banco ou transação ativa)
+func (u *GormUnitOfWork) SystemSettings() SystemSettingsRepository {
+	return NewSystemSettingsRepository(u.db)
 }
 
 // GetDB expõe a conexão ativa com o banco de dados GORM

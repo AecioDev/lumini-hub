@@ -16,6 +16,7 @@ func SetupRoutes(router *gin.RouterGroup, uow repository.UnitOfWork, cfg *config
 	supplierHandler := handlers.NewSupplierHandler(uow)
 	companyHandler := handlers.NewCompanyHandler(uow)
 	companyFiscalConfigHandler := handlers.NewCompanyFiscalConfigHandler(uow, cfg.Security.CertificateEncryptionKey)
+	mailConfigHandler := handlers.NewMailConfigHandler(uow, cfg.Security.CertificateEncryptionKey)
 
 	// Rotas de Clientes (todas protegidas)
 	customers := router.Group("/customers")
@@ -74,5 +75,24 @@ func SetupRoutes(router *gin.RouterGroup, uow repository.UnitOfWork, cfg *config
 		// Sem DELETE de propósito — config 1:1 da empresa, ver comentário em
 		// CompanyFiscalConfigService.
 		companyFiscalConfigs.POST("/:id/certificate", middlewares.RequirePermission("companies.fiscal_config.edit"), companyFiscalConfigHandler.UploadCertificate)
+	}
+	// Rotas de E-mail do sistema (parâmetros globais, valem para qualquer empresa)
+	systemSettings := router.Group("/system-settings")
+	systemSettings.Use(middlewares.AuthMiddleware(cfg))
+	{
+		systemSettings.GET("/email", middlewares.RequirePermission("system_settings.view"), mailConfigHandler.GetSystemEmail)
+		systemSettings.PUT("/email", middlewares.RequirePermission("system_settings.edit"), mailConfigHandler.SaveSystemEmail)
+		systemSettings.POST("/email/test", middlewares.RequirePermission("system_settings.edit"), mailConfigHandler.SendSystemTestEmail)
+	}
+
+	// Rotas de E-mail próprio de cada empresa (sem ele, a empresa herda da Matriz e depois do sistema).
+	// Mesmo desenho por empresa da configuração fiscal; aqui o DELETE existe porque apagar é "voltar a herdar".
+	companyEmailConfigs := router.Group("/company-email-configs")
+	companyEmailConfigs.Use(middlewares.AuthMiddleware(cfg))
+	{
+		companyEmailConfigs.GET("/by-company/:companyId", middlewares.RequirePermission("companies.email_config.view"), mailConfigHandler.GetCompanyEmail)
+		companyEmailConfigs.PUT("/by-company/:companyId", middlewares.RequirePermission("companies.email_config.edit"), mailConfigHandler.SaveCompanyEmail)
+		companyEmailConfigs.DELETE("/by-company/:companyId", middlewares.RequirePermission("companies.email_config.edit"), mailConfigHandler.DeleteCompanyEmail)
+		companyEmailConfigs.POST("/by-company/:companyId/test", middlewares.RequirePermission("companies.email_config.edit"), mailConfigHandler.SendCompanyTestEmail)
 	}
 }

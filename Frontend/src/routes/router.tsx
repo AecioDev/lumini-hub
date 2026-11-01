@@ -11,6 +11,7 @@ import { UsersListPage } from "@/pages/users/UsersListPage";
 import { CreateUserPage } from "@/pages/users/CreateUserPage";
 import { EditUserPage } from "@/pages/users/EditUserPage";
 import { IntegrationsPage } from "@/pages/settings/IntegrationsPage";
+import { SystemEmailPage } from "@/pages/settings/email/SystemEmailPage";
 import { AuditLogsPage } from "@/pages/settings/audit/AuditLogsPage";
 import { RolesAndPermissionsPage } from "@/pages/settings/RolesAndPermissionsPage";
 import { CreateRolePage } from "@/pages/settings/roles/CreateRolePage";
@@ -78,6 +79,12 @@ export const router = createBrowserRouter([
             path: "settings/integrations",
             element: <RequirePermission permission="integrations.view" />,
             children: [{ index: true, element: <IntegrationsPage /> }],
+          },
+          {
+            // Precisa bater com o href real semeado em menu_items ("E-mail do sistema" -> /settings/email).
+            path: "settings/email",
+            element: <RequirePermission permission="system_settings.view" />,
+            children: [{ index: true, element: <SystemEmailPage /> }],
           },
           {
             // Precisa bater com o href real semeado em menu_items ("Auditoria" -> /settings/audit).

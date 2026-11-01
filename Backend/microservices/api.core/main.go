@@ -43,6 +43,8 @@ func main() {
 		if err := db.AutoMigrate(
 			&domain.Company{},
 			&domain.CompanyFiscalConfig{},
+			&domain.CompanyEmailConfig{},
+			&domain.SystemSettings{},
 			&domain.Country{},
 			&domain.State{},
 			&domain.City{},

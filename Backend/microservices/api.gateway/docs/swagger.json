@@ -939,6 +939,240 @@
                 }
             }
         },
+        "/company-email-configs/by-company/{companyId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retorna o servidor SMTP próprio da empresa (campos padrão se ela herda) e de onde o envio sairia hoje: a própria empresa, a Matriz ou o sistema",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CompanyEmailConfig"
+                ],
+                "summary": "Busca o e-mail de uma empresa",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID da Empresa",
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ApiCompanyEmailConfig"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Cria ou atualiza o servidor SMTP próprio da empresa. Senha vazia mantém a atual.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CompanyEmailConfig"
+                ],
+                "summary": "Salva o e-mail de uma empresa",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID da Empresa",
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Servidor SMTP",
+                        "name": "config",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.SaveSMTPRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ApiCompanyEmailConfig"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Apaga o servidor SMTP próprio: a empresa volta a herdar da Matriz ou do sistema",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CompanyEmailConfig"
+                ],
+                "summary": "Remove o e-mail de uma empresa",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID da Empresa",
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/company-email-configs/by-company/{companyId}/test": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Envia um e-mail de teste pela configuração efetiva da empresa (própria, da Matriz ou do sistema) e informa qual foi usada",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CompanyEmailConfig"
+                ],
+                "summary": "Envia e-mail de teste (empresa)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID da Empresa",
+                        "name": "companyId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Destinatário do teste",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.SendTestEmailRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ApiTestEmailResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/company-fiscal-configs": {
             "post": {
                 "security": [
@@ -2060,6 +2294,179 @@
                 }
             }
         },
+        "/system-settings/email": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retorna o servidor SMTP padrão do sistema, usado quando a empresa e a Matriz dela não têm um próprio. A senha nunca é devolvida.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SystemSettings"
+                ],
+                "summary": "Busca o e-mail padrão do sistema",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ApiSystemEmailSettings"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Grava o servidor SMTP padrão do sistema. Senha vazia mantém a atual.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SystemSettings"
+                ],
+                "summary": "Salva o e-mail padrão do sistema",
+                "parameters": [
+                    {
+                        "description": "Servidor SMTP",
+                        "name": "config",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.SaveSMTPRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ApiSystemEmailSettings"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/system-settings/email/test": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Envia um e-mail de teste ao endereço informado usando o e-mail padrão do sistema já salvo",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SystemSettings"
+                ],
+                "summary": "Envia e-mail de teste (sistema)",
+                "parameters": [
+                    {
+                        "description": "Destinatário do teste",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.SendTestEmailRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.ApiTestEmailResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/users": {
             "get": {
                 "security": [
@@ -2785,6 +3192,50 @@
                 }
             }
         },
+        "domain.ApiCompanyEmailConfig": {
+            "type": "object",
+            "properties": {
+                "company_id": {
+                    "type": "integer"
+                },
+                "configured": {
+                    "type": "boolean"
+                },
+                "effective_name": {
+                    "type": "string"
+                },
+                "effective_source": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "from_email": {
+                    "type": "string"
+                },
+                "from_name": {
+                    "type": "string"
+                },
+                "has_password": {
+                    "type": "boolean"
+                },
+                "host": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "integer"
+                },
+                "security": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "domain.ApiCompanyFiscalConfig": {
             "type": "object",
             "properties": {
@@ -3108,6 +3559,49 @@
                 },
                 "pagination": {
                     "$ref": "#/definitions/utils.ApiPagination"
+                }
+            }
+        },
+        "domain.ApiSystemEmailSettings": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "from_email": {
+                    "type": "string"
+                },
+                "from_name": {
+                    "type": "string"
+                },
+                "has_password": {
+                    "type": "boolean"
+                },
+                "host": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "integer"
+                },
+                "security": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.ApiTestEmailResult": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
                 }
             }
         },
@@ -3638,6 +4132,55 @@
             "properties": {
                 "user": {
                     "$ref": "#/definitions/domain.ApiUserDetail"
+                }
+            }
+        },
+        "domain.SaveSMTPRequest": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "from_email": {
+                    "type": "string",
+                    "maxLength": 150
+                },
+                "from_name": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "host": {
+                    "type": "string",
+                    "maxLength": 150
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "port": {
+                    "type": "integer",
+                    "maximum": 65535,
+                    "minimum": 1
+                },
+                "security": {
+                    "type": "string",
+                    "maxLength": 10
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 150
+                }
+            }
+        },
+        "domain.SendTestEmailRequest": {
+            "type": "object",
+            "required": [
+                "to"
+            ],
+            "properties": {
+                "to": {
+                    "type": "string",
+                    "maxLength": 150
                 }
             }
         },

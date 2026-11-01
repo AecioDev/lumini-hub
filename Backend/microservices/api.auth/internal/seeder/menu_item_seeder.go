@@ -98,6 +98,7 @@ var menuItemSeedTree = []menuItemSeed{
 			{Name: "Usuários", Icon: "ph:user-circle", Href: "/settings/users", PermissionCode: "users.view"},
 			{Name: "Perfis e Permissões", Icon: "ph:shield-check", Href: "/settings/roles", PermissionCode: "roles.view"},
 			{Name: "Integrações", Icon: "ph:arrows-clockwise", Href: "/settings/integrations", PermissionCode: "integrations.view"},
+			{Name: "E-mail do sistema", Icon: "ph:envelope-simple", Href: "/settings/email", PermissionCode: "system_settings.view"},
 			{Name: "Auditoria", Icon: "ph:clock-counter-clockwise", Href: "/settings/audit", PermissionCode: "audit.view"},
 		},
 	},

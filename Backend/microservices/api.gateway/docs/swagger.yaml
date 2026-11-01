@@ -113,6 +113,35 @@ definitions:
       updated_by:
         $ref: '#/definitions/lumini-hub_api_core_internal_domain.ApiUser'
     type: object
+  domain.ApiCompanyEmailConfig:
+    properties:
+      company_id:
+        type: integer
+      configured:
+        type: boolean
+      effective_name:
+        type: string
+      effective_source:
+        type: string
+      enabled:
+        type: boolean
+      from_email:
+        type: string
+      from_name:
+        type: string
+      has_password:
+        type: boolean
+      host:
+        type: string
+      port:
+        type: integer
+      security:
+        type: string
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
   domain.ApiCompanyFiscalConfig:
     properties:
       accountant_contact:
@@ -326,6 +355,34 @@ definitions:
         type: array
       pagination:
         $ref: '#/definitions/utils.ApiPagination'
+    type: object
+  domain.ApiSystemEmailSettings:
+    properties:
+      enabled:
+        type: boolean
+      from_email:
+        type: string
+      from_name:
+        type: string
+      has_password:
+        type: boolean
+      host:
+        type: string
+      port:
+        type: integer
+      security:
+        type: string
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
+  domain.ApiTestEmailResult:
+    properties:
+      name:
+        type: string
+      source:
+        type: string
     type: object
   domain.ApiUserDetail:
     properties:
@@ -702,6 +759,41 @@ definitions:
     properties:
       user:
         $ref: '#/definitions/domain.ApiUserDetail'
+    type: object
+  domain.SaveSMTPRequest:
+    properties:
+      enabled:
+        type: boolean
+      from_email:
+        maxLength: 150
+        type: string
+      from_name:
+        maxLength: 100
+        type: string
+      host:
+        maxLength: 150
+        type: string
+      password:
+        maxLength: 255
+        type: string
+      port:
+        maximum: 65535
+        minimum: 1
+        type: integer
+      security:
+        maxLength: 10
+        type: string
+      username:
+        maxLength: 150
+        type: string
+    type: object
+  domain.SendTestEmailRequest:
+    properties:
+      to:
+        maxLength: 150
+        type: string
+    required:
+    - to
     type: object
   domain.SetMenuFavoritesRequest:
     properties:
@@ -1588,6 +1680,151 @@ paths:
       summary: Envia logo da empresa
       tags:
       - Companies
+  /company-email-configs/by-company/{companyId}:
+    delete:
+      description: 'Apaga o servidor SMTP próprio: a empresa volta a herdar da Matriz
+        ou do sistema'
+      parameters:
+      - description: ID da Empresa
+        in: path
+        name: companyId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Remove o e-mail de uma empresa
+      tags:
+      - CompanyEmailConfig
+    get:
+      description: 'Retorna o servidor SMTP próprio da empresa (campos padrão se ela
+        herda) e de onde o envio sairia hoje: a própria empresa, a Matriz ou o sistema'
+      parameters:
+      - description: ID da Empresa
+        in: path
+        name: companyId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiCompanyEmailConfig'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Busca o e-mail de uma empresa
+      tags:
+      - CompanyEmailConfig
+    put:
+      consumes:
+      - application/json
+      description: Cria ou atualiza o servidor SMTP próprio da empresa. Senha vazia
+        mantém a atual.
+      parameters:
+      - description: ID da Empresa
+        in: path
+        name: companyId
+        required: true
+        type: integer
+      - description: Servidor SMTP
+        in: body
+        name: config
+        required: true
+        schema:
+          $ref: '#/definitions/domain.SaveSMTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiCompanyEmailConfig'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Salva o e-mail de uma empresa
+      tags:
+      - CompanyEmailConfig
+  /company-email-configs/by-company/{companyId}/test:
+    post:
+      consumes:
+      - application/json
+      description: Envia um e-mail de teste pela configuração efetiva da empresa (própria,
+        da Matriz ou do sistema) e informa qual foi usada
+      parameters:
+      - description: ID da Empresa
+        in: path
+        name: companyId
+        required: true
+        type: integer
+      - description: Destinatário do teste
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.SendTestEmailRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiTestEmailResult'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Envia e-mail de teste (empresa)
+      tags:
+      - CompanyEmailConfig
   /company-fiscal-configs:
     post:
       consumes:
@@ -2274,6 +2511,109 @@ paths:
       summary: Filtra fornecedores com paginação (PostFilter)
       tags:
       - Fornecedores
+  /system-settings/email:
+    get:
+      description: Retorna o servidor SMTP padrão do sistema, usado quando a empresa
+        e a Matriz dela não têm um próprio. A senha nunca é devolvida.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiSystemEmailSettings'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Busca o e-mail padrão do sistema
+      tags:
+      - SystemSettings
+    put:
+      consumes:
+      - application/json
+      description: Grava o servidor SMTP padrão do sistema. Senha vazia mantém a atual.
+      parameters:
+      - description: Servidor SMTP
+        in: body
+        name: config
+        required: true
+        schema:
+          $ref: '#/definitions/domain.SaveSMTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiSystemEmailSettings'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Salva o e-mail padrão do sistema
+      tags:
+      - SystemSettings
+  /system-settings/email/test:
+    post:
+      consumes:
+      - application/json
+      description: Envia um e-mail de teste ao endereço informado usando o e-mail
+        padrão do sistema já salvo
+      parameters:
+      - description: Destinatário do teste
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.SendTestEmailRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.ApiTestEmailResult'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Envia e-mail de teste (sistema)
+      tags:
+      - SystemSettings
   /users:
     get:
       consumes:
