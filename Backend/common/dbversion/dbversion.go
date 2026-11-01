@@ -21,9 +21,9 @@ import (
 //   - Required: só quando a publicação traz mudanças de banco (sobe uma unidade).
 const (
 	// Required é a versão do banco exigida por este código.
-	Required = 3
+	Required = 4
 	// AppVersion é a versão do sistema, no formato ano.versao_do_banco.sequencia_versao.sequencia_patch.
-	AppVersion = "2026.3.4.0"
+	AppVersion = "2026.4.5.0"
 )
 
 // SchemaVersion é uma linha do histórico: uma por publicação que chegou a este banco.
