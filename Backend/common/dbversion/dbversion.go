@@ -10,6 +10,7 @@ package dbversion
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -87,7 +88,7 @@ func Check(db *gorm.DB) error {
 		return err
 	}
 	if current >= Required {
-		return nil
+		return checkMigrations(db)
 	}
 	if current == 0 {
 		return fmt.Errorf("o banco não tem versão registrada e este sistema (%s) exige a versão %d: "+
@@ -97,4 +98,20 @@ func Check(db *gorm.DB) error {
 	return fmt.Errorf("o banco está na versão %d e este sistema (%s) exige a versão %d: "+
 		"suba uma vez o api.auth com DB_AUTO_MIGRATE=true para atualizar o banco, ou aplique a atualização por outro meio",
 		current, AppVersion, Required)
+}
+
+// checkMigrations recusa o boot quando há migração SQL pendente (migrations.go): o banco tem a
+// versão certa, mas falta aplicar algo que o AutoMigrate não cobre.
+func checkMigrations(db *gorm.DB) error {
+	pending, err := PendingMigrations(db)
+	if err != nil {
+		return err
+	}
+	if len(pending) == 0 {
+		return nil
+	}
+	return fmt.Errorf("há migrações SQL pendentes neste banco (%s): "+
+		"suba uma vez o api.auth com DB_AUTO_MIGRATE=true para aplicá-las, ou aplique os arquivos de "+
+		"Backend/common/dbversion/migrations/ por outro meio e registre-os em schema_migrations",
+		strings.Join(pending, ", "))
 }

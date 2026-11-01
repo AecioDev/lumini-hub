@@ -71,6 +71,13 @@ func TestCheck(t *testing.T) {
 	if err := db.Create(&SchemaVersion{DBVersion: Required, AppVersion: AppVersion}).Error; err != nil {
 		t.Fatal(err)
 	}
+	err = Check(db)
+	if err == nil || !strings.Contains(err.Error(), "migrações SQL pendentes") {
+		t.Fatalf("versão certa mas com migração pendente: erro = %v", err)
+	}
+	if _, err := ApplyMigrations(db); err != nil {
+		t.Fatalf("aplicando as migrações: %v", err)
+	}
 	if err := Check(db); err != nil {
 		t.Fatalf("banco na versão exigida: %v", err)
 	}

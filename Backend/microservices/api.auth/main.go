@@ -111,6 +111,8 @@ func main() {
 //  4. seeder.SeedMenuItems: depois do catálogo, porque o menu referencia as
 //     permissões pelo código; com elas ausentes o item nasceria sem permissão
 //     própria, e isso nunca é corrigido depois (itens existentes são pulados).
+//  5. dbversion.ApplyMigrations: as migrações SQL versionadas (common/dbversion/migrations),
+//     para o que o AutoMigrate não faz; depois a versão do banco é registrada (dbversion.Record).
 func prepareDatabase(db *gorm.DB, cfg *config.Config) error {
 	if !cfg.Database.AutoMigrate {
 		if err := dbversion.Check(db); err != nil {
@@ -142,7 +144,15 @@ func prepareDatabase(db *gorm.DB, cfg *config.Config) error {
 	if err := seeder.SeedMenuItems(db); err != nil {
 		return fmt.Errorf("semeando itens de menu: %w", err)
 	}
-	// 5. Só depois de tudo ter dado certo: registra em que versão o banco ficou.
+	// 5. Migrações SQL versionadas (o que o AutoMigrate não cobre), uma vez por banco.
+	applied, err := dbversion.ApplyMigrations(db)
+	if err != nil {
+		return fmt.Errorf("aplicando migrações SQL: %w", err)
+	}
+	for _, name := range applied {
+		log.Printf("[api.auth] Migração SQL aplicada: %s", name)
+	}
+	// 6. Só depois de tudo ter dado certo: registra em que versão o banco ficou.
 	inserted, err := dbversion.Record(db)
 	if err != nil {
 		return err
