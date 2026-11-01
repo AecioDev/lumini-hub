@@ -129,3 +129,15 @@ func TestFornecedor_BuscaFiltradaEPaginada(t *testing.T) {
 		t.Errorf("first_name FERRAG = %+v", r.Supplier)
 	}
 }
+
+// CFG-050: o documento de um fornecedor excluído volta a ficar livre (índice único parcial).
+func TestFornecedor_RecadastroDepoisDaExclusao(t *testing.T) {
+	s := NewSupplierService(newTestUow(t))
+	antigo := novoFornecedor(t, s, "Casa Alfa", "11.222.333/0001-81")
+	if err := s.DeleteSupplier(antigo.ID); err != nil {
+		t.Fatalf("excluir: %v", err)
+	}
+	if _, err := s.CreateSupplier(domain.CreateSupplierRequest{FirstName: "Casa Beta", PersonType: "J", DocumentNumber: "11.222.333/0001-81"}, 1); err != nil {
+		t.Fatalf("recadastrar o documento de um fornecedor excluído: %v", err)
+	}
+}

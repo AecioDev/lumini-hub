@@ -261,3 +261,13 @@ func TestEmpresa_VisibilidadePorUsuario(t *testing.T) {
 		}
 	}
 }
+
+// CFG-050: o CNPJ de uma empresa excluída volta a ficar livre (índice único parcial).
+func TestEmpresa_RecadastroDepoisDaExclusao(t *testing.T) {
+	s := NewCompanyService(newTestUow(t))
+	antiga := criarMatriz(t, s, "Matriz Antiga", "11111111000111")
+	if err := s.DeleteCompany(antiga); err != nil {
+		t.Fatalf("excluir: %v", err)
+	}
+	criarMatriz(t, s, "Matriz Nova", "11111111000111")
+}

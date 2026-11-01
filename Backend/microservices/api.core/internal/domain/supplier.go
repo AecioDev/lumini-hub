@@ -15,7 +15,7 @@ type Supplier struct {
 	FirstName      string `gorm:"size:100;" json:"first_name"`
 	LastName       string `gorm:"size:100;" json:"last_name"`
 	PersonType     string `gorm:"default:F" json:"person_type"`
-	DocumentNumber string `gorm:"size:20;unique" json:"document_number"`
+	DocumentNumber string `gorm:"size:20;uniqueIndex:idx_suppliers_document_number,where:deleted_at IS NULL" json:"document_number"`
 	CompanyName    string `gorm:"size:100;" json:"company_name"`
 	IsActive       bool   `gorm:"default:true" json:"is_active"`
 	Notes          string `gorm:"size:255" json:"notes"`

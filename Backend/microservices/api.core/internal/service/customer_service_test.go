@@ -178,3 +178,19 @@ func TestCliente_BuscaFiltradaPaginadaEOrdenada(t *testing.T) {
 		t.Errorf("coluna inválida: erro = %v, total = %d", err, r.Pagination.TotalRows)
 	}
 }
+
+// CFG-050: o documento de um cliente excluído volta a ficar livre (índice único parcial).
+func TestCliente_RecadastroDepoisDaExclusao(t *testing.T) {
+	s := NewCustomerService(newTestUow(t))
+	antigo := novoCliente(t, s, "Ana", "111.111.111-11")
+	if err := s.DeleteCustomer(antigo.ID); err != nil {
+		t.Fatalf("excluir: %v", err)
+	}
+	novo, err := s.CreateCustomer(domain.CreateCustomerRequest{FirstName: "Ana Nova", PersonType: "F", DocumentNumber: "111.111.111-11"}, 1)
+	if err != nil {
+		t.Fatalf("recadastrar o documento de um cliente excluído: %v", err)
+	}
+	if novo.ID == antigo.ID {
+		t.Error("o recadastro deveria gerar um registro novo")
+	}
+}

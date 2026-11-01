@@ -27,7 +27,7 @@ type Company struct {
 	// Nullable (não string vazia) de propósito: várias empresas sem CNPJ não
 	// podem colidir no índice único (NULL nunca é igual a NULL pro Postgres,
 	// "" seria igual a "" e quebraria a segunda empresa sem CNPJ criada).
-	CNPJ     *string `gorm:"column:cnpj;size:20" json:"cnpj"`
+	CNPJ     *string `gorm:"column:cnpj;size:20;uniqueIndex:idx_companies_cnpj,where:deleted_at IS NULL" json:"cnpj"`
 	IsActive bool    `gorm:"default:true" json:"is_active"`
 
 	// Logo da empresa (CFG-7.1, ex-CompanyVisualConfig — a identidade visual

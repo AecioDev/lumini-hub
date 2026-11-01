@@ -22,7 +22,7 @@ type Customer struct {
 	FirstName      string `gorm:"size:100" json:"first_name"`
 	LastName       string `gorm:"size:100" json:"last_name"`
 	PersonType     string `gorm:"default:F" json:"person_type"`          // F: Física, J: Jurídica
-	DocumentNumber string `gorm:"size:20;unique" json:"document_number"` // CPF ou CNPJ
+	DocumentNumber string `gorm:"size:20;uniqueIndex:idx_customers_document_number,where:deleted_at IS NULL" json:"document_number"` // CPF ou CNPJ
 	CompanyName    string `gorm:"size:100" json:"company_name"`
 	IsActive       bool   `gorm:"default:true" json:"is_active"`
 	Notes          string `gorm:"size:255" json:"notes"`
