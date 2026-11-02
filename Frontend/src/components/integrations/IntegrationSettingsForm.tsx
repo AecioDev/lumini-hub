@@ -62,7 +62,7 @@ export function IntegrationSettingsForm({
       <Card title="Loja Integrada">
         <Row gutter={16}>
           <Col xs={24} sm={12}>
-            <FormField label="API Key">
+            <FormField label="API Key" stacked>
               <Controller
                 name="li_api_key"
                 control={control}
@@ -77,7 +77,7 @@ export function IntegrationSettingsForm({
             </FormField>
           </Col>
           <Col xs={24} sm={12}>
-            <FormField label="App Key">
+            <FormField label="App Key" stacked>
               <Controller
                 name="li_app_key"
                 control={control}
@@ -92,7 +92,7 @@ export function IntegrationSettingsForm({
             </FormField>
           </Col>
           <Col xs={24} sm={12}>
-            <FormField label="Segredo do Webhook">
+            <FormField label="Segredo do Webhook" stacked>
               <Controller
                 name="li_webhook_secret"
                 control={control}
@@ -107,7 +107,7 @@ export function IntegrationSettingsForm({
             </FormField>
           </Col>
           <Col xs={24} sm={12}>
-            <FormField label="Código do tipo de nota (codtipnot)">
+            <FormField label="Código do tipo de nota (codtipnot)" stacked>
               <Controller
                 name="codtipnot"
                 control={control}
