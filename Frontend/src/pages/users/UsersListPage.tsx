@@ -127,6 +127,8 @@ export function UsersListPage() {
             confirm: {
               title: "Reenviar o convite?",
               description: `Um novo e-mail com o link para criar a senha será enviado para ${user.email}. O link anterior deixa de valer.`,
+              okText: "Reenviar",
+              danger: false,
               onConfirm: () => resendInvite(user),
             },
           },

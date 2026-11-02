@@ -31,8 +31,17 @@ export interface RowAction {
   /** Rota para onde a ação leva (ex.: a tela de edição). */
   to?: string;
   onClick?: () => void;
-  /** Ação destrutiva: pede confirmação antes (Popconfirm na tabela, caixa de confirmação no cartão). */
-  confirm?: { title: string; description: string; onConfirm: () => void | Promise<void> };
+  /**
+   * Pede confirmação antes (Popconfirm na tabela, caixa de confirmação no cartão). Por padrão é uma ação
+   * destrutiva: botão vermelho "Excluir". Numa ação que não exclui, informe `okText` e `danger: false`.
+   */
+  confirm?: {
+    title: string;
+    description: string;
+    onConfirm: () => void | Promise<void>;
+    okText?: string;
+    danger?: boolean;
+  };
 }
 
 // Botões de ícone da coluna "Ações" da tabela.
@@ -52,17 +61,19 @@ export function RowActionButtons({ actions }: { actions: RowAction[] }) {
         );
         if (action.confirm) {
           return (
-            <Popconfirm
-              key={action.key}
-              title={action.confirm.title}
-              description={action.confirm.description}
-              okText="Excluir"
-              okButtonProps={{ danger: true }}
-              cancelText="Cancelar"
-              onConfirm={action.confirm.onConfirm}
-            >
-              {button}
-            </Popconfirm>
+            // O tooltip envolve o Popconfirm: a ação com confirmação também mostra o seu nome ao passar o mouse.
+            <Tooltip key={action.key} title={action.label}>
+              <Popconfirm
+                title={action.confirm.title}
+                description={action.confirm.description}
+                okText={action.confirm.okText ?? "Excluir"}
+                okButtonProps={{ danger: action.confirm.danger ?? true }}
+                cancelText="Cancelar"
+                onConfirm={action.confirm.onConfirm}
+              >
+                {button}
+              </Popconfirm>
+            </Tooltip>
           );
         }
         const withLink = action.to ? <Link to={action.to}>{button}</Link> : button;
@@ -123,12 +134,12 @@ export function ResponsiveTable<T extends object>({
       danger: action.danger,
       onClick: () => {
         if (action.confirm) {
-          const { title, description, onConfirm } = action.confirm;
+          const { title, description, onConfirm, okText, danger } = action.confirm;
           modal.confirm({
             title,
             content: description,
-            okText: "Excluir",
-            okButtonProps: { danger: true },
+            okText: okText ?? "Excluir",
+            okButtonProps: { danger: danger ?? true },
             cancelText: "Cancelar",
             onOk: onConfirm,
           });
