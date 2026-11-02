@@ -26,8 +26,9 @@ const SOURCE_LABEL: Record<ApiTestEmailResult["source"], string> = {
   system: "padrão do sistema",
 };
 
-function toFormValues(settings: ApiSmtpSettings): EmailConfigFormValues {
+function toFormValues(settings: ApiSmtpSettings & { app_base_url?: string }): EmailConfigFormValues {
   return {
+    app_base_url: settings.app_base_url ?? "",
     host: settings.host,
     port: settings.port,
     security: settings.security,
@@ -41,8 +42,10 @@ function toFormValues(settings: ApiSmtpSettings): EmailConfigFormValues {
 
 interface SmtpConfigFormProps {
   title: string;
-  settings: ApiSmtpSettings;
+  settings: ApiSmtpSettings & { app_base_url?: string };
   canEdit: boolean;
+  // Mostra o campo do endereço público do sistema (só no e-mail do sistema, não no da empresa).
+  showAppBaseUrl?: boolean;
   // Quem usa grava e atualiza `settings` com a resposta (o formulário se refaz a partir dela).
   onSave: (values: SaveSmtpRequest) => Promise<void>;
   onSendTest: (to: string) => Promise<ApiTestEmailResult>;
@@ -54,7 +57,16 @@ interface SmtpConfigFormProps {
 
 // Formulário de servidor SMTP compartilhado pelo "E-mail do sistema" e pela aba "Configuração de E-mail"
 // da Empresa. O e-mail de teste usa a configuração JÁ SALVA, por isso fica bloqueado com alterações pendentes.
-export function SmtpConfigForm({ title, settings, canEdit, onSave, onSendTest, extraActions, notice }: SmtpConfigFormProps) {
+export function SmtpConfigForm({
+  title,
+  settings,
+  canEdit,
+  showAppBaseUrl,
+  onSave,
+  onSendTest,
+  extraActions,
+  notice,
+}: SmtpConfigFormProps) {
   const feedback = useFeedback();
   const [saving, setSaving] = useState(false);
   const [testTo, setTestTo] = useState("");
@@ -227,6 +239,25 @@ export function SmtpConfigForm({ title, settings, canEdit, onSave, onSendTest, e
               </FormField>
             </Col>
           </Row>
+
+          {showAppBaseUrl && (
+            <>
+              <Divider>Endereço do sistema</Divider>
+              <FormField label="Endereço (URL)" error={errors.app_base_url} stacked>
+                <Controller
+                  name="app_base_url"
+                  control={control}
+                  render={({ field }) => (
+                    <Input {...field} placeholder="https://app.suaempresa.com.br" disabled={!canEdit} />
+                  )}
+                />
+              </FormField>
+              <Text type="secondary" style={{ display: "block", marginBottom: 16 }}>
+                Endereço em que o sistema é acessado. É usado nos links dos e-mails (como a recuperação de senha). Sem ele,
+                os e-mails com link não são enviados.
+              </Text>
+            </>
+          )}
 
           <Text type="secondary">
             Gmail: servidor smtp.gmail.com, porta 587, STARTTLS, e uma senha de app (a senha normal da conta não funciona).

@@ -127,6 +127,7 @@ func prepareDatabase(db *gorm.DB, cfg *config.Config) error {
 		&domain.User{},
 		&domain.MenuItem{},
 		&domain.UserMenuFavorite{},
+		&domain.PasswordResetToken{},
 		&database.SystemLog{}, // auditoria: gravada por todos os serviços, lida pelo api.auth
 	); err != nil {
 		return fmt.Errorf("migrando tabelas do api.auth: %w", err)

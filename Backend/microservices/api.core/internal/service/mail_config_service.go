@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"lumini-hub/api.core/internal/domain"
@@ -21,6 +22,9 @@ const (
 
 // maxCompanyChain limita a subida pelos ParentID (o validator de empresa já impede ciclos; é só uma trava).
 const maxCompanyChain = 20
+
+// ErrAppBaseURLNotConfigured: o endereço público do sistema não foi preenchido, então não dá para montar o link do e-mail.
+var ErrAppBaseURLNotConfigured = errors.New("o endereço do sistema não está configurado (Configurações > E-mail do sistema)")
 
 // ErrMailNotConfigured: nenhuma configuração SMTP ativa foi encontrada na cadeia da empresa nem no sistema.
 var ErrMailNotConfigured = errors.New("e-mail não configurado")
@@ -70,19 +74,25 @@ func (s *MailConfigService) GetSystemEmail() (*domain.ApiSystemEmailSettings, er
 	}
 	return &domain.ApiSystemEmailSettings{
 		ApiSMTPSettings: domain.ApiSMTPSettingsFromModel(settings.SMTP),
+		AppBaseURL:      settings.AppBaseURL,
 		UpdatedAt:       settings.UpdatedAt,
 	}, nil
 }
 
 // SaveSystemEmail grava o e-mail padrão do sistema
-func (s *MailConfigService) SaveSystemEmail(req domain.SaveSMTPRequest, userID uint) (*domain.ApiSystemEmailSettings, error) {
+func (s *MailConfigService) SaveSystemEmail(req domain.SaveSystemEmailRequest, userID uint) (*domain.ApiSystemEmailSettings, error) {
 	settings, err := s.uow.SystemSettings().Get()
 	if err != nil {
 		return nil, err
 	}
-	if err := s.applyRequest(&settings.SMTP, req); err != nil {
+	if err := s.applyRequest(&settings.SMTP, req.SaveSMTPRequest); err != nil {
 		return nil, err
 	}
+	appURL, err := validator.NormalizeAppBaseURL(req.AppBaseURL)
+	if err != nil {
+		return nil, err
+	}
+	settings.AppBaseURL = appURL
 	settings.UpdatedByID = &userID
 
 	if err := s.uow.Execute(func(uow repository.UnitOfWork) error {
@@ -223,6 +233,45 @@ func (s *MailConfigService) Send(companyID *uint, msg mail.Message) (*ResolvedMa
 		return nil, &MailSendError{Err: err}
 	}
 	return resolved, nil
+}
+
+// SendPasswordReset envia o e-mail de redefinição de senha: monta o link com o endereço do sistema e o token,
+// renderiza o template e manda pela configuração da empresa do usuário (companyID nil, ou uma empresa que já
+// não existe, vale só o padrão do sistema).
+func (s *MailConfigService) SendPasswordReset(req domain.SendPasswordResetRequest) error {
+	settings, err := s.uow.SystemSettings().Get()
+	if err != nil {
+		return err
+	}
+	if settings.AppBaseURL == "" {
+		return ErrAppBaseURLNotConfigured
+	}
+
+	companyID := req.CompanyID
+	companyName := "Lumini Hub"
+	if companyID != nil {
+		company, err := s.uow.Companies().FindByID(*companyID)
+		if err != nil {
+			return err
+		}
+		if company != nil {
+			companyName = companyDisplayName(company.TradeName, company.LegalName)
+		} else {
+			companyID = nil
+		}
+	}
+
+	msg, err := mail.Render(mail.TemplatePasswordReset, req.To, mail.TemplateData{
+		CompanyName:    companyName,
+		Name:           req.Name,
+		Link:           settings.AppBaseURL + "/reset-password?token=" + url.QueryEscape(req.Token),
+		ExpiresMinutes: req.ExpiresMinutes,
+	})
+	if err != nil {
+		return err
+	}
+	_, err = s.Send(companyID, msg)
+	return err
 }
 
 // SendTest manda um e-mail de teste pela configuração que valeria para a empresa (ou a do sistema, sem empresa).

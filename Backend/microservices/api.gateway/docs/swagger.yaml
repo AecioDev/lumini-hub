@@ -358,6 +358,8 @@ definitions:
     type: object
   domain.ApiSystemEmailSettings:
     properties:
+      app_base_url:
+        type: string
       enabled:
         type: boolean
       from_email:
@@ -750,6 +752,14 @@ definitions:
       person_type:
         type: string
     type: object
+  domain.ForgotPasswordRequest:
+    properties:
+      email:
+        maxLength: 100
+        type: string
+    required:
+    - email
+    type: object
   domain.LoginSuccessResponse:
     properties:
       user:
@@ -759,6 +769,19 @@ definitions:
     properties:
       user:
         $ref: '#/definitions/domain.ApiUserDetail'
+    type: object
+  domain.ResetPasswordRequest:
+    properties:
+      new_password:
+        maxLength: 72
+        minLength: 6
+        type: string
+      token:
+        maxLength: 200
+        type: string
+    required:
+    - new_password
+    - token
     type: object
   domain.SaveSMTPRequest:
     properties:
@@ -786,6 +809,59 @@ definitions:
       username:
         maxLength: 150
         type: string
+    type: object
+  domain.SaveSystemEmailRequest:
+    properties:
+      app_base_url:
+        maxLength: 255
+        type: string
+      enabled:
+        type: boolean
+      from_email:
+        maxLength: 150
+        type: string
+      from_name:
+        maxLength: 100
+        type: string
+      host:
+        maxLength: 150
+        type: string
+      password:
+        maxLength: 255
+        type: string
+      port:
+        maximum: 65535
+        minimum: 1
+        type: integer
+      security:
+        maxLength: 10
+        type: string
+      username:
+        maxLength: 150
+        type: string
+    type: object
+  domain.SendPasswordResetRequest:
+    properties:
+      company_id:
+        type: integer
+      expires_minutes:
+        maximum: 1440
+        minimum: 1
+        type: integer
+      name:
+        maxLength: 100
+        type: string
+      to:
+        maxLength: 150
+        type: string
+      token:
+        maxLength: 200
+        type: string
+    required:
+    - expires_minutes
+    - name
+    - to
+    - token
     type: object
   domain.SendTestEmailRequest:
     properties:
@@ -1221,6 +1297,38 @@ paths:
       summary: Define os favoritos do menu
       tags:
       - Autenticação
+  /auth/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Envia, para o e-mail informado, um link de redefinição de senha
+        válido por 30 minutos. A resposta é sempre a mesma, exista ou não uma conta
+        com esse e-mail.
+      parameters:
+      - description: E-mail da conta
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.ForgotPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: Esqueci a senha
+      tags:
+      - Autenticação
   /auth/login:
     post:
       consumes:
@@ -1327,6 +1435,37 @@ paths:
           schema:
             $ref: '#/definitions/utils.Response'
       summary: Renova token de autenticação
+      tags:
+      - Autenticação
+  /auth/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Troca a senha da conta dona do token do link. O token vale uma
+        vez só e por 30 minutos.
+      parameters:
+      - description: Token do link e nova senha
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.ResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: Redefine a senha
       tags:
       - Autenticação
   /auth/version:
@@ -2263,6 +2402,42 @@ paths:
       summary: Filtra clientes com paginação (PostFilter)
       tags:
       - Clientes
+  /internal/mail/password-reset:
+    post:
+      consumes:
+      - application/json
+      description: 'Rota interna, só com token de serviço (não passa pelo gateway):
+        monta o link, renderiza o template e envia pela configuração da empresa do
+        usuário'
+      parameters:
+      - description: Destinatário, nome, token e empresa
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.SendPasswordResetRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: Envia o e-mail de redefinição de senha
+      tags:
+      - Interno
   /suppliers:
     get:
       consumes:
@@ -2539,14 +2714,15 @@ paths:
     put:
       consumes:
       - application/json
-      description: Grava o servidor SMTP padrão do sistema. Senha vazia mantém a atual.
+      description: Grava o servidor SMTP padrão do sistema e o endereço público do
+        sistema (usado nos links dos e-mails). Senha vazia mantém a atual.
       parameters:
-      - description: Servidor SMTP
+      - description: Servidor SMTP e endereço do sistema
         in: body
         name: config
         required: true
         schema:
-          $ref: '#/definitions/domain.SaveSMTPRequest'
+          $ref: '#/definitions/domain.SaveSystemEmailRequest'
       produces:
       - application/json
       responses:

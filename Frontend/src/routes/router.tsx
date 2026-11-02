@@ -6,6 +6,7 @@ import { RequirePermission } from "./RequirePermission";
 import { PlaceholderPage } from "@/pages/PlaceholderPage";
 import { LoginPage } from "@/pages/auth/LoginPage";
 import { ForgotPasswordPage } from "@/pages/auth/ForgotPasswordPage";
+import { ResetPasswordPage } from "@/pages/auth/ResetPasswordPage";
 import { CrmDashboardPage } from "@/pages/dashboard/CrmDashboardPage";
 import { UsersListPage } from "@/pages/users/UsersListPage";
 import { CreateUserPage } from "@/pages/users/CreateUserPage";
@@ -28,6 +29,7 @@ export const router = createBrowserRouter([
     children: [
       { path: "/login", element: <LoginPage /> },
       { path: "/forgot-password", element: <ForgotPasswordPage /> },
+      { path: "/reset-password", element: <ResetPasswordPage /> },
     ],
   },
   {

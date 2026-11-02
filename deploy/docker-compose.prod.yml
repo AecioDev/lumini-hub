@@ -43,6 +43,8 @@ services:
       BOOTSTRAP_ADMIN_USERNAME: ${BOOTSTRAP_ADMIN_USERNAME:-admin}
       BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
       BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-}
+      # O api.auth pede o envio de e-mail (recuperação de senha) direto ao api.core, sem passar pelo gateway.
+      CORE_SERVICE_URL: http://api-core:4002
     depends_on: { postgres: { condition: service_healthy } }
 
   api-core:

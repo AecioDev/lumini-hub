@@ -31,6 +31,10 @@ type SystemSettings struct {
 
 	SMTP SMTPSettings `gorm:"embedded" json:"smtp"`
 
+	// AppBaseURL é o endereço público do sistema (ex.: https://app.empresa.com.br), usado para montar os links
+	// dos e-mails (redefinição de senha). Cada banco/domínio guarda o seu; vazio = e-mails com link não saem.
+	AppBaseURL string `gorm:"column:app_base_url;size:255" json:"app_base_url"`
+
 	UpdatedByID *uint     `gorm:"column:updated_by" json:"updated_by_id"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
@@ -70,6 +74,22 @@ type SaveSMTPRequest struct {
 	Enabled   bool   `json:"enabled"`
 }
 
+// SaveSystemEmailRequest é o corpo do PUT do e-mail do sistema: o servidor SMTP mais o endereço do sistema.
+type SaveSystemEmailRequest struct {
+	SaveSMTPRequest
+	AppBaseURL string `json:"app_base_url" binding:"omitempty,max=255"`
+}
+
+// SendPasswordResetRequest é o pedido interno (api.auth -> api.core) de envio do e-mail de redefinição de senha.
+// Token é o valor puro; o link é montado aqui com o AppBaseURL do sistema.
+type SendPasswordResetRequest struct {
+	To             string `json:"to" binding:"required,email,max=150"`
+	Name           string `json:"name" binding:"required,max=100"`
+	Token          string `json:"token" binding:"required,max=200"`
+	CompanyID      *uint  `json:"company_id"`
+	ExpiresMinutes int    `json:"expires_minutes" binding:"required,min=1,max=1440"`
+}
+
 // SendTestEmailRequest pede um e-mail de teste para o endereço informado.
 type SendTestEmailRequest struct {
 	To string `json:"to" binding:"required,email,max=150"`
@@ -90,6 +110,7 @@ type ApiSMTPSettings struct {
 // ApiSystemEmailSettings é a resposta do e-mail do sistema.
 type ApiSystemEmailSettings struct {
 	ApiSMTPSettings
+	AppBaseURL string    `json:"app_base_url"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
 

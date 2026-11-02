@@ -95,4 +95,11 @@ func SetupRoutes(router *gin.RouterGroup, uow repository.UnitOfWork, cfg *config
 		companyEmailConfigs.DELETE("/by-company/:companyId", middlewares.RequirePermission("companies.email_config.edit"), mailConfigHandler.DeleteCompanyEmail)
 		companyEmailConfigs.POST("/by-company/:companyId/test", middlewares.RequirePermission("companies.email_config.edit"), mailConfigHandler.SendCompanyTestEmail)
 	}
+	// Rotas internas (chamadas só por outros microsserviços, com token de serviço). O gateway não repassa
+	// /api/internal: elas não são alcançáveis de fora do servidor.
+	internal := router.Group("/internal")
+	internal.Use(middlewares.ServiceAuthMiddleware(cfg))
+	{
+		internal.POST("/mail/password-reset", mailConfigHandler.SendPasswordResetEmail)
+	}
 }

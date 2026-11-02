@@ -16,6 +16,7 @@ type Config struct {
 	Database  DatabaseConfig
 	JWT       JWTConfig
 	Security  SecurityConfig
+	Services  ServicesConfig
 	Bootstrap BootstrapAdminConfig
 	App       AppConfig
 }
@@ -53,6 +54,14 @@ type JWTConfig struct {
 	Secret          string
 	AccessTokenExp  time.Duration
 	RefreshTokenExp time.Duration
+}
+
+// ServicesConfig armazena o endereço dos outros microsserviços, para as chamadas internas entre eles
+// (que não passam pelo gateway).
+type ServicesConfig struct {
+	// CoreURL é o endereço do api.core (CORE_SERVICE_URL, o mesmo nome que o gateway usa), usado, por
+	// exemplo, pelo api.auth para pedir o envio de e-mail. Sem barra no fim.
+	CoreURL string
 }
 
 // SecurityConfig armazena chaves usadas pra criptografar dados sensíveis
@@ -154,6 +163,9 @@ func Load() (*Config, error) {
 		},
 		Security: SecurityConfig{
 			CertificateEncryptionKey: certificateEncryptionKey,
+		},
+		Services: ServicesConfig{
+			CoreURL: strings.TrimRight(getEnv("CORE_SERVICE_URL", "http://localhost:4002"), "/"),
 		},
 		Bootstrap: bootstrapAdmin,
 		App: AppConfig{

@@ -81,7 +81,12 @@ export function CompanyEmailConfigForm({ companyId }: CompanyEmailConfigFormProp
           </Popconfirm>
         )
       }
-      onSave={async (values) => setConfig(await companyEmailConfigService.save(companyId, values))}
+      onSave={async (values) => {
+        // O endereço do sistema é do e-mail do sistema, não da empresa.
+        const smtp = { ...values };
+        delete smtp.app_base_url;
+        setConfig(await companyEmailConfigService.save(companyId, smtp));
+      }}
       onSendTest={(to) => companyEmailConfigService.sendTest(companyId, to)}
     />
   );

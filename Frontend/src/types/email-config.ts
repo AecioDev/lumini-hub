@@ -15,6 +15,8 @@ export interface ApiSmtpSettings {
 }
 
 export interface ApiSystemEmailSettings extends ApiSmtpSettings {
+  // Endereço público do sistema, usado nos links dos e-mails (recuperação de senha).
+  app_base_url: string;
   updated_at: string;
 }
 
@@ -41,6 +43,8 @@ export interface SaveSmtpRequest {
   from_name: string;
   from_email: string;
   enabled: boolean;
+  // Só o e-mail do sistema usa; a API da empresa ignora.
+  app_base_url?: string;
 }
 
 export interface ApiTestEmailResult {

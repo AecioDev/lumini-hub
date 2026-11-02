@@ -39,6 +39,7 @@ export function SystemEmailPage() {
           title="Servidor SMTP padrão"
           settings={settings}
           canEdit={hasPermission("system_settings.edit")}
+          showAppBaseUrl
           notice={
             !settings.enabled && (
               <Alert

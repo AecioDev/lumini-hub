@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"time"
+
 	"lumini-hub/api.auth/internal/handlers"
 	"lumini-hub/common/config"
 	"lumini-hub/common/middlewares"
@@ -13,6 +15,7 @@ import (
 func SetupRoutes(router *gin.RouterGroup, db *gorm.DB, cfg *config.Config) {
 	// Handlers
 	authHandler := handlers.NewAuthHandler(db, cfg)
+	passwordResetHandler := handlers.NewPasswordResetHandler(db, cfg)
 	userHandler := handlers.NewUserHandler(db)
 	roleHandler := handlers.NewRoleHandler(db)
 	permHandler := handlers.NewPermissionHandler(db)
@@ -24,6 +27,10 @@ func SetupRoutes(router *gin.RouterGroup, db *gorm.DB, cfg *config.Config) {
 	{
 		auth.POST("/login", authHandler.Login)
 		auth.POST("/refresh-token", authHandler.RefreshToken)
+
+		// Recuperação de senha por e-mail (públicas): freio por IP aqui, e o limite por usuário fica no service.
+		auth.POST("/forgot-password", middlewares.RateLimitByIP(5, time.Hour), passwordResetHandler.ForgotPassword)
+		auth.POST("/reset-password", middlewares.RateLimitByIP(10, 15*time.Minute), passwordResetHandler.ResetPassword)
 
 		// Rotas de autenticação protegidas
 		protected := auth.Group("")

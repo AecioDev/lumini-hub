@@ -19,6 +19,7 @@ func TestRequests_MaxAlinhadoAoTamanhoDaColuna(t *testing.T) {
 	testutil.AssertRequestMaxMatchesColumnSize(t, CompanyFiscalConfig{}, CreateCompanyFiscalConfigRequest{}, UpdateCompanyFiscalConfigRequest{})
 	// Servidor SMTP: as colunas vivem em SMTPSettings, embutida no sistema e na configuração de cada empresa.
 	testutil.AssertRequestMaxMatchesColumnSize(t, SMTPSettings{}, SaveSMTPRequest{})
+	testutil.AssertRequestMaxMatchesColumnSize(t, SystemSettings{}, SaveSystemEmailRequest{})
 }
 
 // Comportamento de verdade: 100 caracteres passam, 101 são recusados (conta caracteres, não bytes).

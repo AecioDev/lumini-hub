@@ -2,6 +2,7 @@ package validator
 
 import (
 	netmail "net/mail"
+	"net/url"
 	"strings"
 
 	"lumini-hub/api.core/internal/domain"
@@ -46,4 +47,26 @@ func ValidateSMTPSettings(s domain.SMTPSettings, hasPassword bool) error {
 		return errs
 	}
 	return nil
+}
+
+// NormalizeAppBaseURL valida o endereço público do sistema (http ou https, com servidor, sem usuário,
+// parâmetros nem âncora) e o devolve sem a barra final. Vazio é aceito: só desliga os e-mails com link.
+func NormalizeAppBaseURL(raw string) (string, error) {
+	value := strings.TrimSpace(raw)
+	if value == "" {
+		return "", nil
+	}
+
+	var errs ValidationErrors
+	parsed, err := url.Parse(value)
+	switch {
+	case err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") || parsed.Host == "":
+		errs.AddError("app_base_url", "endereço inválido: use o formato https://app.suaempresa.com.br")
+	case parsed.User != nil || parsed.RawQuery != "" || parsed.Fragment != "":
+		errs.AddError("app_base_url", "o endereço não pode ter usuário, parâmetros (?) nem âncora (#)")
+	}
+	if errs.HasErrors() {
+		return "", errs
+	}
+	return strings.TrimRight(value, "/"), nil
 }

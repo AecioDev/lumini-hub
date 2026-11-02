@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
-import { Button, Input, Typography } from "antd";
+import { Alert, Button, Input, Typography } from "antd";
 import { Link } from "react-router-dom";
 import { FormField } from "@/components/common/FormField";
 import { useFeedback } from "@/hooks/useFeedback";
+import { authService } from "@/services/auth/auth-service";
+import { getApiErrorMessage } from "@/utils/api-error";
 import {
   forgotPasswordSchema,
   type ForgotPasswordFormValues,
@@ -15,6 +17,7 @@ const { Title, Paragraph } = Typography;
 export function ForgotPasswordPage() {
   const feedback = useFeedback();
   const [submitting, setSubmitting] = useState(false);
+  const [sent, setSent] = useState(false);
 
   const {
     control,
@@ -25,16 +28,13 @@ export function ForgotPasswordPage() {
     defaultValues: { email: "" },
   });
 
-  const onSubmit = async () => {
+  const onSubmit = async (values: ForgotPasswordFormValues) => {
     setSubmitting(true);
     try {
-      // O backend ainda não expõe um endpoint de recuperação de senha
-      // (só /auth/login|refresh-token|logout|me). A tela fica pronta para
-      // plugar em POST /auth/forgot-password (ou equivalente) assim que existir.
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      feedback.info(
-        "Recuperação de senha ainda não está disponível: falta o endpoint de envio de e-mail no backend."
-      );
+      await authService.forgotPassword(values.email);
+      setSent(true);
+    } catch (error) {
+      feedback.error(getApiErrorMessage(error, "Não foi possível enviar o link agora. Tente novamente."));
     } finally {
       setSubmitting(false);
     }
@@ -48,6 +48,16 @@ export function ForgotPasswordPage() {
       <Paragraph type="secondary" style={{ marginBottom: 28 }}>
         Enviaremos um link de redefinição para seu e-mail
       </Paragraph>
+
+      {sent && (
+        <Alert
+          type="success"
+          showIcon
+          style={{ marginBottom: 20 }}
+          message="Verifique seu e-mail"
+          description="Se o e-mail estiver cadastrado, enviamos um link para redefinir a senha. Ele vale por 30 minutos."
+        />
+      )}
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <FormField label="E-mail" error={errors.email}>
@@ -68,7 +78,7 @@ export function ForgotPasswordPage() {
           loading={submitting}
           style={{ marginTop: 8 }}
         >
-          Enviar link de recuperação
+          {sent ? "Enviar novamente" : "Enviar link de recuperação"}
         </Button>
       </form>
 

@@ -31,6 +31,8 @@ func NewMailConfigHandler(uow repository.UnitOfWork, encryptionKey string) *Mail
 func replyMailError(c *gin.Context, action string, err error) {
 	var sendErr *service.MailSendError
 	switch {
+	case errors.Is(err, service.ErrAppBaseURLNotConfigured):
+		utils.ErrorResponse(c, http.StatusUnprocessableEntity, err.Error(), err.Error())
 	case errors.Is(err, utils.ErrNotFound):
 		utils.ErrorResponse(c, http.StatusNotFound, "Empresa não encontrada", err.Error())
 	case validator.IsValidationError(err):
@@ -64,18 +66,18 @@ func (h *MailConfigHandler) GetSystemEmail(c *gin.Context) {
 
 // SaveSystemEmail grava o e-mail padrão do sistema
 // @Summary      Salva o e-mail padrão do sistema
-// @Description  Grava o servidor SMTP padrão do sistema. Senha vazia mantém a atual.
+// @Description  Grava o servidor SMTP padrão do sistema e o endereço público do sistema (usado nos links dos e-mails). Senha vazia mantém a atual.
 // @Tags         SystemSettings
 // @Accept       json
 // @Produce      json
-// @Param        config  body      domain.SaveSMTPRequest  true  "Servidor SMTP"
+// @Param        config  body      domain.SaveSystemEmailRequest  true  "Servidor SMTP e endereço do sistema"
 // @Success      200     {object}  utils.Response{data=domain.ApiSystemEmailSettings}
 // @Failure      400     {object}  utils.Response
 // @Failure      401     {object}  utils.Response
 // @Router       /system-settings/email [put]
 // @Security     ApiKeyAuth
 func (h *MailConfigHandler) SaveSystemEmail(c *gin.Context) {
-	var req domain.SaveSMTPRequest
+	var req domain.SaveSystemEmailRequest
 	if err := utils.BindJsonOrSendErrorRes(c, &req); err != nil {
 		return
 	}
@@ -223,4 +225,28 @@ func (h *MailConfigHandler) SendCompanyTestEmail(c *gin.Context) {
 		return
 	}
 	utils.SuccessResponse(c, http.StatusOK, "E-mail de teste enviado", result, nil)
+}
+
+// SendPasswordResetEmail envia o e-mail de redefinição de senha (rota interna, chamada pelo api.auth)
+// @Summary      Envia o e-mail de redefinição de senha
+// @Description  Rota interna, só com token de serviço (não passa pelo gateway): monta o link, renderiza o template e envia pela configuração da empresa do usuário
+// @Tags         Interno
+// @Accept       json
+// @Produce      json
+// @Param        body  body      domain.SendPasswordResetRequest  true  "Destinatário, nome, token e empresa"
+// @Success      200   {object}  utils.Response
+// @Failure      401   {object}  utils.Response
+// @Failure      422   {object}  utils.Response
+// @Failure      502   {object}  utils.Response
+// @Router       /internal/mail/password-reset [post]
+func (h *MailConfigHandler) SendPasswordResetEmail(c *gin.Context) {
+	var req domain.SendPasswordResetRequest
+	if err := utils.BindJsonOrSendErrorRes(c, &req); err != nil {
+		return
+	}
+	if err := h.mailService.SendPasswordReset(req); err != nil {
+		replyMailError(c, "Erro ao enviar o e-mail de redefinição de senha", err)
+		return
+	}
+	utils.SuccessResponse(c, http.StatusOK, "E-mail enviado", nil, nil)
 }

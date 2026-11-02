@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"lumini-hub/api.auth/internal/domain"
@@ -58,18 +59,36 @@ func (s *AuthService) GetMenuItemsForUser(user domain.User) ([]domain.ApiUserMen
 	return domain.FilterMenuTreeForUser(tree, userPermissionCodes, role), nil
 }
 
-// Login autentica um usuário e retorna tokens JWT
-func (s *AuthService) Login(username, password string) (*LoginResponse, error) {
-	var user domain.User
+// findUserForLogin busca o usuário pelo que foi digitado no login: o nome de usuário ou o e-mail (sem
+// diferenciar maiúsculas). O nome de usuário vale primeiro: se o texto digitado for o username de uma conta e,
+// ao mesmo tempo, o e-mail de outra, entra a do username.
+func (s *AuthService) findUserForLogin(identifier string) (*domain.User, error) {
+	identifier = strings.TrimSpace(identifier)
 
-	// Buscar usuário pelo username
-	result := s.db.Preload("Role").Preload("Role.Permissions").Preload("Permissions").Where("LOWER(username) = LOWER(?)", username).First(&user)
-	if result.Error != nil {
-		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+	for _, column := range []string{"username", "email"} {
+		var user domain.User
+		err := s.db.Preload("Role").Preload("Role.Permissions").Preload("Permissions").
+			Where("LOWER("+column+") = LOWER(?)", identifier).First(&user).Error
+		if err == nil {
+			return &user, nil
+		}
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		}
+	}
+	return nil, gorm.ErrRecordNotFound
+}
+
+// Login autentica um usuário (pelo nome de usuário ou pelo e-mail) e retorna tokens JWT
+func (s *AuthService) Login(username, password string) (*LoginResponse, error) {
+	found, err := s.findUserForLogin(username)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("usuário não encontrado")
 		}
-		return nil, result.Error
+		return nil, err
 	}
+	user := *found
 
 	// Verificar se o usuário está ativo
 	if !user.IsActive {

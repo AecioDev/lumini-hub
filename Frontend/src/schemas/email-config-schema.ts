@@ -19,6 +19,14 @@ export const emailConfigSchema = z
       .max(150, "Máximo 150 caracteres")
       .refine((value) => value === "" || z.string().email().safeParse(value).success, "E-mail inválido"),
     enabled: z.boolean(),
+    // Só aparece na tela do e-mail do sistema; vazio é aceito (desliga os e-mails com link).
+    app_base_url: z
+      .string()
+      .max(255, "Máximo 255 caracteres")
+      .refine(
+        (value) => value.trim() === "" || /^https?:\/\/[^\s/?#]+[^\s?#]*$/i.test(value.trim()),
+        "Use o formato https://app.suaempresa.com.br"
+      ),
   })
   .superRefine((values, ctx) => {
     if (!values.enabled) return;

@@ -51,12 +51,18 @@ export function LoginPage() {
       </Paragraph>
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <FormField label="Usuário" error={errors.username}>
+        <FormField label="Usuário ou e-mail" error={errors.username}>
           <Controller
             name="username"
             control={control}
             render={({ field }) => (
-              <Input {...field} size="large" placeholder="seu.usuario" autoFocus />
+              <Input
+                {...field}
+                size="large"
+                placeholder="seu.usuario ou voce@empresa.com"
+                autoComplete="username"
+                autoFocus
+              />
             )}
           />
         </FormField>

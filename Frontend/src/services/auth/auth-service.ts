@@ -29,6 +29,15 @@ export const authService = {
     return data.data!;
   },
 
+  // A resposta é sempre a mesma, exista ou não uma conta com o e-mail (o backend não revela quais existem).
+  async forgotPassword(email: string): Promise<void> {
+    await api.post("/auth/forgot-password", { email });
+  },
+
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    await api.post("/auth/reset-password", { token, new_password: newPassword });
+  },
+
   async logout(): Promise<void> {
     await api.post("/auth/logout");
   },

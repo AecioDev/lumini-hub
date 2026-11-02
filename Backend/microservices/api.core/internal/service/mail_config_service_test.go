@@ -15,14 +15,16 @@ import (
 // remetenteFalso guarda o que seria enviado, no lugar de abrir conexão SMTP.
 type remetenteFalso struct {
 	enviados []mail.ServerConfig
+	ultima   mail.Message
 	err      error
 }
 
-func (r *remetenteFalso) Send(cfg mail.ServerConfig, _ mail.Message) error {
+func (r *remetenteFalso) Send(cfg mail.ServerConfig, msg mail.Message) error {
 	if r.err != nil {
 		return r.err
 	}
 	r.enviados = append(r.enviados, cfg)
+	r.ultima = msg
 	return nil
 }
 
@@ -35,6 +37,11 @@ func novoServicoEmail(t *testing.T) (*MailConfigService, *CompanyService, *remet
 
 func smtpLigado(host string) domain.SaveSMTPRequest {
 	return domain.SaveSMTPRequest{Host: host, Port: 587, Security: "starttls", Username: "user", Password: "segredo-" + host, FromEmail: "noreply@" + host, Enabled: true}
+}
+
+// sistema embrulha uma configuração SMTP no corpo do PUT do e-mail do sistema (sem endereço do sistema).
+func sistema(smtp domain.SaveSMTPRequest) domain.SaveSystemEmailRequest {
+	return domain.SaveSystemEmailRequest{SaveSMTPRequest: smtp}
 }
 
 func filial(t *testing.T, empresas *CompanyService, pai uint, nome string) uint {
@@ -66,7 +73,7 @@ func TestEmail_SistemaVazioNaoEnviaENaoVazaSenha(t *testing.T) {
 func TestEmail_SalvarCriptografaSenhaEVazioMantem(t *testing.T) {
 	svc, _, _ := novoServicoEmail(t)
 
-	if _, err := svc.SaveSystemEmail(smtpLigado("smtp.exemplo.com"), 1); err != nil {
+	if _, err := svc.SaveSystemEmail(sistema(smtpLigado("smtp.exemplo.com")), 1); err != nil {
 		t.Fatalf("salvar: %v", err)
 	}
 	stored, _ := svc.uow.SystemSettings().Get()
@@ -77,7 +84,7 @@ func TestEmail_SalvarCriptografaSenhaEVazioMantem(t *testing.T) {
 	// Salvar de novo sem senha mantém a gravada; a resolução devolve a senha em texto para o envio.
 	req := smtpLigado("smtp.exemplo.com")
 	req.Password = ""
-	api, err := svc.SaveSystemEmail(req, 1)
+	api, err := svc.SaveSystemEmail(sistema(req), 1)
 	if err != nil {
 		t.Fatalf("salvar sem senha: %v", err)
 	}
@@ -91,7 +98,7 @@ func TestEmail_SalvarCriptografaSenhaEVazioMantem(t *testing.T) {
 
 	// Sem usuário não há autenticação: a senha é descartada.
 	req.Username = ""
-	api, err = svc.SaveSystemEmail(req, 1)
+	api, err = svc.SaveSystemEmail(sistema(req), 1)
 	if err != nil || api.HasPassword {
 		t.Errorf("sem usuário a senha deveria sumir: %+v, %v", api, err)
 	}
@@ -100,20 +107,20 @@ func TestEmail_SalvarCriptografaSenhaEVazioMantem(t *testing.T) {
 func TestEmail_LigadoExigeServidorRemetenteESenha(t *testing.T) {
 	svc, _, _ := novoServicoEmail(t)
 
-	_, err := svc.SaveSystemEmail(domain.SaveSMTPRequest{Enabled: true}, 1)
+	_, err := svc.SaveSystemEmail(sistema(domain.SaveSMTPRequest{Enabled: true}), 1)
 	exigeErroNoCampo(t, err, "host")
 
-	_, err = svc.SaveSystemEmail(domain.SaveSMTPRequest{Host: "h", Enabled: true, FromEmail: "x"}, 1)
+	_, err = svc.SaveSystemEmail(sistema(domain.SaveSMTPRequest{Host: "h", Enabled: true, FromEmail: "x"}), 1)
 	exigeErroNoCampo(t, err, "from_email")
 
-	_, err = svc.SaveSystemEmail(domain.SaveSMTPRequest{Host: "h", Enabled: true, FromEmail: "a@b.com", Username: "u"}, 1)
+	_, err = svc.SaveSystemEmail(sistema(domain.SaveSMTPRequest{Host: "h", Enabled: true, FromEmail: "a@b.com", Username: "u"}), 1)
 	exigeErroNoCampo(t, err, "password")
 
-	_, err = svc.SaveSystemEmail(domain.SaveSMTPRequest{Host: "h", Security: "tls", FromEmail: "a@b.com"}, 1)
+	_, err = svc.SaveSystemEmail(sistema(domain.SaveSMTPRequest{Host: "h", Security: "tls", FromEmail: "a@b.com"}), 1)
 	exigeErroNoCampo(t, err, "security")
 
 	// Desligado aceita campos pela metade.
-	if _, err := svc.SaveSystemEmail(domain.SaveSMTPRequest{Host: "so-o-servidor"}, 1); err != nil {
+	if _, err := svc.SaveSystemEmail(sistema(domain.SaveSMTPRequest{Host: "so-o-servidor"}), 1); err != nil {
 		t.Errorf("desligado deveria aceitar: %v", err)
 	}
 }
@@ -123,7 +130,7 @@ func TestEmail_EmpresaUsaAPropriaDepoisAMatrizDepoisOSistema(t *testing.T) {
 	matriz := criarMatriz(t, empresas, "Matriz", "11111111000111")
 	filha := filial(t, empresas, matriz, "Filial")
 
-	if _, err := svc.SaveSystemEmail(smtpLigado("sistema.com"), 1); err != nil {
+	if _, err := svc.SaveSystemEmail(sistema(smtpLigado("sistema.com")), 1); err != nil {
 		t.Fatal(err)
 	}
 	// Só o sistema configurado: a filial cai nele.
@@ -218,5 +225,61 @@ func TestEmail_EnvioDeTesteUsaConfiguracaoEfetivaEPropagaFalha(t *testing.T) {
 
 	if _, err := svc.SendTest(uintPtr(9999), "ana@exemplo.com"); err == nil {
 		t.Error("empresa inexistente deveria falhar")
+	}
+}
+
+func TestEmail_EnderecoDoSistemaEhValidadoENormalizado(t *testing.T) {
+	svc, _, _ := novoServicoEmail(t)
+
+	for _, ruim := range []string{"app.exemplo.com", "ftp://app.exemplo.com", "https://", "https://u:p@app.exemplo.com", "https://app.exemplo.com/?a=1", "https://app.exemplo.com/#x"} {
+		_, err := svc.SaveSystemEmail(domain.SaveSystemEmailRequest{AppBaseURL: ruim}, 1)
+		exigeErroNoCampo(t, err, "app_base_url")
+	}
+
+	api, err := svc.SaveSystemEmail(domain.SaveSystemEmailRequest{AppBaseURL: "  https://app.exemplo.com/  "}, 1)
+	if err != nil || api.AppBaseURL != "https://app.exemplo.com" {
+		t.Errorf("endereço = %q, %v", api.AppBaseURL, err)
+	}
+	// Vazio é aceito: desliga só os e-mails com link.
+	if api, err = svc.SaveSystemEmail(domain.SaveSystemEmailRequest{}, 1); err != nil || api.AppBaseURL != "" {
+		t.Errorf("vazio = %q, %v", api.AppBaseURL, err)
+	}
+}
+
+func TestEmail_RedefinicaoDeSenhaMontaLinkEUsaOServidorDaEmpresa(t *testing.T) {
+	svc, empresas, fake := novoServicoEmail(t)
+	matriz := criarMatriz(t, empresas, "Matriz Ltda", "11111111000111")
+	if _, err := svc.SaveCompanyEmail(matriz, smtpLigado("matriz.com")); err != nil {
+		t.Fatal(err)
+	}
+	pedido := domain.SendPasswordResetRequest{To: "ana@exemplo.com", Name: "Ana", Token: "tok+en/1", CompanyID: &matriz, ExpiresMinutes: 30}
+
+	// Sem o endereço do sistema não há link: nada é enviado.
+	if err := svc.SendPasswordReset(pedido); !errors.Is(err, ErrAppBaseURLNotConfigured) {
+		t.Fatalf("sem endereço deveria falhar com ErrAppBaseURLNotConfigured: %v", err)
+	}
+	if len(fake.enviados) != 0 {
+		t.Fatal("nada deveria ter sido enviado")
+	}
+
+	if _, err := svc.SaveSystemEmail(domain.SaveSystemEmailRequest{AppBaseURL: "https://app.exemplo.com"}, 1); err != nil {
+		t.Fatal(err)
+	}
+	if err := svc.SendPasswordReset(pedido); err != nil {
+		t.Fatalf("enviar: %v", err)
+	}
+	if len(fake.enviados) != 1 || fake.enviados[0].Host != "matriz.com" {
+		t.Fatalf("deveria sair pelo servidor da empresa: %+v", fake.enviados)
+	}
+	if fake.ultima.To != "ana@exemplo.com" || !strings.Contains(fake.ultima.HTML, "https://app.exemplo.com/reset-password?token=tok%2Ben%2F1") ||
+		!strings.Contains(fake.ultima.HTML, "Matriz Ltda") {
+		t.Errorf("mensagem inesperada: %+v", fake.ultima)
+	}
+
+	// Empresa que não existe mais: cai no padrão do sistema (que aqui está desligado -> erro de e-mail não configurado).
+	fantasma := uint(9999)
+	pedido.CompanyID = &fantasma
+	if err := svc.SendPasswordReset(pedido); !errors.Is(err, ErrMailNotConfigured) {
+		t.Errorf("empresa inexistente sem padrão do sistema deveria falhar com ErrMailNotConfigured: %v", err)
 	}
 }

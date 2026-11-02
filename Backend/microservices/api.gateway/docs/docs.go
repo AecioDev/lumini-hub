@@ -198,6 +198,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/forgot-password": {
+            "post": {
+                "description": "Envia, para o e-mail informado, um link de redefinição de senha válido por 30 minutos. A resposta é sempre a mesma, exista ou não uma conta com esse e-mail.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Autenticação"
+                ],
+                "summary": "Esqueci a senha",
+                "parameters": [
+                    {
+                        "description": "E-mail da conta",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.ForgotPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "429": {
+                        "description": "Too Many Requests",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/login": {
             "post": {
                 "description": "Autentica o usuário no ERP Lumini Hub, definindo cookies seguros HTTP-Only",
@@ -370,6 +416,52 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/reset-password": {
+            "post": {
+                "description": "Troca a senha da conta dona do token do link. O token vale uma vez só e por 30 minutos.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Autenticação"
+                ],
+                "summary": "Redefine a senha",
+                "parameters": [
+                    {
+                        "description": "Token do link e nova senha",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.ResetPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "429": {
+                        "description": "Too Many Requests",
                         "schema": {
                             "$ref": "#/definitions/utils.Response"
                         }
@@ -1892,6 +1984,58 @@ const docTemplate = `{
                 }
             }
         },
+        "/internal/mail/password-reset": {
+            "post": {
+                "description": "Rota interna, só com token de serviço (não passa pelo gateway): monta o link, renderiza o template e envia pela configuração da empresa do usuário",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Interno"
+                ],
+                "summary": "Envia o e-mail de redefinição de senha",
+                "parameters": [
+                    {
+                        "description": "Destinatário, nome, token e empresa",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.SendPasswordResetRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/suppliers": {
             "get": {
                 "security": [
@@ -2348,7 +2492,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Grava o servidor SMTP padrão do sistema. Senha vazia mantém a atual.",
+                "description": "Grava o servidor SMTP padrão do sistema e o endereço público do sistema (usado nos links dos e-mails). Senha vazia mantém a atual.",
                 "consumes": [
                     "application/json"
                 ],
@@ -2361,12 +2505,12 @@ const docTemplate = `{
                 "summary": "Salva o e-mail padrão do sistema",
                 "parameters": [
                     {
-                        "description": "Servidor SMTP",
+                        "description": "Servidor SMTP e endereço do sistema",
                         "name": "config",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.SaveSMTPRequest"
+                            "$ref": "#/definitions/domain.SaveSystemEmailRequest"
                         }
                     }
                 ],
@@ -3571,6 +3715,9 @@ const docTemplate = `{
         "domain.ApiSystemEmailSettings": {
             "type": "object",
             "properties": {
+                "app_base_url": {
+                    "type": "string"
+                },
                 "enabled": {
                     "type": "boolean"
                 },
@@ -4125,6 +4272,18 @@ const docTemplate = `{
                 }
             }
         },
+        "domain.ForgotPasswordRequest": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "maxLength": 100
+                }
+            }
+        },
         "domain.LoginSuccessResponse": {
             "type": "object",
             "properties": {
@@ -4138,6 +4297,24 @@ const docTemplate = `{
             "properties": {
                 "user": {
                     "$ref": "#/definitions/domain.ApiUserDetail"
+                }
+            }
+        },
+        "domain.ResetPasswordRequest": {
+            "type": "object",
+            "required": [
+                "new_password",
+                "token"
+            ],
+            "properties": {
+                "new_password": {
+                    "type": "string",
+                    "maxLength": 72,
+                    "minLength": 6
+                },
+                "token": {
+                    "type": "string",
+                    "maxLength": 200
                 }
             }
         },
@@ -4175,6 +4352,78 @@ const docTemplate = `{
                 "username": {
                     "type": "string",
                     "maxLength": 150
+                }
+            }
+        },
+        "domain.SaveSystemEmailRequest": {
+            "type": "object",
+            "properties": {
+                "app_base_url": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "from_email": {
+                    "type": "string",
+                    "maxLength": 150
+                },
+                "from_name": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "host": {
+                    "type": "string",
+                    "maxLength": 150
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "port": {
+                    "type": "integer",
+                    "maximum": 65535,
+                    "minimum": 1
+                },
+                "security": {
+                    "type": "string",
+                    "maxLength": 10
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 150
+                }
+            }
+        },
+        "domain.SendPasswordResetRequest": {
+            "type": "object",
+            "required": [
+                "expires_minutes",
+                "name",
+                "to",
+                "token"
+            ],
+            "properties": {
+                "company_id": {
+                    "type": "integer"
+                },
+                "expires_minutes": {
+                    "type": "integer",
+                    "maximum": 1440,
+                    "minimum": 1
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "to": {
+                    "type": "string",
+                    "maxLength": 150
+                },
+                "token": {
+                    "type": "string",
+                    "maxLength": 200
                 }
             }
         },
