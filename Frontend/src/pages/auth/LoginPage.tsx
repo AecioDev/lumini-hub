@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
-import { Button, Checkbox, Input, Typography } from "antd";
+import { Button, Input, Typography } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { FormField } from "@/components/common/FormField";
@@ -22,7 +22,7 @@ export function LoginPage() {
     formState: { errors },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { username: "", password: "", remember: false },
+    defaultValues: { username: "", password: "" },
   });
 
   useEffect(() => {
@@ -80,20 +80,11 @@ export function LoginPage() {
         <div
           style={{
             display: "flex",
-            justifyContent: "space-between",
+            justifyContent: "flex-end",
             alignItems: "center",
             margin: "-4px 0 22px",
           }}
         >
-          <Controller
-            name="remember"
-            control={control}
-            render={({ field: { value, onChange } }) => (
-              <Checkbox checked={value} onChange={(e) => onChange(e.target.checked)}>
-                Lembrar-me
-              </Checkbox>
-            )}
-          />
           <Link to="/forgot-password">Esqueceu a senha?</Link>
         </div>
 

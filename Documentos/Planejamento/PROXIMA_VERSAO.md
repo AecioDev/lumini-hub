@@ -19,7 +19,7 @@ Alterações feitas desde o último envio ao servidor. O Claude acrescenta uma l
 
 ## Correções
 
-(nenhuma)
+- Tela de login: removida a caixa "Lembrar-me", que não fazia nada (a sessão já dura até 7 dias pelo cookie de renovação, com ou sem ela).
 
 ## Interno (não afeta o servidor)
 
