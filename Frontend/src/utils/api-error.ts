@@ -36,3 +36,13 @@ export function isForbiddenError(error: unknown): boolean {
 export function isNotFoundError(error: unknown): boolean {
   return isAxiosError(error) && error.response?.status === 404;
 }
+
+// Erro de cada campo (nome no JSON -> mensagem), como a API manda em `fieldErrors` nas respostas 400 de
+// validação. Vazio quando o erro não sabe o campo (aí vale a mensagem geral, de getApiErrorMessage).
+export function getApiFieldErrors(error: unknown): Record<string, string> {
+  if (isAxiosError(error)) {
+    const body = error.response?.data as { fieldErrors?: Record<string, string> } | undefined;
+    if (body?.fieldErrors && typeof body.fieldErrors === "object") return body.fieldErrors;
+  }
+  return {};
+}

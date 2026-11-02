@@ -19,8 +19,8 @@ export interface CreateUserRequest {
 
 // Resposta do cadastro: o usuário e, quando houve convite, se o e-mail saiu (falha no e-mail não desfaz o cadastro).
 export interface ApiUserCreated extends ApiUser {
-  invite_sent: boolean;
-  invite_error?: string;
+  email_sent: boolean;
+  email_error?: string;
 }
 
 export interface UpdateUserRequest {

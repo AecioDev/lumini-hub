@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm, useWatch, type FieldErrors } from "react-hook-form";
 import { Button, Card, Col, Input, Row, Select, Skeleton, Switch, Tabs, Typography } from "antd";
@@ -20,7 +20,8 @@ import { permissionService } from "@/services/permissions/permission-service";
 import { userService } from "@/services/users/user-service";
 import { companyService } from "@/services/companies/company-service";
 import { useFeedback } from "@/hooks/useFeedback";
-import { isForbiddenError } from "@/utils/api-error";
+import { getApiErrorMessage, getApiFieldErrors, isForbiddenError } from "@/utils/api-error";
+import { suggestUsername } from "@/utils/username";
 import type { ApiRole } from "@/types/role";
 import type { ApiPermissionsByModule } from "@/types/permission";
 import type { ApiCompany } from "@/types/company";
@@ -73,6 +74,8 @@ export function CreateUserForm() {
     control,
     handleSubmit,
     setValue,
+    getValues,
+    setError,
     formState: { errors },
   } = useForm<CreateUserFormValues>({
     resolver: zodResolver(createUserSchema),
@@ -90,6 +93,17 @@ export function CreateUserForm() {
     },
   });
   const sendInvite = useWatch({ control, name: "send_invite" });
+
+  // Última sugestão de usuário feita a partir do nome. Só se sugere de novo enquanto o campo Usuário estiver
+  // vazio ou ainda for a sugestão anterior: o que a pessoa digitou ela mesma nunca é trocado.
+  const lastSuggestedUsername = useRef("");
+  const handleNameBlur = () => {
+    const current = getValues("username");
+    if (current !== "" && current !== lastSuggestedUsername.current) return;
+    const suggestion = suggestUsername(getValues("name"));
+    lastSuggestedUsername.current = suggestion;
+    setValue("username", suggestion, { shouldValidate: suggestion !== "" });
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -214,20 +228,38 @@ export function CreateUserForm() {
       await userService.updatePermissions(created.id, {
         permission_ids: [...selectedPermissionIds],
       });
-      if (!values.send_invite) {
-        feedback.success("Usuário criado com sucesso.");
-      } else if (created.invite_sent) {
-        feedback.success(`Usuário criado e convite enviado para ${created.email}.`);
+      // O novo usuário sempre recebe um e-mail: o convite (para criar a senha) ou os dados de acesso.
+      if (created.email_sent) {
+        feedback.success(
+          values.send_invite
+            ? `Usuário criado e convite enviado para ${created.email}.`
+            : `Usuário criado e dados de acesso enviados para ${created.email}.`
+        );
       } else {
-        // O usuário existe; só o e-mail falhou. O convite pode ser reenviado pela lista de usuários.
+        // O usuário existe; só o e-mail falhou. "Reenviar convite" (na lista de usuários) manda um link para ele criar a senha.
         feedback.info(
-          `Usuário criado, mas o convite não foi enviado: ${created.invite_error ?? "falha no envio do e-mail"}. Use "Reenviar convite" na lista de usuários.`,
-          "Convite não enviado"
+          `Usuário criado, mas o e-mail não foi enviado: ${created.email_error ?? "falha no envio do e-mail"}. Use "Reenviar convite" na lista de usuários.`,
+          "E-mail não enviado"
         );
       }
       navigate("/settings/users");
-    } catch {
-      feedback.error("Erro ao criar usuário. Confira os dados e tente novamente.");
+    } catch (error) {
+      // Erro de um campo (ex.: e-mail já em uso): marca o campo e leva à aba onde ele está.
+      const fieldErrors = getApiFieldErrors(error);
+      const formFields = new Set<string>(DADOS_FIELDS);
+      let marked = false;
+      for (const [field, message] of Object.entries(fieldErrors)) {
+        if (formFields.has(field)) {
+          setError(field as keyof CreateUserFormValues, { type: "server", message });
+          marked = true;
+        }
+      }
+      if (marked) setActiveTab("dados");
+      feedback.error(
+        marked
+          ? "Confira os campos destacados e tente novamente."
+          : getApiErrorMessage(error, "Erro ao criar usuário. Confira os dados e tente novamente.")
+      );
     } finally {
       setSubmitting(false);
     }
@@ -260,7 +292,26 @@ export function CreateUserForm() {
               <Card>
                 <Row gutter={16}>
                   <Col xs={24} sm={12}>
-                    <FormField label="Usuário" error={errors.username}>
+                    <FormField label="Nome completo" error={errors.name} stacked>
+                      <Controller
+                        name="name"
+                        control={control}
+                        render={({ field }) => (
+                          <Input
+                            {...field}
+                            placeholder="Ex: Carla Souza"
+                            autoFocus
+                            onBlur={() => {
+                              field.onBlur();
+                              handleNameBlur();
+                            }}
+                          />
+                        )}
+                      />
+                    </FormField>
+                  </Col>
+                  <Col xs={24} sm={12}>
+                    <FormField label="Usuário" error={errors.username} stacked>
                       <Controller
                         name="username"
                         control={control}
@@ -271,18 +322,7 @@ export function CreateUserForm() {
                     </FormField>
                   </Col>
                   <Col xs={24} sm={12}>
-                    <FormField label="Nome completo" error={errors.name}>
-                      <Controller
-                        name="name"
-                        control={control}
-                        render={({ field }) => (
-                          <Input {...field} placeholder="Ex: Carla Souza" />
-                        )}
-                      />
-                    </FormField>
-                  </Col>
-                  <Col xs={24} sm={12}>
-                    <FormField label="E-mail" error={errors.email}>
+                    <FormField label="E-mail" error={errors.email} stacked>
                       <Controller
                         name="email"
                         control={control}
@@ -293,7 +333,7 @@ export function CreateUserForm() {
                     </FormField>
                   </Col>
                   <Col xs={24} sm={12}>
-                    <FormField label="Telefone" error={errors.phone}>
+                    <FormField label="Telefone" error={errors.phone} stacked>
                       <Controller
                         name="phone"
                         control={control}
@@ -304,7 +344,7 @@ export function CreateUserForm() {
                     </FormField>
                   </Col>
                   <Col xs={24}>
-                    <FormField label="Enviar convite por e-mail" error={errors.send_invite}>
+                    <FormField label="Enviar convite por e-mail" error={errors.send_invite} stacked>
                       <Controller
                         name="send_invite"
                         control={control}
@@ -316,7 +356,7 @@ export function CreateUserForm() {
                         <Text type="secondary">
                           {sendInvite
                             ? "O usuário recebe um e-mail com um link (válido por 7 dias) para criar a própria senha."
-                            : "Você define a senha inicial abaixo e passa a ele por outro meio."}
+                            : "O usuário recebe um e-mail com o usuário e a senha inicial definida abaixo, e um botão para acessar o sistema."}
                         </Text>
                       </div>
                     </FormField>
@@ -324,7 +364,7 @@ export function CreateUserForm() {
                   {!sendInvite && (
                     <>
                       <Col xs={24} sm={12}>
-                        <FormField label="Senha inicial" error={errors.password}>
+                        <FormField label="Senha inicial" error={errors.password} stacked>
                           <Controller
                             name="password"
                             control={control}
@@ -335,7 +375,7 @@ export function CreateUserForm() {
                         </FormField>
                       </Col>
                       <Col xs={24} sm={12}>
-                        <FormField label="Exigir troca no primeiro acesso" error={errors.must_change_password}>
+                        <FormField label="Exigir troca no primeiro acesso" error={errors.must_change_password} stacked>
                           <Controller
                             name="must_change_password"
                             control={control}
@@ -345,7 +385,7 @@ export function CreateUserForm() {
                           />
                           <div style={{ marginTop: 4 }}>
                             <Text type="secondary">
-                              Ligado: ao entrar, o usuário é levado a trocar a senha antes de usar o sistema.
+                              Ligado: o e-mail avisa que a troca é obrigatória e, ao entrar, o usuário é levado a trocar a senha antes de usar o sistema. Desligado: o e-mail só sugere a troca.
                             </Text>
                           </div>
                         </FormField>
@@ -353,7 +393,7 @@ export function CreateUserForm() {
                     </>
                   )}
                   <Col xs={24} sm={12}>
-                    <FormField label="Perfil" error={errors.role_id}>
+                    <FormField label="Perfil" error={errors.role_id} stacked>
                       {loadingPresets ? (
                         <Skeleton.Input active block style={{ width: "100%" }} />
                       ) : (
@@ -370,7 +410,7 @@ export function CreateUserForm() {
                     </FormField>
                   </Col>
                   <Col xs={24} sm={12}>
-                    <FormField label="Empresa" error={errors.company_id}>
+                    <FormField label="Empresa" error={errors.company_id} stacked>
                       {loadingPresets ? (
                         <Skeleton.Input active block style={{ width: "100%" }} />
                       ) : (

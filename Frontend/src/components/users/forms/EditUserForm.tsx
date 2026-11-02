@@ -20,7 +20,7 @@ import { permissionService } from "@/services/permissions/permission-service";
 import { userService } from "@/services/users/user-service";
 import { companyService } from "@/services/companies/company-service";
 import { useFeedback } from "@/hooks/useFeedback";
-import { isForbiddenError } from "@/utils/api-error";
+import { getApiErrorMessage, getApiFieldErrors, isForbiddenError } from "@/utils/api-error";
 import type { ApiRole } from "@/types/role";
 import type { ApiPermissionsByModule } from "@/types/permission";
 import type { ApiCompany } from "@/types/company";
@@ -70,6 +70,7 @@ export function EditUserForm({ userId }: { userId: number }) {
     control,
     handleSubmit,
     setValue,
+    setError,
     formState: { errors },
   } = useForm<UpdateUserFormValues>({
     resolver: zodResolver(updateUserSchema),
@@ -210,8 +211,23 @@ export function EditUserForm({ userId }: { userId: number }) {
       });
       feedback.success("Usuário atualizado com sucesso.");
       navigate("/settings/users");
-    } catch {
-      feedback.error("Erro ao salvar usuário. Confira os dados e tente novamente.");
+    } catch (error) {
+      // Erro de um campo (ex.: e-mail já em uso): marca o campo e leva à aba onde ele está.
+      const fieldErrors = getApiFieldErrors(error);
+      const formFields = new Set<string>(DADOS_FIELDS);
+      let marked = false;
+      for (const [field, message] of Object.entries(fieldErrors)) {
+        if (formFields.has(field)) {
+          setError(field as keyof UpdateUserFormValues, { type: "server", message });
+          marked = true;
+        }
+      }
+      if (marked) setActiveTab("dados");
+      feedback.error(
+        marked
+          ? "Confira os campos destacados e tente novamente."
+          : getApiErrorMessage(error, "Erro ao salvar usuário. Confira os dados e tente novamente.")
+      );
     } finally {
       setSubmitting(false);
     }
@@ -246,12 +262,12 @@ export function EditUserForm({ userId }: { userId: number }) {
               <Card>
                 <Row gutter={16}>
                   <Col xs={24} sm={12}>
-                    <FormField label="Usuário">
+                    <FormField label="Usuário" stacked>
                       <Input value={username} disabled />
                     </FormField>
                   </Col>
                   <Col xs={24} sm={12}>
-                    <FormField label="Nome completo" error={errors.name}>
+                    <FormField label="Nome completo" error={errors.name} stacked>
                       <Controller
                         name="name"
                         control={control}
@@ -262,7 +278,7 @@ export function EditUserForm({ userId }: { userId: number }) {
                     </FormField>
                   </Col>
                   <Col xs={24} sm={12}>
-                    <FormField label="E-mail" error={errors.email}>
+                    <FormField label="E-mail" error={errors.email} stacked>
                       <Controller
                         name="email"
                         control={control}
@@ -273,7 +289,7 @@ export function EditUserForm({ userId }: { userId: number }) {
                     </FormField>
                   </Col>
                   <Col xs={24} sm={12}>
-                    <FormField label="Telefone" error={errors.phone}>
+                    <FormField label="Telefone" error={errors.phone} stacked>
                       <Controller
                         name="phone"
                         control={control}
@@ -284,7 +300,7 @@ export function EditUserForm({ userId }: { userId: number }) {
                     </FormField>
                   </Col>
                   <Col xs={24} sm={12}>
-                    <FormField label="Perfil" error={errors.role_id}>
+                    <FormField label="Perfil" error={errors.role_id} stacked>
                       <Select
                         value={roleId ?? undefined}
                         placeholder="Selecione o perfil do usuário"
@@ -297,7 +313,7 @@ export function EditUserForm({ userId }: { userId: number }) {
                     </FormField>
                   </Col>
                   <Col xs={24} sm={12}>
-                    <FormField label="Empresa" error={errors.company_id}>
+                    <FormField label="Empresa" error={errors.company_id} stacked>
                       <Controller
                         name="company_id"
                         control={control}
@@ -323,7 +339,7 @@ export function EditUserForm({ userId }: { userId: number }) {
                     </FormField>
                   </Col>
                   <Col xs={24} sm={12}>
-                    <FormField label="Ativo">
+                    <FormField label="Ativo" stacked>
                       <Controller
                         name="is_active"
                         control={control}
