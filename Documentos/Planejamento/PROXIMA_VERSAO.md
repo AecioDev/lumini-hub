@@ -14,7 +14,7 @@ Alterações feitas desde o último envio ao servidor. O Claude acrescenta uma l
 
 ## Novidades e melhorias
 
-- **CFG-054** (aguardando teste): convite para novo usuário por e-mail (link de 7 dias para criar a senha, com reenvio na lista de usuários) e, no cadastro sem convite, a opção de exigir a troca da senha no primeiro acesso. Todo usuário novo recebe um e-mail: o convite, ou os dados de acesso (login, senha provisória e botão de acesso, com o aviso de que a troca da senha é obrigatória ou só sugerida).
+- **CFG-054**: convite para novo usuário por e-mail (link de 7 dias para criar a senha, com reenvio na lista de usuários) e, no cadastro sem convite, a opção de exigir a troca da senha no primeiro acesso. Todo usuário novo recebe um e-mail: o convite, ou os dados de acesso (login, senha provisória e botão de acesso, com o aviso de que a troca da senha é obrigatória ou só sugerida).
 - **CFG-053**: o login aceita o nome de usuário ou o e-mail da conta.
 - **CFG-038**: recuperação de senha por e-mail. Telas **Esqueci a senha** e **Nova senha**; link de uso único válido por 30 minutos, com limite de pedidos por usuário e por IP. Primeiro template de e-mail do sistema. Campo **Endereço do sistema** na tela E-mail do sistema (usado nos links dos e-mails).
 - **CFG-052**: configuração de e-mail. Tela **Configurações → E-mail do sistema** (servidor SMTP padrão) e aba **Configuração de E-mail** na Empresa (servidor próprio, opcional). Uma empresa sem servidor próprio herda o da Matriz e, por fim, o do sistema; nunca usa empresa de outro grupo. Senha criptografada, botão de e-mail de teste. É a base da recuperação de senha (CFG-038).
