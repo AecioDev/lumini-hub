@@ -15,12 +15,14 @@ var templateFiles embed.FS
 const (
 	TemplatePasswordReset = "password_reset"
 	TemplateUserInvite    = "user_invite"
+	TemplateUserWelcome   = "user_welcome"
 )
 
 // templateSubjects guarda o assunto de cada template.
 var templateSubjects = map[string]string{
 	TemplatePasswordReset: "Redefinição de senha",
 	TemplateUserInvite:    "Convite para acessar o Lumini Hub",
+	TemplateUserWelcome:   "Seus dados de acesso ao Lumini Hub",
 }
 
 // TemplateData é o que os templates enxergam. Campos que um template não usa ficam vazios.
@@ -39,6 +41,10 @@ type TemplateData struct {
 	Username    string // nome de usuário de acesso
 	InvitedBy   string // quem cadastrou (opcional)
 	ExpiresDays int
+
+	// Dados de acesso de um usuário cadastrado com senha inicial
+	Password           string // senha provisória, em texto
+	MustChangePassword bool   // true: a troca no primeiro acesso é obrigatória; false: só sugerida
 }
 
 // Render monta a mensagem (assunto, texto e HTML) de um template para o destinatário.

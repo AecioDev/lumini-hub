@@ -916,6 +916,30 @@ definitions:
     - token
     - username
     type: object
+  domain.SendUserWelcomeRequest:
+    properties:
+      company_id:
+        type: integer
+      must_change_password:
+        type: boolean
+      name:
+        maxLength: 100
+        type: string
+      password:
+        maxLength: 72
+        type: string
+      to:
+        maxLength: 150
+        type: string
+      username:
+        maxLength: 50
+        type: string
+    required:
+    - name
+    - password
+    - to
+    - username
+    type: object
   domain.SetMenuFavoritesRequest:
     properties:
       menu_item_ids:
@@ -1208,6 +1232,14 @@ definitions:
       data: {}
       error:
         type: string
+      fieldErrors:
+        additionalProperties:
+          type: string
+        description: |-
+          FieldErrors diz qual campo (pelo nome no JSON) causou cada erro de validação, para o formulário
+          marcar o campo certo. Só vem quando o erro sabe o campo (erro de bind/validação e as regras de
+          negócio dos validators dos serviços, via FieldMessager).
+        type: object
       message:
         type: string
       meta: {}
@@ -2521,6 +2553,42 @@ paths:
           schema:
             $ref: '#/definitions/utils.Response'
       summary: Envia o e-mail de convite de usuário
+      tags:
+      - Interno
+  /internal/mail/user-welcome:
+    post:
+      consumes:
+      - application/json
+      description: 'Rota interna, só com token de serviço (não passa pelo gateway):
+        envia o usuário e a senha provisória de um usuário cadastrado sem convite,
+        com o botão de acesso ao sistema'
+      parameters:
+      - description: Destinatário, usuário, senha provisória e empresa
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.SendUserWelcomeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: Envia o e-mail com os dados de acesso do usuário
       tags:
       - Interno
   /suppliers:

@@ -110,12 +110,13 @@ type ApiUser struct {
 	PendingInvite bool `json:"pending_invite"`
 }
 
-// ApiUserCreated é a resposta do cadastro de usuário: o usuário e, quando houve convite, se o e-mail saiu.
-// Falha no e-mail não desfaz o cadastro: o usuário existe e o convite pode ser reenviado.
+// ApiUserCreated é a resposta do cadastro de usuário: o usuário e se o e-mail ao novo usuário saiu (o convite, ou os
+// dados de acesso quando o cadastro foi com senha inicial). Falha no e-mail não desfaz o cadastro: o usuário existe
+// e o convite pode ser reenviado.
 type ApiUserCreated struct {
 	ApiUser
-	InviteSent  bool   `json:"invite_sent"`
-	InviteError string `json:"invite_error,omitempty"`
+	EmailSent  bool   `json:"email_sent"`
+	EmailError string `json:"email_error,omitempty"`
 }
 
 // ApiUserRole representa os dados básicos do papel do usuário, sem incluir as permissões aninhadas

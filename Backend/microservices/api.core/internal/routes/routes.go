@@ -102,5 +102,6 @@ func SetupRoutes(router *gin.RouterGroup, uow repository.UnitOfWork, cfg *config
 	{
 		internal.POST("/mail/password-reset", mailConfigHandler.SendPasswordResetEmail)
 		internal.POST("/mail/user-invite", mailConfigHandler.SendUserInviteEmail)
+		internal.POST("/mail/user-welcome", mailConfigHandler.SendUserWelcomeEmail)
 	}
 }

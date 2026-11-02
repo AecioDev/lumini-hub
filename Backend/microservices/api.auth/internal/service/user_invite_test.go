@@ -46,7 +46,7 @@ func TestConvite_UsuarioNasceSemSenhaUtilizavelEOEmailSai(t *testing.T) {
 	if err != nil {
 		t.Fatalf("criar: %v", err)
 	}
-	if !created.InviteSent || created.InviteError != "" || !created.PendingInvite {
+	if !created.EmailSent || created.EmailError != "" || !created.PendingInvite {
 		t.Errorf("resposta inesperada: %+v", created)
 	}
 
@@ -107,7 +107,7 @@ func TestConvite_FalhaNoEmailNaoDesfazOCadastroEPermiteReenviar(t *testing.T) {
 	if err != nil {
 		t.Fatalf("o cadastro não pode falhar por causa do e-mail: %v", err)
 	}
-	if created.InviteSent || created.InviteError == "" {
+	if created.EmailSent || created.EmailError == "" {
 		t.Errorf("deveria informar a falha do envio: %+v", created)
 	}
 	var count int64
@@ -165,8 +165,15 @@ func TestCadastro_SemConviteExigeSenhaETrocaObrigatoriaValeSoSemConvite(t *testi
 	if err != nil {
 		t.Fatalf("criar: %v", err)
 	}
-	if created.InviteSent || len(mailer.convites) != 0 {
-		t.Error("sem convite nenhum e-mail sai")
+	if !created.EmailSent || len(mailer.convites) != 0 {
+		t.Errorf("sem convite sai o e-mail de dados de acesso, não o convite: %+v", created)
+	}
+	if len(mailer.acessos) != 1 {
+		t.Fatalf("deveria pedir 1 e-mail de dados de acesso, pediu %d", len(mailer.acessos))
+	}
+	a := mailer.acessos[0]
+	if a.To != "novo@exemplo.com" || a.Username != "novo.usuario" || a.Name != "Novo" || a.Password != "senha-inicial" || !a.MustChangePassword {
+		t.Errorf("e-mail de acesso inesperado: %+v", a)
 	}
 	var user domain.User
 	db.First(&user, created.ID)
@@ -201,5 +208,31 @@ func TestTrocaDeSenha_OProprioUsuarioDesligaATrocaObrigatoria(t *testing.T) {
 	db.First(&user, created.ID)
 	if user.MustChangePassword || !utils.CheckPasswordHash("senha-propria-9", user.PasswordHash) {
 		t.Errorf("a troca pelo próprio usuário deveria desligar a marca: %+v", user)
+	}
+}
+
+func TestCadastro_SemConviteEmailDeAcessoCarregaASenhaESeATrocaEObrigatoria(t *testing.T) {
+	svc, _, mailer, _, role := novoServicoDeUsuario(t)
+
+	// Sem troca obrigatória: o e-mail só sugere a troca.
+	req := pedidoDeUsuario(role)
+	req.Password = "senha-livre-1"
+	req.MustChangePassword = false
+	if _, err := svc.CreateUser(req, "ADMIN", "admin"); err != nil {
+		t.Fatalf("criar: %v", err)
+	}
+	if len(mailer.acessos) != 1 || mailer.acessos[0].MustChangePassword || mailer.acessos[0].Password != "senha-livre-1" {
+		t.Errorf("e-mail de acesso inesperado: %+v", mailer.acessos)
+	}
+
+	// Falha no e-mail: o usuário continua criado e a resposta diz que o e-mail não saiu.
+	mailer.err = errors.New("api.core recusou o envio (HTTP 422): endereço do sistema não configurado")
+	req2 := domain.CreateUserRequest{Username: "outro.usuario", Name: "Outro", Email: "outro@exemplo.com", RoleID: role.ID, Password: "senha-livre-2"}
+	created, err := svc.CreateUser(req2, "ADMIN", "admin")
+	if err != nil {
+		t.Fatalf("a falha do e-mail não pode impedir o cadastro: %v", err)
+	}
+	if created.EmailSent || created.EmailError == "" {
+		t.Errorf("deveria informar que o e-mail não saiu: %+v", created)
 	}
 }

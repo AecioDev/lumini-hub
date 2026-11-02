@@ -307,7 +307,35 @@ func TestEmail_ConviteDeUsuarioMontaLinkComInviteEUsaOServidorDaEmpresa(t *testi
 	}
 	if fake.ultima.Subject != "Convite para acessar o Lumini Hub" ||
 		!strings.Contains(fake.ultima.HTML, "https://app.exemplo.com/reset-password?token=tok&amp;invite=1") ||
-		!strings.Contains(fake.ultima.HTML, "novo.usuario") || !strings.Contains(fake.ultima.HTML, "Admin criou") {
+		!strings.Contains(fake.ultima.HTML, "novo.usuario") || !strings.Contains(fake.ultima.HTML, "Seu cadastro no Lumini Hub da empresa Matriz Ltda está pronto.") {
+		t.Errorf("mensagem inesperada: %+v", fake.ultima)
+	}
+}
+
+func TestEmail_DadosDeAcessoSaemComLinkDeLoginESenhaProvisoria(t *testing.T) {
+	svc, empresas, fake := novoServicoEmail(t)
+	matriz := criarMatriz(t, empresas, "Matriz Ltda", "11111111000111")
+	if _, err := svc.SaveCompanyEmail(matriz, smtpLigado("matriz.com")); err != nil {
+		t.Fatal(err)
+	}
+	pedido := domain.SendUserWelcomeRequest{To: "joel@exemplo.com", Name: "Joel", Username: "joel.silva", Password: "Prov-123", CompanyID: &matriz, MustChangePassword: true}
+
+	if err := svc.SendUserWelcome(pedido); !errors.Is(err, ErrAppBaseURLNotConfigured) {
+		t.Fatalf("sem endereço do sistema deveria falhar: %v", err)
+	}
+	if _, err := svc.SaveSystemEmail(domain.SaveSystemEmailRequest{AppBaseURL: "https://app.exemplo.com"}, 1); err != nil {
+		t.Fatal(err)
+	}
+	if err := svc.SendUserWelcome(pedido); err != nil {
+		t.Fatalf("enviar: %v", err)
+	}
+	if len(fake.enviados) != 1 || fake.enviados[0].Host != "matriz.com" {
+		t.Fatalf("deveria sair pelo servidor da empresa: %+v", fake.enviados)
+	}
+	if fake.ultima.Subject != "Seus dados de acesso ao Lumini Hub" ||
+		!strings.Contains(fake.ultima.HTML, `href="https://app.exemplo.com/login"`) ||
+		!strings.Contains(fake.ultima.HTML, "joel.silva") || !strings.Contains(fake.ultima.HTML, "Prov-123") ||
+		!strings.Contains(fake.ultima.HTML, "será necessário trocar a senha no primeiro acesso") {
 		t.Errorf("mensagem inesperada: %+v", fake.ultima)
 	}
 }

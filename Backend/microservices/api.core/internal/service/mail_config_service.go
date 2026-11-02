@@ -252,6 +252,13 @@ func (s *MailConfigService) SendUserInvite(req domain.SendUserInviteRequest) err
 		mail.TemplateData{Name: req.Name, Username: req.Username, InvitedBy: req.InvitedBy, ExpiresDays: req.ExpiresDays})
 }
 
+// SendUserWelcome envia o e-mail com os dados de acesso (usuário e senha provisória) de um usuário cadastrado sem
+// convite. O botão leva à tela de login; o texto diz se a troca da senha no primeiro acesso é obrigatória ou só sugerida.
+func (s *MailConfigService) SendUserWelcome(req domain.SendUserWelcomeRequest) error {
+	return s.sendLinkTemplate(mail.TemplateUserWelcome, req.To, req.CompanyID, "/login",
+		mail.TemplateData{Name: req.Name, Username: req.Username, Password: req.Password, MustChangePassword: req.MustChangePassword})
+}
+
 // sendLinkTemplate renderiza um template cujo e-mail traz um link para o sistema (linkPath é o caminho e a query,
 // que recebem na frente o endereço do sistema) e o envia pela configuração da empresa. data traz os campos próprios
 // do template; o nome da empresa e o link são preenchidos aqui.

@@ -102,6 +102,17 @@ type SendUserInviteRequest struct {
 	InvitedBy   string `json:"invited_by" binding:"omitempty,max=100"`
 }
 
+// SendUserWelcomeRequest é o pedido interno (api.auth -> api.core) de envio do e-mail com os dados de acesso de um
+// usuário cadastrado com senha inicial. Password é a senha provisória em texto (só passa por aqui, nunca é gravada).
+type SendUserWelcomeRequest struct {
+	To                 string `json:"to" binding:"required,email,max=150"`
+	Name               string `json:"name" binding:"required,max=100"`
+	Username           string `json:"username" binding:"required,max=50"`
+	Password           string `json:"password" binding:"required,max=72"`
+	CompanyID          *uint  `json:"company_id"`
+	MustChangePassword bool   `json:"must_change_password"`
+}
+
 // SendTestEmailRequest pede um e-mail de teste para o endereço informado.
 type SendTestEmailRequest struct {
 	To string `json:"to" binding:"required,email,max=150"`

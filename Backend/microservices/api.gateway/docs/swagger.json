@@ -2082,6 +2082,58 @@
                 }
             }
         },
+        "/internal/mail/user-welcome": {
+            "post": {
+                "description": "Rota interna, só com token de serviço (não passa pelo gateway): envia o usuário e a senha provisória de um usuário cadastrado sem convite, com o botão de acesso ao sistema",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Interno"
+                ],
+                "summary": "Envia o e-mail com os dados de acesso do usuário",
+                "parameters": [
+                    {
+                        "description": "Destinatário, usuário, senha provisória e empresa",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.SendUserWelcomeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/suppliers": {
             "get": {
                 "security": [
@@ -4589,6 +4641,39 @@
                 }
             }
         },
+        "domain.SendUserWelcomeRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "password",
+                "to",
+                "username"
+            ],
+            "properties": {
+                "company_id": {
+                    "type": "integer"
+                },
+                "must_change_password": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 72
+                },
+                "to": {
+                    "type": "string",
+                    "maxLength": 150
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 50
+                }
+            }
+        },
         "domain.SetMenuFavoritesRequest": {
             "type": "object",
             "properties": {
@@ -5013,6 +5098,13 @@
                 "data": {},
                 "error": {
                     "type": "string"
+                },
+                "fieldErrors": {
+                    "description": "FieldErrors diz qual campo (pelo nome no JSON) causou cada erro de validação, para o formulário\nmarcar o campo certo. Só vem quando o erro sabe o campo (erro de bind/validação e as regras de\nnegócio dos validators dos serviços, via FieldMessager).",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 },
                 "message": {
                     "type": "string"

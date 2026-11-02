@@ -145,6 +145,26 @@ func (s *PasswordResetService) IssueInvite(user domain.User, invitedBy string) (
 	return mailErr, nil
 }
 
+// SendWelcome pede ao api.core o e-mail com os dados de acesso (usuário e senha provisória) de um usuário cadastrado
+// com senha inicial. Na hora, como o convite: quem cadastra precisa saber se o e-mail saiu. A senha só passa por aqui,
+// em memória, a caminho do e-mail: nunca é gravada nem vai para o log.
+func (s *PasswordResetService) SendWelcome(user domain.User, password string, mustChangePassword bool) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 35*time.Second)
+	defer cancel()
+	err := s.mailer.SendUserWelcome(ctx, internalmail.UserWelcomeRequest{
+		To:                 user.Email,
+		Name:               user.Name,
+		Username:           user.Username,
+		Password:           password,
+		CompanyID:          user.CompanyID,
+		MustChangePassword: mustChangePassword,
+	})
+	if err != nil {
+		log.Printf("Cadastro de usuário: e-mail de acesso não enviado ao usuário %d: %v", user.ID, err)
+	}
+	return err
+}
+
 // ResetPassword troca a senha da conta dona do token e o inutiliza (junto com qualquer outro pedido aberto dela).
 func (s *PasswordResetService) ResetPassword(token, newPassword string) error {
 	hash := hashResetToken(token)

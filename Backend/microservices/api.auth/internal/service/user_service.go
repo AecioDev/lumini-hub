@@ -15,10 +15,12 @@ import (
 // ErrInviteNotAllowed: o convite só pode ser reenviado a um usuário ativo que ainda não entrou no sistema.
 var ErrInviteNotAllowed = errors.New("o convite só pode ser reenviado a um usuário ativo que ainda não entrou no sistema")
 
-// InviteIssuer gera o link de convite de um usuário e pede o e-mail (implementado por PasswordResetService).
-// Quando o link foi criado mas o e-mail falhou, devolve mailErr com err nil.
-type InviteIssuer interface {
+// UserMailer manda ao usuário os e-mails do cadastro (implementado por PasswordResetService): o convite, com o link
+// para ele criar a senha, ou os dados de acesso de quem foi cadastrado com senha inicial. Quando o e-mail falha,
+// devolve o erro dele (mailErr, no convite com err nil, porque o link já foi criado).
+type UserMailer interface {
 	IssueInvite(user domain.User, invitedBy string) (mailErr error, err error)
+	SendWelcome(user domain.User, password string, mustChangePassword bool) error
 }
 
 // UserService gerencia operações relacionadas a usuários
@@ -26,7 +28,7 @@ type UserService struct {
 	userRepo  repository.UserRepository
 	roleRepo  repository.RoleRepository
 	permRepo  repository.PermissionRepository
-	invites   InviteIssuer
+	mailer    UserMailer
 	validator *validator.UserValidator
 }
 
@@ -35,13 +37,13 @@ func NewUserService(
 	userRepo repository.UserRepository,
 	roleRepo repository.RoleRepository,
 	permRepo repository.PermissionRepository,
-	invites InviteIssuer,
+	mailer UserMailer,
 ) *UserService {
 	return &UserService{
 		userRepo:  userRepo,
 		roleRepo:  roleRepo,
 		permRepo:  permRepo,
-		invites:   invites,
+		mailer:    mailer,
 		validator: validator.NewUserValidator(userRepo, roleRepo, permRepo),
 	}
 }
@@ -166,8 +168,9 @@ func unusablePasswordHash() (string, error) {
 	return utils.HashPassword(base64.RawURLEncoding.EncodeToString(raw))
 }
 
-// CreateUser cria um novo usuário. Com SendInvite ele nasce sem senha utilizável e recebe por e-mail o link para
-// definir a sua; falha no e-mail não desfaz o cadastro (a resposta traz InviteSent=false e o convite pode ser reenviado).
+// CreateUser cria um novo usuário e sempre manda um e-mail a ele. Com SendInvite ele nasce sem senha utilizável e
+// recebe o link para definir a sua; sem convite, recebe os dados de acesso (usuário e a senha provisória que quem
+// cadastrou digitou). Falha no e-mail não desfaz o cadastro: a resposta traz EmailSent=false e o motivo.
 func (s *UserService) CreateUser(req domain.CreateUserRequest, requesterRole, requesterName string) (*domain.ApiUserCreated, error) {
 	// Validar dados
 	if err := s.validator.ValidateForCreation(req); err != nil {
@@ -225,17 +228,21 @@ func (s *UserService) CreateUser(req domain.CreateUserRequest, requesterRole, re
 
 	created := domain.ApiUserCreated{ApiUser: domain.ApiUserFromModel(*completeUser)}
 	if req.SendInvite {
-		mailErr, err := s.invites.IssueInvite(*completeUser, requesterName)
+		mailErr, err := s.mailer.IssueInvite(*completeUser, requesterName)
 		switch {
 		case err != nil:
 			// O usuário já existe: o convite fica pendente e pode ser reenviado.
 			log.Printf("Convite de usuário: não foi possível gerar o link do usuário %d: %v", completeUser.ID, err)
-			created.InviteError = "não foi possível gerar o convite"
+			created.EmailError = "não foi possível gerar o convite"
 		case mailErr != nil:
-			created.InviteError = mailErr.Error()
+			created.EmailError = mailErr.Error()
 		default:
-			created.InviteSent = true
+			created.EmailSent = true
 		}
+	} else if mailErr := s.mailer.SendWelcome(*completeUser, req.Password, user.MustChangePassword); mailErr != nil {
+		created.EmailError = mailErr.Error()
+	} else {
+		created.EmailSent = true
 	}
 	return &created, nil
 }
@@ -262,7 +269,7 @@ func (s *UserService) ResendInvite(id uint, requesterRole, requesterName string)
 		return ErrInviteNotAllowed
 	}
 
-	mailErr, err := s.invites.IssueInvite(*user, requesterName)
+	mailErr, err := s.mailer.IssueInvite(*user, requesterName)
 	if err != nil {
 		return err
 	}

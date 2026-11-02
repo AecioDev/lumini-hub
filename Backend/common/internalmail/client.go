@@ -20,6 +20,19 @@ import (
 type Sender interface {
 	SendPasswordReset(ctx context.Context, req PasswordResetRequest) error
 	SendUserInvite(ctx context.Context, req UserInviteRequest) error
+	SendUserWelcome(ctx context.Context, req UserWelcomeRequest) error
+}
+
+// UserWelcomeRequest é o pedido de envio do e-mail com os dados de acesso de um usuário cadastrado com senha
+// inicial (sem convite). Password é a senha provisória em texto: só trafega neste pedido, direto entre os
+// serviços, e nunca é gravada nem registrada em log.
+type UserWelcomeRequest struct {
+	To                 string `json:"to"`
+	Name               string `json:"name"`
+	Username           string `json:"username"`
+	Password           string `json:"password"`
+	CompanyID          *uint  `json:"company_id"`
+	MustChangePassword bool   `json:"must_change_password"`
 }
 
 // UserInviteRequest é o pedido de envio do e-mail de convite de um novo usuário. Token é o valor puro (o link
@@ -71,6 +84,11 @@ func (c *Client) SendPasswordReset(ctx context.Context, req PasswordResetRequest
 // SendUserInvite pede ao api.core o envio do e-mail de convite de um novo usuário.
 func (c *Client) SendUserInvite(ctx context.Context, req UserInviteRequest) error {
 	return c.post(ctx, "/api/internal/mail/user-invite", req)
+}
+
+// SendUserWelcome pede ao api.core o envio do e-mail com os dados de acesso (usuário e senha provisória).
+func (c *Client) SendUserWelcome(ctx context.Context, req UserWelcomeRequest) error {
+	return c.post(ctx, "/api/internal/mail/user-welcome", req)
 }
 
 func (c *Client) post(ctx context.Context, path string, payload any) error {

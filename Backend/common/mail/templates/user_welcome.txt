@@ -1,0 +1,17 @@
+Olá, {{.Name}}!
+
+Seu cadastro no Lumini Hub{{if ne .CompanyName "Lumini Hub"}} da empresa {{.CompanyName}}{{end}} está pronto.
+
+Seus dados de acesso:
+Usuário: {{.Username}}
+Senha provisória: {{.Password}}
+
+Você também pode entrar com este e-mail no lugar do usuário.
+
+Para acessar, abra o endereço abaixo no navegador:
+
+{{.Link}}
+
+{{if .MustChangePassword}}ATENÇÃO: será necessário trocar a senha no primeiro acesso.{{else}}Por segurança, sugerimos que você troque essa senha provisória por uma só sua.{{end}}
+
+Se você não esperava este cadastro, avise quem administra o sistema.

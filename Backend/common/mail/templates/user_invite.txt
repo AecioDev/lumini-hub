@@ -1,11 +1,13 @@
-Olá, {{.Name}}.
+Olá, {{.Name}}!
 
-{{if .InvitedBy}}{{.InvitedBy}} criou{{else}}Foi criado{{end}} um acesso para você ao Lumini Hub ({{.CompanyName}}).
-Para começar, escolha a sua senha abrindo o endereço abaixo no navegador:
+Seu cadastro no Lumini Hub{{if ne .CompanyName "Lumini Hub"}} da empresa {{.CompanyName}}{{end}} está pronto.
+
+Para acessar, escolha a sua senha abrindo o endereço abaixo no navegador:
 
 {{.Link}}
 
-Seu usuário de acesso: {{.Username}} (você também pode entrar com este e-mail).
+Seu usuário de acesso é: {{.Username}}
+Mas você também pode entrar com este e-mail.
 
 O convite vale por {{.ExpiresDays}} dias e o link só pode ser usado uma vez. Depois disso, peça um novo
 convite a quem cadastrou você.

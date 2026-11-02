@@ -274,3 +274,27 @@ func (h *MailConfigHandler) SendUserInviteEmail(c *gin.Context) {
 	}
 	utils.SuccessResponse(c, http.StatusOK, "E-mail enviado", nil, nil)
 }
+
+// SendUserWelcomeEmail envia o e-mail com os dados de acesso de um novo usuário (rota interna, chamada pelo api.auth)
+// @Summary      Envia o e-mail com os dados de acesso do usuário
+// @Description  Rota interna, só com token de serviço (não passa pelo gateway): envia o usuário e a senha provisória de um usuário cadastrado sem convite, com o botão de acesso ao sistema
+// @Tags         Interno
+// @Accept       json
+// @Produce      json
+// @Param        body  body      domain.SendUserWelcomeRequest  true  "Destinatário, usuário, senha provisória e empresa"
+// @Success      200   {object}  utils.Response
+// @Failure      401   {object}  utils.Response
+// @Failure      422   {object}  utils.Response
+// @Failure      502   {object}  utils.Response
+// @Router       /internal/mail/user-welcome [post]
+func (h *MailConfigHandler) SendUserWelcomeEmail(c *gin.Context) {
+	var req domain.SendUserWelcomeRequest
+	if err := utils.BindJsonOrSendErrorRes(c, &req); err != nil {
+		return
+	}
+	if err := h.mailService.SendUserWelcome(req); err != nil {
+		replyMailError(c, "Erro ao enviar o e-mail com os dados de acesso", err)
+		return
+	}
+	utils.SuccessResponse(c, http.StatusOK, "E-mail enviado", nil, nil)
+}

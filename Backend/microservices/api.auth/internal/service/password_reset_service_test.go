@@ -20,7 +20,16 @@ import (
 type mailerFalso struct {
 	pedidos  []internalmail.PasswordResetRequest
 	convites []internalmail.UserInviteRequest
+	acessos  []internalmail.UserWelcomeRequest
 	err      error
+}
+
+func (m *mailerFalso) SendUserWelcome(_ context.Context, req internalmail.UserWelcomeRequest) error {
+	if m.err != nil {
+		return m.err
+	}
+	m.acessos = append(m.acessos, req)
+	return nil
 }
 
 func (m *mailerFalso) SendUserInvite(_ context.Context, req internalmail.UserInviteRequest) error {
