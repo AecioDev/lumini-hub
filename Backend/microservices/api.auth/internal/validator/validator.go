@@ -21,6 +21,21 @@ func (ve ValidationErrors) Error() string {
 	return ve[0].Message
 }
 
+// FieldMessages devolve a mensagem de cada campo com erro (o primeiro erro de cada campo), pelo nome do campo no
+// JSON. Implementa utils.FieldMessager: a resposta de erro da API leva esse mapa em `fieldErrors`.
+func (ve ValidationErrors) FieldMessages() map[string]string {
+	messages := map[string]string{}
+	for _, e := range ve {
+		if e.Field == "" {
+			continue
+		}
+		if _, exists := messages[e.Field]; !exists {
+			messages[e.Field] = e.Message
+		}
+	}
+	return messages
+}
+
 // GetErrors retorna todos os erros de validação
 func (ve ValidationErrors) GetErrors() []ValidationError {
 	return ve

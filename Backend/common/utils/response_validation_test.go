@@ -123,3 +123,38 @@ func TestValidationErrorResponse_CampoComJSONHifenUsaONomeEmGo(t *testing.T) {
 		t.Errorf("mensagens = %v", messages)
 	}
 }
+
+// regraDeNegocioFalsa imita os erros dos validators dos serviços (lista de campo + mensagem).
+type regraDeNegocioFalsa map[string]string
+
+func (r regraDeNegocioFalsa) Error() string { return "regra de negócio" }
+func (r regraDeNegocioFalsa) FieldMessages() map[string]string {
+	return r
+}
+
+func TestValidationErrorResponse_FieldErrorsApontamOCampo(t *testing.T) {
+	capturaLog(t)
+
+	// Erro de bind: o campo sai pelo nome do JSON.
+	c, rec := newTestContext(http.MethodPost, "/api/x")
+	ValidationErrorResponse(c, "Dados inválidos", bindJSON(t, `{"first_name":"abcdefgh","age":20,"hidden":"x"}`))
+	got := decode(t, rec)
+	if got.FieldErrors["first_name"] != "no máximo 5 caracteres" {
+		t.Errorf("fieldErrors do bind = %v", got.FieldErrors)
+	}
+
+	// Regra de negócio que implementa FieldMessager.
+	c, rec = newTestContext(http.MethodPost, "/api/x")
+	ValidationErrorResponse(c, "Dados inválidos", regraDeNegocioFalsa{"email": "email já está em uso"})
+	got = decode(t, rec)
+	if got.FieldErrors["email"] != "email já está em uso" || len(got.FieldErrors) != 1 {
+		t.Errorf("fieldErrors da regra = %v", got.FieldErrors)
+	}
+
+	// Erro sem campo: a resposta não traz o mapa.
+	c, rec = newTestContext(http.MethodPost, "/api/x")
+	ValidationErrorResponse(c, "Dados inválidos", errors.New("algo deu errado"))
+	if got = decode(t, rec); got.FieldErrors != nil {
+		t.Errorf("erro sem campo não deveria ter fieldErrors: %v", got.FieldErrors)
+	}
+}

@@ -15,6 +15,10 @@ type Response struct {
 	StatusCode       int         `json:"statusCode"`
 	Message          string      `json:"message,omitempty"`
 	ValidationErrors []string    `json:"validationErrors,omitempty"`
+	// FieldErrors diz qual campo (pelo nome no JSON) causou cada erro de validação, para o formulário
+	// marcar o campo certo. Só vem quando o erro sabe o campo (erro de bind/validação e as regras de
+	// negócio dos validators dos serviços, via FieldMessager).
+	FieldErrors map[string]string `json:"fieldErrors,omitempty"`
 	Data             interface{} `json:"data,omitempty"`
 	Error            string      `json:"error,omitempty"`
 	Meta             interface{} `json:"meta,omitempty"`
@@ -62,6 +66,7 @@ func ErrorResponse(c *gin.Context, statusCode int, message string, err string) {
 // err.Error()): assim erros de bind/validação viram frases como "first_name: no máximo 100 caracteres".
 func ValidationErrorResponse(c *gin.Context, message string, errors interface{}) {
 	var validationErrors []string
+	var fieldErrors map[string]string
 
 	if errors != nil {
 		switch v := errors.(type) {
@@ -83,6 +88,12 @@ func ValidationErrorResponse(c *gin.Context, message string, errors interface{})
 		for i, text := range validationErrors {
 			validationErrors[i] = hideDatabaseError(c, http.StatusBadRequest, message, text)
 		}
+		if err, ok := errors.(error); ok {
+			fieldErrors = fieldErrorsOf(err)
+			for field, text := range fieldErrors {
+				fieldErrors[field] = hideDatabaseError(c, http.StatusBadRequest, message, text)
+			}
+		}
 	}
 
 	c.JSON(http.StatusBadRequest, Response{
@@ -90,6 +101,7 @@ func ValidationErrorResponse(c *gin.Context, message string, errors interface{})
 		StatusCode:       http.StatusBadRequest,
 		Message:          message,
 		ValidationErrors: validationErrors,
+		FieldErrors:      fieldErrors,
 	})
 }
 

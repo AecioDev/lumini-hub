@@ -28,6 +28,43 @@ func init() {
 	}
 }
 
+// FieldMessager é implementado pelos erros de validação de regra de negócio dos serviços (as listas de
+// campo + mensagem dos validators): devolve a mensagem de cada campo, pelo nome dele no JSON, para a
+// resposta de erro apontar qual campo do formulário está errado.
+type FieldMessager interface {
+	FieldMessages() map[string]string
+}
+
+// fieldErrorsOf devolve o erro de cada campo (nome no JSON -> mensagem) quando o erro sabe o campo: erro de
+// bind/validação da requisição ou regra de negócio que implementa FieldMessager. Nil nos demais casos.
+// Havendo mais de um erro no mesmo campo, vale o primeiro.
+func fieldErrorsOf(err error) map[string]string {
+	result := map[string]string{}
+
+	var fieldErrors validator.ValidationErrors
+	if errors.As(err, &fieldErrors) {
+		for _, fieldError := range fieldErrors {
+			if _, exists := result[fieldError.Field()]; !exists {
+				result[fieldError.Field()] = validationRuleMessage(fieldError)
+			}
+		}
+	}
+
+	var messager FieldMessager
+	if errors.As(err, &messager) {
+		for field, text := range messager.FieldMessages() {
+			if _, exists := result[field]; !exists {
+				result[field] = text
+			}
+		}
+	}
+
+	if len(result) == 0 {
+		return nil
+	}
+	return result
+}
+
 // describeRequestError traduz o erro de um bind/validação de requisição em frases legíveis, sem
 // mostrar nomes internos do código (struct, campo em Go, regra do validador). Devolve false quando o
 // erro não é desse tipo (por exemplo, uma regra de negócio nossa), para o chamador usar o texto dele.
