@@ -2,6 +2,7 @@ import { api } from "../common/api";
 import type { ApiResponse } from "@/types/common";
 import type { ApiUserDetail } from "@/types/auth";
 import type {
+  ApiUserCreated,
   ApiUserListPaginated,
   CreateUserRequest,
   UpdateUserPermissionsRequest,
@@ -33,9 +34,22 @@ export const userService = {
     return data.data!;
   },
 
-  async create(payload: CreateUserRequest): Promise<ApiUserDetail> {
-    const { data } = await api.post<ApiResponse<ApiUserDetail>>("/users", payload);
+  async create(payload: CreateUserRequest): Promise<ApiUserCreated> {
+    const { data } = await api.post<ApiResponse<ApiUserCreated>>("/users", payload);
     return data.data!;
+  },
+
+  // Gera um novo link de convite (o anterior deixa de valer) e reenvia o e-mail; só para quem nunca entrou.
+  async resendInvite(id: number): Promise<void> {
+    await api.post(`/users/${id}/invite`);
+  },
+
+  // O próprio usuário troca a senha informando a atual.
+  async changePassword(id: number, currentPassword: string, newPassword: string): Promise<void> {
+    await api.put(`/users/${id}/password`, {
+      current_password: currentPassword,
+      new_password: newPassword,
+    });
   },
 
   async update(id: number, payload: UpdateUserRequest): Promise<ApiUserDetail> {

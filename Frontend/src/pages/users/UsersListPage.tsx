@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { EditOutlined, EyeOutlined, PlusOutlined } from "@ant-design/icons";
+import { EditOutlined, EyeOutlined, MailOutlined, PlusOutlined } from "@ant-design/icons";
 import {
   Avatar,
   Button,
@@ -14,6 +14,7 @@ import { roleService } from "@/services/roles/role-service";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserDetailDrawer } from "@/components/users/UserDetailDrawer";
 import { useFeedback } from "@/hooks/useFeedback";
+import { getApiErrorMessage } from "@/utils/api-error";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { getAvatarGradient, getInitials, getTagColor } from "@/utils/avatar";
 import type { ApiUser } from "@/types/auth";
@@ -89,6 +90,16 @@ export function UsersListPage() {
     };
   }, [page, debouncedSearch, filters, feedback]);
 
+  // Gera um novo link e reenvia o e-mail de convite (o link anterior deixa de valer).
+  const resendInvite = async (user: ApiUser) => {
+    try {
+      await userService.resendInvite(user.id);
+      feedback.success(`Convite reenviado para ${user.email}.`);
+    } catch (error) {
+      feedback.error(getApiErrorMessage(error, "Não foi possível reenviar o convite."), "Convite não enviado");
+    }
+  };
+
   const rowActions = (user: ApiUser): RowAction[] => [
     {
       key: "view",
@@ -103,6 +114,21 @@ export function UsersListPage() {
             label: "Editar",
             icon: <EditOutlined />,
             to: `/settings/users/${user.id}/edit`,
+          },
+        ]
+      : []),
+    // Só para quem ainda não entrou no sistema (convite pendente).
+    ...(hasPermission("users.create") && user.pending_invite && user.is_active
+      ? [
+          {
+            key: "invite",
+            label: "Reenviar convite",
+            icon: <MailOutlined />,
+            confirm: {
+              title: "Reenviar o convite?",
+              description: `Um novo e-mail com o link para criar a senha será enviado para ${user.email}. O link anterior deixa de valer.`,
+              onConfirm: () => resendInvite(user),
+            },
           },
         ]
       : []),

@@ -53,8 +53,8 @@ func (v *UserValidator) ValidateForCreation(req domain.CreateUserRequest) error 
 		errors.AddError("role_id", "perfil não encontrado")
 	}
 
-	// Verificar senha
-	if len(req.Password) < 6 {
+	// Verificar senha: com convite o usuário define a própria pelo link; sem convite, quem cadastra informa uma
+	if !req.SendInvite && len(req.Password) < 6 {
 		errors.AddError("password", "senha deve ter pelo menos 6 caracteres")
 	}
 

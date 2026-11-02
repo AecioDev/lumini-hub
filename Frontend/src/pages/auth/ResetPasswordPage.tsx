@@ -11,10 +11,12 @@ import { resetPasswordSchema, type ResetPasswordFormValues } from "@/schemas/res
 
 const { Title, Paragraph } = Typography;
 
-// Destino do link do e-mail de recuperação: /reset-password?token=...
+// Destino do link do e-mail de recuperação de senha (/reset-password?token=...) e do convite de novo usuário
+// (o mesmo link com &invite=1, que só troca os textos da tela).
 export function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token") ?? "";
+  const isInvite = searchParams.get("invite") === "1";
   const navigate = useNavigate();
   const feedback = useFeedback();
   const [submitting, setSubmitting] = useState(false);
@@ -34,7 +36,9 @@ export function ResetPasswordPage() {
     setLinkError(null);
     try {
       await authService.resetPassword(token, values.new_password);
-      feedback.success("Senha redefinida com sucesso. Entre com a nova senha.");
+      feedback.success(
+        isInvite ? "Senha criada com sucesso. Entre com o seu usuário ou e-mail." : "Senha redefinida com sucesso. Entre com a nova senha."
+      );
       navigate("/login", { replace: true });
     } catch (error) {
       setLinkError(getApiErrorMessage(error, "Não foi possível redefinir a senha. Tente novamente."));
@@ -50,11 +54,15 @@ export function ResetPasswordPage() {
           Link inválido
         </Title>
         <Paragraph type="secondary">
-          O link de redefinição está incompleto. Peça um novo para receber outro e-mail.
+          {isInvite
+            ? "O link do convite está incompleto. Peça um novo convite a quem cadastrou você."
+            : "O link de redefinição está incompleto. Peça um novo para receber outro e-mail."}
         </Paragraph>
-        <Paragraph style={{ marginBottom: 0 }}>
-          <Link to="/forgot-password">Pedir novo link</Link>
-        </Paragraph>
+        {!isInvite && (
+          <Paragraph style={{ marginBottom: 0 }}>
+            <Link to="/forgot-password">Pedir novo link</Link>
+          </Paragraph>
+        )}
       </div>
     );
   }
@@ -62,10 +70,10 @@ export function ResetPasswordPage() {
   return (
     <div>
       <Title level={3} style={{ marginTop: 0, marginBottom: 6 }}>
-        Nova senha
+        {isInvite ? "Bem-vindo ao Lumini Hub" : "Nova senha"}
       </Title>
       <Paragraph type="secondary" style={{ marginBottom: 28 }}>
-        Escolha a nova senha da sua conta
+        {isInvite ? "Crie a senha para acessar a sua conta" : "Escolha a nova senha da sua conta"}
       </Paragraph>
 
       {linkError && (
@@ -74,12 +82,14 @@ export function ResetPasswordPage() {
           showIcon
           style={{ marginBottom: 20 }}
           message={linkError}
-          description={<Link to="/forgot-password">Pedir novo link</Link>}
+          description={
+            isInvite ? "Peça um novo convite a quem cadastrou você." : <Link to="/forgot-password">Pedir novo link</Link>
+          }
         />
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <FormField label="Nova senha" error={errors.new_password}>
+        <FormField label={isInvite ? "Senha" : "Nova senha"} error={errors.new_password}>
           <Controller
             name="new_password"
             control={control}
@@ -98,7 +108,7 @@ export function ResetPasswordPage() {
         </FormField>
 
         <Button type="primary" htmlType="submit" size="large" block loading={submitting} style={{ marginTop: 8 }}>
-          Redefinir senha
+          {isInvite ? "Criar senha" : "Redefinir senha"}
         </Button>
       </form>
 

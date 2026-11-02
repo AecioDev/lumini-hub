@@ -30,6 +30,11 @@ type User struct {
 	// usuário só vê a própria Empresa, exceto com companies.hierarchy.view.
 	CompanyID *uint `json:"company_id"`
 
+	// MustChangePassword obriga a troca da senha no primeiro acesso: depois do login o frontend leva o
+	// usuário à tela de troca, e o próprio usuário trocando a senha (ChangePassword ou o link do e-mail)
+	// desliga a marca. Vale para o cadastro sem convite, em que quem cadastra conhece a senha inicial.
+	MustChangePassword bool `gorm:"not null;default:false" json:"must_change_password"`
+
 	// ActiveCompanyID é a Company que o usuário está "operando como" no
 	// momento — só é uma escolha real pra quem enxerga mais de uma Company
 	// (master, ou tem companies.hierarchy.view); pra todo mundo mais é
@@ -45,13 +50,21 @@ func (User) TableName() string {
 
 // CreateUserRequest representa os dados para criar um novo usuário
 type CreateUserRequest struct {
-	Username  string `json:"username" binding:"required,min=3,max=50"`
-	Password  string `json:"password" binding:"required,min=6,max=72"`
+	Username string `json:"username" binding:"required,min=3,max=50"`
+	// Password é obrigatório sem convite (o validator confere); com SendInvite o usuário define a própria
+	// senha pelo link e o campo é ignorado.
+	Password  string `json:"password" binding:"omitempty,min=6,max=72"`
 	Name      string `json:"name" binding:"required,max=100"`
 	Email     string `json:"email" binding:"required,email,max=100"`
 	Phone     string `json:"phone" binding:"omitempty,max=20"`
 	RoleID    uint   `json:"role_id" binding:"required"`
 	CompanyID *uint  `json:"company_id"`
+
+	// SendInvite cria o usuário sem senha utilizável e envia um e-mail de convite com o link para ele
+	// definir a senha.
+	SendInvite bool `json:"send_invite"`
+	// MustChangePassword (só sem convite): exige a troca da senha no primeiro acesso.
+	MustChangePassword bool `json:"must_change_password"`
 }
 
 // UserFilterRequest define os parâmetros da busca filtrada e paginada de usuários (POST /users/filter).
@@ -93,6 +106,16 @@ type ApiUser struct {
 	Role      string `json:"role,omitempty"`
 	IsActive  bool   `json:"is_active"`
 	CompanyID *uint  `json:"company_id"`
+	// PendingInvite: o usuário nunca entrou no sistema (a lista oferece "Reenviar convite" para ele).
+	PendingInvite bool `json:"pending_invite"`
+}
+
+// ApiUserCreated é a resposta do cadastro de usuário: o usuário e, quando houve convite, se o e-mail saiu.
+// Falha no e-mail não desfaz o cadastro: o usuário existe e o convite pode ser reenviado.
+type ApiUserCreated struct {
+	ApiUser
+	InviteSent  bool   `json:"invite_sent"`
+	InviteError string `json:"invite_error,omitempty"`
 }
 
 // ApiUserRole representa os dados básicos do papel do usuário, sem incluir as permissões aninhadas
@@ -116,6 +139,8 @@ type ApiUserDetail struct {
 	IsActive  bool        `json:"is_active"`
 	LastLogin string      `json:"last_login,omitempty"`
 	CompanyID *uint       `json:"company_id"`
+	// MustChangePassword: o frontend leva o usuário à tela de troca de senha antes de qualquer outra.
+	MustChangePassword bool `json:"must_change_password"`
 	// ActiveCompanyID/ActiveCompanyName/RequiresCompanySelection/
 	// VisibleCompanies só vêm com valor "de verdade" (revalidado) na
 	// resposta de login/refresh/me — ver AuthService. Em outras respostas de
@@ -134,9 +159,9 @@ type ApiUserDetail struct {
 	MenuItems                []ApiUserMenuItem     `json:"menu_items,omitempty"`
 	// FavoriteMenuItemIDs: itens do menu que o usuário marcou como favoritos, na ordem do cabeçalho
 	// (só preenchido no login/refresh/me). Sem omitempty: a lista vazia chega como [].
-	FavoriteMenuItemIDs      []uint                `json:"favorite_menu_item_ids"`
-	CreatedAt                string                `json:"created_at"`
-	UpdatedAt                string                `json:"updated_at"`
+	FavoriteMenuItemIDs []uint `json:"favorite_menu_item_ids"`
+	CreatedAt           string `json:"created_at"`
+	UpdatedAt           string `json:"updated_at"`
 }
 
 // ApiUserListPaginated representa uma lista paginada de usuários
@@ -165,6 +190,8 @@ func ApiUserFromModel(u User) ApiUser {
 		RoleID:    u.RoleID,
 		IsActive:  u.IsActive,
 		CompanyID: u.CompanyID,
+
+		PendingInvite: u.LastLogin == nil,
 	}
 
 	// Adicionar o nome do perfil se estiver carregado
@@ -187,8 +214,10 @@ func ApiUserDetailFromModel(u User) ApiUserDetail {
 		IsActive:        u.IsActive,
 		CompanyID:       u.CompanyID,
 		ActiveCompanyID: u.ActiveCompanyID,
-		CreatedAt:       u.CreatedAt.Format("2006-01-02 15:04:05"),
-		UpdatedAt:       u.UpdatedAt.Format("2006-01-02 15:04:05"),
+
+		MustChangePassword: u.MustChangePassword,
+		CreatedAt:          u.CreatedAt.Format("2006-01-02 15:04:05"),
+		UpdatedAt:          u.UpdatedAt.Format("2006-01-02 15:04:05"),
 	}
 
 	// Adicionar o último login se existir

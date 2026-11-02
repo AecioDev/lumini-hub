@@ -12,6 +12,8 @@ export interface ApiUser {
   role?: string;
   is_active: boolean;
   company_id: number | null;
+  // O usuário nunca entrou no sistema: a lista oferece "Reenviar convite".
+  pending_invite?: boolean;
 }
 
 export interface ApiCompanyOption {
@@ -39,6 +41,8 @@ export interface ApiUserDetail {
   is_active: boolean;
   last_login?: string;
   company_id: number | null;
+  // Troca de senha obrigatória no primeiro acesso: o app leva o usuário à tela de troca antes de qualquer outra.
+  must_change_password?: boolean;
   // active_company_id/active_company_name/requires_company_selection/
   // visible_companies só vêm revalidados de verdade nas respostas de
   // login/refresh/me — ver AuthService no backend. visible_companies não

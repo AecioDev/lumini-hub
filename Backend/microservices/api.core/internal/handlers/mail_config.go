@@ -250,3 +250,27 @@ func (h *MailConfigHandler) SendPasswordResetEmail(c *gin.Context) {
 	}
 	utils.SuccessResponse(c, http.StatusOK, "E-mail enviado", nil, nil)
 }
+
+// SendUserInviteEmail envia o e-mail de convite de um novo usuário (rota interna, chamada pelo api.auth)
+// @Summary      Envia o e-mail de convite de usuário
+// @Description  Rota interna, só com token de serviço (não passa pelo gateway): monta o link para o novo usuário definir a senha, renderiza o template e envia pela configuração da empresa dele
+// @Tags         Interno
+// @Accept       json
+// @Produce      json
+// @Param        body  body      domain.SendUserInviteRequest  true  "Destinatário, nome, usuário, token e empresa"
+// @Success      200   {object}  utils.Response
+// @Failure      401   {object}  utils.Response
+// @Failure      422   {object}  utils.Response
+// @Failure      502   {object}  utils.Response
+// @Router       /internal/mail/user-invite [post]
+func (h *MailConfigHandler) SendUserInviteEmail(c *gin.Context) {
+	var req domain.SendUserInviteRequest
+	if err := utils.BindJsonOrSendErrorRes(c, &req); err != nil {
+		return
+	}
+	if err := h.mailService.SendUserInvite(req); err != nil {
+		replyMailError(c, "Erro ao enviar o e-mail de convite", err)
+		return
+	}
+	utils.SuccessResponse(c, http.StatusOK, "E-mail enviado", nil, nil)
+}

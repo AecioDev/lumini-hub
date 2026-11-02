@@ -7,6 +7,7 @@ import { PlaceholderPage } from "@/pages/PlaceholderPage";
 import { LoginPage } from "@/pages/auth/LoginPage";
 import { ForgotPasswordPage } from "@/pages/auth/ForgotPasswordPage";
 import { ResetPasswordPage } from "@/pages/auth/ResetPasswordPage";
+import { ChangePasswordPage } from "@/pages/auth/ChangePasswordPage";
 import { CrmDashboardPage } from "@/pages/dashboard/CrmDashboardPage";
 import { UsersListPage } from "@/pages/users/UsersListPage";
 import { CreateUserPage } from "@/pages/users/CreateUserPage";
@@ -35,6 +36,11 @@ export const router = createBrowserRouter([
   {
     element: <ProtectedRoute />,
     children: [
+      {
+        // Troca de senha obrigatória: o ProtectedRoute leva para cá quem tem must_change_password.
+        element: <AuthLayout />,
+        children: [{ path: "/change-password", element: <ChangePasswordPage /> }],
+      },
       {
         element: <AppLayout />,
         children: [

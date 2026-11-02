@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Controller, useForm, type FieldErrors } from "react-hook-form";
-import { Button, Card, Col, Input, Row, Select, Skeleton, Tabs } from "antd";
+import { Controller, useForm, useWatch, type FieldErrors } from "react-hook-form";
+import { Button, Card, Col, Input, Row, Select, Skeleton, Switch, Tabs, Typography } from "antd";
 import { useNavigate } from "react-router-dom";
 import { FormField } from "@/components/common/FormField";
 import { AccessDeniedResult } from "@/components/common/AccessDeniedResult";
@@ -32,6 +32,8 @@ import type { ApiCompany } from "@/types/company";
 // ignorava `company_id: null` no update (corrigido em UserService.
 // UpdateUser, achado testando).
 const MASTER_OPTION_VALUE = 0;
+
+const { Text } = Typography;
 
 const DADOS_FIELDS: (keyof CreateUserFormValues)[] = [
   "username",
@@ -82,8 +84,12 @@ export function CreateUserForm() {
       phone: "",
       role_id: 0,
       company_id: null,
+      // Convite por padrão: o usuário define a própria senha. Sem convite, a troca no primeiro acesso vem ligada.
+      send_invite: true,
+      must_change_password: true,
     },
   });
+  const sendInvite = useWatch({ control, name: "send_invite" });
 
   useEffect(() => {
     let cancelled = false;
@@ -199,11 +205,26 @@ export function CreateUserForm() {
   const onSubmit = async (values: CreateUserFormValues) => {
     setSubmitting(true);
     try {
-      const created = await userService.create(values);
+      const { password, must_change_password: mustChange, ...rest } = values;
+      const created = await userService.create({
+        ...rest,
+        // Com convite não há senha digitada; sem convite a troca obrigatória vale só se marcada.
+        ...(values.send_invite ? {} : { password, must_change_password: mustChange }),
+      });
       await userService.updatePermissions(created.id, {
         permission_ids: [...selectedPermissionIds],
       });
-      feedback.success("Usuário criado com sucesso.");
+      if (!values.send_invite) {
+        feedback.success("Usuário criado com sucesso.");
+      } else if (created.invite_sent) {
+        feedback.success(`Usuário criado e convite enviado para ${created.email}.`);
+      } else {
+        // O usuário existe; só o e-mail falhou. O convite pode ser reenviado pela lista de usuários.
+        feedback.info(
+          `Usuário criado, mas o convite não foi enviado: ${created.invite_error ?? "falha no envio do e-mail"}. Use "Reenviar convite" na lista de usuários.`,
+          "Convite não enviado"
+        );
+      }
       navigate("/settings/users");
     } catch {
       feedback.error("Erro ao criar usuário. Confira os dados e tente novamente.");
@@ -282,17 +303,55 @@ export function CreateUserForm() {
                       />
                     </FormField>
                   </Col>
-                  <Col xs={24} sm={12}>
-                    <FormField label="Senha temporária" error={errors.password}>
+                  <Col xs={24}>
+                    <FormField label="Enviar convite por e-mail" error={errors.send_invite}>
                       <Controller
-                        name="password"
+                        name="send_invite"
                         control={control}
                         render={({ field }) => (
-                          <Input.Password {...field} placeholder="••••••••" />
+                          <Switch checked={field.value} onChange={field.onChange} />
                         )}
                       />
+                      <div style={{ marginTop: 4 }}>
+                        <Text type="secondary">
+                          {sendInvite
+                            ? "O usuário recebe um e-mail com um link (válido por 7 dias) para criar a própria senha."
+                            : "Você define a senha inicial abaixo e passa a ele por outro meio."}
+                        </Text>
+                      </div>
                     </FormField>
                   </Col>
+                  {!sendInvite && (
+                    <>
+                      <Col xs={24} sm={12}>
+                        <FormField label="Senha inicial" error={errors.password}>
+                          <Controller
+                            name="password"
+                            control={control}
+                            render={({ field }) => (
+                              <Input.Password {...field} placeholder="••••••••" autoComplete="new-password" />
+                            )}
+                          />
+                        </FormField>
+                      </Col>
+                      <Col xs={24} sm={12}>
+                        <FormField label="Exigir troca no primeiro acesso" error={errors.must_change_password}>
+                          <Controller
+                            name="must_change_password"
+                            control={control}
+                            render={({ field }) => (
+                              <Switch checked={field.value} onChange={field.onChange} />
+                            )}
+                          />
+                          <div style={{ marginTop: 4 }}>
+                            <Text type="secondary">
+                              Ligado: ao entrar, o usuário é levado a trocar a senha antes de usar o sistema.
+                            </Text>
+                          </div>
+                        </FormField>
+                      </Col>
+                    </>
+                  )}
                   <Col xs={24} sm={12}>
                     <FormField label="Perfil" error={errors.role_id}>
                       {loadingPresets ? (

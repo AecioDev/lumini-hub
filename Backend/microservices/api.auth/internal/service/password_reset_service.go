@@ -21,6 +21,8 @@ import (
 const (
 	// PasswordResetTTL é por quanto tempo o link de redefinição vale.
 	PasswordResetTTL = 30 * time.Minute
+	// InviteTTL é por quanto tempo o link do convite de um novo usuário vale (mais que o da recuperação).
+	InviteTTL = 7 * 24 * time.Hour
 	// maxResetRequestsPerHour limita os pedidos por usuário numa hora (os pedidos além disso são ignorados em silêncio).
 	maxResetRequestsPerHour = 3
 )
@@ -57,7 +59,7 @@ func (s *PasswordResetService) ForgotPassword(email, requestedIP string) error {
 
 	var recent int64
 	if err := s.db.Model(&domain.PasswordResetToken{}).
-		Where("user_id = ? AND created_at > ?", user.ID, time.Now().Add(-time.Hour)).
+		Where("user_id = ? AND purpose = ? AND created_at > ?", user.ID, domain.TokenPurposeReset, time.Now().Add(-time.Hour)).
 		Count(&recent).Error; err != nil {
 		return err
 	}
@@ -66,25 +68,7 @@ func (s *PasswordResetService) ForgotPassword(email, requestedIP string) error {
 		return nil
 	}
 
-	token, hash, err := newResetToken()
-	if err != nil {
-		return err
-	}
-	now := time.Now()
-	err = s.db.Transaction(func(tx *gorm.DB) error {
-		// Um pedido novo invalida os anteriores ainda abertos (mas os mantém, para a contagem do limite).
-		if err := tx.Model(&domain.PasswordResetToken{}).
-			Where("user_id = ? AND used_at IS NULL", user.ID).
-			Update("used_at", now).Error; err != nil {
-			return err
-		}
-		return tx.Create(&domain.PasswordResetToken{
-			UserID:      user.ID,
-			TokenHash:   hash,
-			ExpiresAt:   now.Add(PasswordResetTTL),
-			RequestedIP: requestedIP,
-		}).Error
-	})
+	token, err := s.createToken(user.ID, domain.TokenPurposeReset, PasswordResetTTL, requestedIP)
 	if err != nil {
 		return err
 	}
@@ -105,6 +89,60 @@ func (s *PasswordResetService) ForgotPassword(email, requestedIP string) error {
 		}
 	})
 	return nil
+}
+
+// createToken gera um token novo para o usuário e invalida os anteriores ainda abertos (mas os mantém, para a
+// contagem do limite de pedidos). Devolve o valor puro, que só existe para ir no link do e-mail.
+func (s *PasswordResetService) createToken(userID uint, purpose string, ttl time.Duration, requestedIP string) (string, error) {
+	token, hash, err := newResetToken()
+	if err != nil {
+		return "", err
+	}
+	now := time.Now()
+	err = s.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&domain.PasswordResetToken{}).
+			Where("user_id = ? AND used_at IS NULL", userID).
+			Update("used_at", now).Error; err != nil {
+			return err
+		}
+		return tx.Create(&domain.PasswordResetToken{
+			UserID:      userID,
+			Purpose:     purpose,
+			TokenHash:   hash,
+			ExpiresAt:   now.Add(ttl),
+			RequestedIP: requestedIP,
+		}).Error
+	})
+	if err != nil {
+		return "", err
+	}
+	return token, nil
+}
+
+// IssueInvite cria o link de convite do usuário (válido por InviteTTL, invalidando os links anteriores dele) e
+// pede o e-mail ao api.core na hora, sem enviar em segundo plano: quem cadastra precisa saber se o e-mail saiu.
+// Quando o link foi criado mas o e-mail falhou, devolve mailErr e err nil (o convite pode ser reenviado).
+func (s *PasswordResetService) IssueInvite(user domain.User, invitedBy string) (mailErr error, err error) {
+	token, err := s.createToken(user.ID, domain.TokenPurposeInvite, InviteTTL, "")
+	if err != nil {
+		return nil, err
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 35*time.Second)
+	defer cancel()
+	mailErr = s.mailer.SendUserInvite(ctx, internalmail.UserInviteRequest{
+		To:          user.Email,
+		Name:        user.Name,
+		Username:    user.Username,
+		Token:       token,
+		CompanyID:   user.CompanyID,
+		ExpiresDays: int(InviteTTL.Hours() / 24),
+		InvitedBy:   invitedBy,
+	})
+	if mailErr != nil {
+		log.Printf("Convite de usuário: e-mail não enviado ao usuário %d: %v", user.ID, mailErr)
+	}
+	return mailErr, nil
 }
 
 // ResetPassword troca a senha da conta dona do token e o inutiliza (junto com qualquer outro pedido aberto dela).
@@ -138,9 +176,10 @@ func (s *PasswordResetService) ResetPassword(token, newPassword string) error {
 			return ErrInvalidResetToken
 		}
 
+		// Quem define a própria senha pelo link não precisa mais trocá-la no primeiro acesso.
 		updated := tx.Model(&domain.User{}).
 			Where("id = ? AND is_active = ?", record.UserID, true).
-			Update("password_hash", passwordHash)
+			Updates(map[string]any{"password_hash": passwordHash, "must_change_password": false})
 		if updated.Error != nil {
 			return updated.Error
 		}

@@ -5,12 +5,22 @@ import type { ApiUser } from "./auth";
 
 export interface CreateUserRequest {
   username: string;
-  password: string;
+  // Obrigatória sem convite; com `send_invite` o usuário define a própria senha pelo link do e-mail.
+  password?: string;
   name: string;
   email: string;
   phone?: string;
   role_id: number;
   company_id?: number | null;
+  send_invite?: boolean;
+  // Só sem convite: exige a troca da senha no primeiro acesso.
+  must_change_password?: boolean;
+}
+
+// Resposta do cadastro: o usuário e, quando houve convite, se o e-mail saiu (falha no e-mail não desfaz o cadastro).
+export interface ApiUserCreated extends ApiUser {
+  invite_sent: boolean;
+  invite_error?: string;
 }
 
 export interface UpdateUserRequest {

@@ -16,7 +16,7 @@ func SetupRoutes(router *gin.RouterGroup, db *gorm.DB, cfg *config.Config) {
 	// Handlers
 	authHandler := handlers.NewAuthHandler(db, cfg)
 	passwordResetHandler := handlers.NewPasswordResetHandler(db, cfg)
-	userHandler := handlers.NewUserHandler(db)
+	userHandler := handlers.NewUserHandler(db, cfg)
 	roleHandler := handlers.NewRoleHandler(db)
 	permHandler := handlers.NewPermissionHandler(db)
 	menuItemHandler := handlers.NewMenuItemHandler(db)
@@ -52,6 +52,7 @@ func SetupRoutes(router *gin.RouterGroup, db *gorm.DB, cfg *config.Config) {
 		users.POST("/filter", middlewares.RequirePermission("users.view"), userHandler.PostUserFilter)
 		users.GET("/:id", middlewares.RequirePermission("users.view"), userHandler.GetUser)
 		users.POST("", middlewares.RequirePermission("users.create"), userHandler.CreateUser)
+		users.POST("/:id/invite", middlewares.RequirePermission("users.create"), userHandler.ResendInvite)
 		users.PUT("/:id", middlewares.RequirePermission("users.edit"), userHandler.UpdateUser)
 		users.DELETE("/:id", middlewares.RequirePermission("users.delete"), userHandler.DeleteUser)
 		users.PUT("/:id/password", userHandler.ChangePassword) // A permissão é verificada internamente no handler

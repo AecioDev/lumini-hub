@@ -426,6 +426,10 @@ definitions:
         items:
           $ref: '#/definitions/domain.ApiUserMenuItem'
         type: array
+      must_change_password:
+        description: 'MustChangePassword: o frontend leva o usuário à tela de troca
+          de senha antes de qualquer outra.'
+        type: boolean
       name:
         type: string
       permissions:
@@ -704,10 +708,17 @@ definitions:
       email:
         maxLength: 100
         type: string
+      must_change_password:
+        description: 'MustChangePassword (só sem convite): exige a troca da senha
+          no primeiro acesso.'
+        type: boolean
       name:
         maxLength: 100
         type: string
       password:
+        description: |-
+          Password é obrigatório sem convite (o validator confere); com SendInvite o usuário define a própria
+          senha pelo link e o campo é ignorado.
         maxLength: 72
         minLength: 6
         type: string
@@ -716,6 +727,11 @@ definitions:
         type: string
       role_id:
         type: integer
+      send_invite:
+        description: |-
+          SendInvite cria o usuário sem senha utilizável e envia um e-mail de convite com o link para ele
+          definir a senha.
+        type: boolean
       username:
         maxLength: 50
         minLength: 3
@@ -723,7 +739,6 @@ definitions:
     required:
     - email
     - name
-    - password
     - role_id
     - username
     type: object
@@ -870,6 +885,36 @@ definitions:
         type: string
     required:
     - to
+    type: object
+  domain.SendUserInviteRequest:
+    properties:
+      company_id:
+        type: integer
+      expires_days:
+        maximum: 90
+        minimum: 1
+        type: integer
+      invited_by:
+        maxLength: 100
+        type: string
+      name:
+        maxLength: 100
+        type: string
+      to:
+        maxLength: 150
+        type: string
+      token:
+        maxLength: 200
+        type: string
+      username:
+        maxLength: 50
+        type: string
+    required:
+    - expires_days
+    - name
+    - to
+    - token
+    - username
     type: object
   domain.SetMenuFavoritesRequest:
     properties:
@@ -1114,6 +1159,10 @@ definitions:
         type: boolean
       name:
         type: string
+      pending_invite:
+        description: 'PendingInvite: o usuário nunca entrou no sistema (a lista oferece
+          "Reenviar convite" para ele).'
+        type: boolean
       role:
         type: string
       role_id:
@@ -2438,6 +2487,42 @@ paths:
       summary: Envia o e-mail de redefinição de senha
       tags:
       - Interno
+  /internal/mail/user-invite:
+    post:
+      consumes:
+      - application/json
+      description: 'Rota interna, só com token de serviço (não passa pelo gateway):
+        monta o link para o novo usuário definir a senha, renderiza o template e envia
+        pela configuração da empresa dele'
+      parameters:
+      - description: Destinatário, nome, usuário, token e empresa
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.SendUserInviteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: Envia o e-mail de convite de usuário
+      tags:
+      - Interno
   /suppliers:
     get:
       consumes:
@@ -2995,6 +3080,40 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Atualiza usuário
+      tags:
+      - Usuários
+  /users/{id}/invite:
+    post:
+      description: Gera um novo link de convite (o anterior deixa de valer) e reenvia
+        o e-mail para o usuário que ainda não entrou no sistema
+      parameters:
+      - description: ID do Usuário
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Reenvia o convite do usuário
       tags:
       - Usuários
   /users/{id}/password:

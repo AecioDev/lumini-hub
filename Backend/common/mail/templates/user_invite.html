@@ -1,0 +1,7 @@
+{{define "content"}}<p style="margin:0 0 16px;">Olá, {{.Name}}.</p>
+<p style="margin:0 0 16px;">{{if .InvitedBy}}{{.InvitedBy}} criou{{else}}Foi criado{{end}} um acesso para você ao Lumini Hub ({{.CompanyName}}). Para começar, escolha a sua senha clicando no botão abaixo.</p>
+<p style="margin:0 0 16px;">Seu usuário de acesso: <strong>{{.Username}}</strong> (você também pode entrar com este e-mail).</p>
+<p style="margin:24px 0;"><a href="{{.Link}}" style="background:#1677ff;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:6px;display:inline-block;">Criar minha senha</a></p>
+<p style="margin:0 0 16px;">Se o botão não funcionar, copie e cole este endereço no navegador:<br><span style="word-break:break-all;color:#52606d;">{{.Link}}</span></p>
+<p style="margin:0 0 16px;">O convite vale por {{.ExpiresDays}} dias e o link só pode ser usado uma vez. Depois disso, peça um novo convite a quem cadastrou você.</p>
+<p style="margin:0;color:#52606d;">Se você não esperava este convite, pode ignorar este e-mail.</p>{{end}}

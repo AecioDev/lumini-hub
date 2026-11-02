@@ -1,17 +1,32 @@
 package service
 
 import (
+	"crypto/rand"
+	"encoding/base64"
+	"errors"
+	"log"
+
 	"lumini-hub/api.auth/internal/domain"
 	"lumini-hub/api.auth/internal/repository"
 	"lumini-hub/api.auth/internal/validator"
 	"lumini-hub/common/utils"
 )
 
+// ErrInviteNotAllowed: o convite só pode ser reenviado a um usuário ativo que ainda não entrou no sistema.
+var ErrInviteNotAllowed = errors.New("o convite só pode ser reenviado a um usuário ativo que ainda não entrou no sistema")
+
+// InviteIssuer gera o link de convite de um usuário e pede o e-mail (implementado por PasswordResetService).
+// Quando o link foi criado mas o e-mail falhou, devolve mailErr com err nil.
+type InviteIssuer interface {
+	IssueInvite(user domain.User, invitedBy string) (mailErr error, err error)
+}
+
 // UserService gerencia operações relacionadas a usuários
 type UserService struct {
 	userRepo  repository.UserRepository
 	roleRepo  repository.RoleRepository
 	permRepo  repository.PermissionRepository
+	invites   InviteIssuer
 	validator *validator.UserValidator
 }
 
@@ -20,11 +35,13 @@ func NewUserService(
 	userRepo repository.UserRepository,
 	roleRepo repository.RoleRepository,
 	permRepo repository.PermissionRepository,
+	invites InviteIssuer,
 ) *UserService {
 	return &UserService{
 		userRepo:  userRepo,
 		roleRepo:  roleRepo,
 		permRepo:  permRepo,
+		invites:   invites,
 		validator: validator.NewUserValidator(userRepo, roleRepo, permRepo),
 	}
 }
@@ -139,8 +156,19 @@ func (s *UserService) isHiddenFromRequester(user *domain.User, requesterRole str
 	return user.RoleID == developerRole.ID, nil
 }
 
-// CreateUser cria um novo usuário
-func (s *UserService) CreateUser(req domain.CreateUserRequest, requesterRole string) (*domain.ApiUser, error) {
+// unusablePasswordHash gera o hash de uma senha aleatória que ninguém conhece: o usuário convidado só entra
+// depois de definir a própria senha pelo link do convite.
+func unusablePasswordHash() (string, error) {
+	raw := make([]byte, 32)
+	if _, err := rand.Read(raw); err != nil {
+		return "", err
+	}
+	return utils.HashPassword(base64.RawURLEncoding.EncodeToString(raw))
+}
+
+// CreateUser cria um novo usuário. Com SendInvite ele nasce sem senha utilizável e recebe por e-mail o link para
+// definir a sua; falha no e-mail não desfaz o cadastro (a resposta traz InviteSent=false e o convite pode ser reenviado).
+func (s *UserService) CreateUser(req domain.CreateUserRequest, requesterRole, requesterName string) (*domain.ApiUserCreated, error) {
 	// Validar dados
 	if err := s.validator.ValidateForCreation(req); err != nil {
 		return nil, err
@@ -150,7 +178,13 @@ func (s *UserService) CreateUser(req domain.CreateUserRequest, requesterRole str
 	}
 
 	// Hash da senha
-	passwordHash, err := utils.HashPassword(req.Password)
+	var passwordHash string
+	var err error
+	if req.SendInvite {
+		passwordHash, err = unusablePasswordHash()
+	} else {
+		passwordHash, err = utils.HashPassword(req.Password)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -165,6 +199,8 @@ func (s *UserService) CreateUser(req domain.CreateUserRequest, requesterRole str
 		RoleID:       req.RoleID,
 		IsActive:     true, // Por padrão, usuários são criados ativos
 		CompanyID:    req.CompanyID,
+		// Troca obrigatória só faz sentido sem convite: quem cadastra conhece a senha inicial.
+		MustChangePassword: req.MustChangePassword && !req.SendInvite,
 	}
 
 	if err := s.userRepo.Create(&user); err != nil {
@@ -187,9 +223,50 @@ func (s *UserService) CreateUser(req domain.CreateUserRequest, requesterRole str
 		return nil, err
 	}
 
-	// Converter para DTO
-	userDTO := domain.ApiUserFromModel(*completeUser)
-	return &userDTO, nil
+	created := domain.ApiUserCreated{ApiUser: domain.ApiUserFromModel(*completeUser)}
+	if req.SendInvite {
+		mailErr, err := s.invites.IssueInvite(*completeUser, requesterName)
+		switch {
+		case err != nil:
+			// O usuário já existe: o convite fica pendente e pode ser reenviado.
+			log.Printf("Convite de usuário: não foi possível gerar o link do usuário %d: %v", completeUser.ID, err)
+			created.InviteError = "não foi possível gerar o convite"
+		case mailErr != nil:
+			created.InviteError = mailErr.Error()
+		default:
+			created.InviteSent = true
+		}
+	}
+	return &created, nil
+}
+
+// ResendInvite gera um novo link de convite (o anterior deixa de valer) e reenvia o e-mail. Só vale para quem nunca
+// entrou no sistema. Devolve o erro do envio do e-mail, quando houver.
+func (s *UserService) ResendInvite(id uint, requesterRole, requesterName string) error {
+	user, err := s.userRepo.FindByID(id)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		return utils.ErrNotFound
+	}
+	if hidden, err := s.isHiddenFromRequester(user, requesterRole); err != nil {
+		return err
+	} else if hidden {
+		return utils.ErrNotFound
+	}
+	if !user.IsActive {
+		return ErrInviteNotAllowed
+	}
+	if user.LastLogin != nil {
+		return ErrInviteNotAllowed
+	}
+
+	mailErr, err := s.invites.IssueInvite(*user, requesterName)
+	if err != nil {
+		return err
+	}
+	return mailErr
 }
 
 // UpdateUser atualiza um usuário existente
@@ -308,8 +385,11 @@ func (s *UserService) ChangePassword(id uint, currentPassword, newPassword strin
 		return err
 	}
 
-	// Atualizar senha
+	// Atualizar senha. Quando o próprio usuário troca a senha, a troca obrigatória (se havia) está cumprida.
 	user.PasswordHash = passwordHash
+	if !isAdmin {
+		user.MustChangePassword = false
+	}
 	return s.userRepo.Update(user)
 }
 

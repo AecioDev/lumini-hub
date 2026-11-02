@@ -12,11 +12,15 @@ import (
 var templateFiles embed.FS
 
 // Nomes dos templates de e-mail do sistema. Cada um tem um .html (dentro do layout.html) e um .txt em templates/.
-const TemplatePasswordReset = "password_reset"
+const (
+	TemplatePasswordReset = "password_reset"
+	TemplateUserInvite    = "user_invite"
+)
 
 // templateSubjects guarda o assunto de cada template.
 var templateSubjects = map[string]string{
 	TemplatePasswordReset: "Redefinição de senha",
+	TemplateUserInvite:    "Convite para acessar o Lumini Hub",
 }
 
 // TemplateData é o que os templates enxergam. Campos que um template não usa ficam vazios.
@@ -25,9 +29,16 @@ type TemplateData struct {
 	CompanyName string // nome no cabeçalho do e-mail
 	Name        string // nome de quem recebe
 
+	// Link para definir a senha (redefinição de senha e convite)
+	Link string
+
 	// Redefinição de senha
-	Link           string
 	ExpiresMinutes int
+
+	// Convite de novo usuário
+	Username    string // nome de usuário de acesso
+	InvitedBy   string // quem cadastrou (opcional)
+	ExpiresDays int
 }
 
 // Render monta a mensagem (assunto, texto e HTML) de um template para o destinatário.

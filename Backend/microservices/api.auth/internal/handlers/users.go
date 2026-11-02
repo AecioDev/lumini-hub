@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -8,6 +9,8 @@ import (
 	"lumini-hub/api.auth/internal/repository"
 	"lumini-hub/api.auth/internal/service"
 	"lumini-hub/api.auth/internal/validator"
+	"lumini-hub/common/config"
+	"lumini-hub/common/internalmail"
 	"lumini-hub/common/utils"
 	"lumini-hub/common/utils/path"
 
@@ -21,13 +24,14 @@ type UserHandler struct {
 }
 
 // NewUserHandler cria um novo handler de usuários
-func NewUserHandler(db *gorm.DB) *UserHandler {
+func NewUserHandler(db *gorm.DB, cfg *config.Config) *UserHandler {
 	userRepo := repository.NewUserRepository(db)
 	roleRepo := repository.NewRoleRepository(db)
 	permRepo := repository.NewPermissionRepository(db)
 
 	return &UserHandler{
-		userService: service.NewUserService(userRepo, roleRepo, permRepo),
+		userService: service.NewUserService(userRepo, roleRepo, permRepo,
+			service.NewPasswordResetService(db, internalmail.NewClient("api.auth", cfg))),
 	}
 }
 
@@ -138,7 +142,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 		return
 	}
 
-	user, err := h.userService.CreateUser(req, utils.RoleFromGinContext(c))
+	user, err := h.userService.CreateUser(req, utils.RoleFromGinContext(c), usernameFromContext(c))
 	if err != nil {
 		if validator.IsValidationError(err) {
 			utils.ValidationErrorResponse(c, "Dados inválidos", err)
@@ -149,6 +153,45 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 	}
 
 	utils.SuccessResponse(c, http.StatusCreated, "Usuário criado com sucesso", user, nil)
+}
+
+// usernameFromContext devolve o usuário logado (para citar no convite quem cadastrou)
+func usernameFromContext(c *gin.Context) string {
+	username, _ := c.Get("username")
+	name, _ := username.(string)
+	return name
+}
+
+// ResendInvite reenvia o convite de um usuário que ainda não entrou no sistema
+// @Summary      Reenvia o convite do usuário
+// @Description  Gera um novo link de convite (o anterior deixa de valer) e reenvia o e-mail para o usuário que ainda não entrou no sistema
+// @Tags         Usuários
+// @Produce      json
+// @Param        id   path      int  true  "ID do Usuário"
+// @Success      200  {object}  utils.Response
+// @Failure      400  {object}  utils.Response
+// @Failure      404  {object}  utils.Response
+// @Failure      502  {object}  utils.Response
+// @Router       /users/{id}/invite [post]
+// @Security     ApiKeyAuth
+func (h *UserHandler) ResendInvite(c *gin.Context) {
+	id, err := path.IdFromPathParamOrSendError(c)
+	if err != nil {
+		return
+	}
+
+	err = h.userService.ResendInvite(id, utils.RoleFromGinContext(c), usernameFromContext(c))
+	switch {
+	case err == nil:
+		utils.SuccessResponse(c, http.StatusOK, "Convite reenviado com sucesso", nil, nil)
+	case errors.Is(err, utils.ErrNotFound):
+		utils.ErrorResponse(c, http.StatusNotFound, "Usuário não encontrado", err.Error())
+	case errors.Is(err, service.ErrInviteNotAllowed):
+		utils.ErrorResponse(c, http.StatusBadRequest, err.Error(), err.Error())
+	default:
+		// Falha do e-mail (servidor recusou, e-mail não configurado...): o texto vem do api.core e é útil a quem cadastra.
+		utils.ErrorResponse(c, http.StatusBadGateway, "Não foi possível enviar o convite", err.Error())
+	}
 }
 
 // UpdateUser atualiza um usuário existente

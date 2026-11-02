@@ -2036,6 +2036,58 @@ const docTemplate = `{
                 }
             }
         },
+        "/internal/mail/user-invite": {
+            "post": {
+                "description": "Rota interna, só com token de serviço (não passa pelo gateway): monta o link para o novo usuário definir a senha, renderiza o template e envia pela configuração da empresa dele",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Interno"
+                ],
+                "summary": "Envia o e-mail de convite de usuário",
+                "parameters": [
+                    {
+                        "description": "Destinatário, nome, usuário, token e empresa",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.SendUserInviteRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/suppliers": {
             "get": {
                 "security": [
@@ -3025,6 +3077,58 @@ const docTemplate = `{
                 }
             }
         },
+        "/users/{id}/invite": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Gera um novo link de convite (o anterior deixa de valer) e reenvia o e-mail para o usuário que ainda não entrou no sistema",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Usuários"
+                ],
+                "summary": "Reenvia o convite do usuário",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID do Usuário",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/users/{id}/password": {
             "put": {
                 "security": [
@@ -3799,6 +3903,10 @@ const docTemplate = `{
                         "$ref": "#/definitions/domain.ApiUserMenuItem"
                     }
                 },
+                "must_change_password": {
+                    "description": "MustChangePassword: o frontend leva o usuário à tela de troca de senha antes de qualquer outra.",
+                    "type": "boolean"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -4199,7 +4307,6 @@ const docTemplate = `{
             "required": [
                 "email",
                 "name",
-                "password",
                 "role_id",
                 "username"
             ],
@@ -4211,11 +4318,16 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 100
                 },
+                "must_change_password": {
+                    "description": "MustChangePassword (só sem convite): exige a troca da senha no primeiro acesso.",
+                    "type": "boolean"
+                },
                 "name": {
                     "type": "string",
                     "maxLength": 100
                 },
                 "password": {
+                    "description": "Password é obrigatório sem convite (o validator confere); com SendInvite o usuário define a própria\nsenha pelo link e o campo é ignorado.",
                     "type": "string",
                     "maxLength": 72,
                     "minLength": 6
@@ -4226,6 +4338,10 @@ const docTemplate = `{
                 },
                 "role_id": {
                     "type": "integer"
+                },
+                "send_invite": {
+                    "description": "SendInvite cria o usuário sem senha utilizável e envia um e-mail de convite com o link para ele\ndefinir a senha.",
+                    "type": "boolean"
                 },
                 "username": {
                     "type": "string",
@@ -4436,6 +4552,46 @@ const docTemplate = `{
                 "to": {
                     "type": "string",
                     "maxLength": 150
+                }
+            }
+        },
+        "domain.SendUserInviteRequest": {
+            "type": "object",
+            "required": [
+                "expires_days",
+                "name",
+                "to",
+                "token",
+                "username"
+            ],
+            "properties": {
+                "company_id": {
+                    "type": "integer"
+                },
+                "expires_days": {
+                    "type": "integer",
+                    "maximum": 90,
+                    "minimum": 1
+                },
+                "invited_by": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "to": {
+                    "type": "string",
+                    "maxLength": 150
+                },
+                "token": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 50
                 }
             }
         },
@@ -4790,6 +4946,10 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "pending_invite": {
+                    "description": "PendingInvite: o usuário nunca entrou no sistema (a lista oferece \"Reenviar convite\" para ele).",
+                    "type": "boolean"
                 },
                 "role": {
                     "type": "string"

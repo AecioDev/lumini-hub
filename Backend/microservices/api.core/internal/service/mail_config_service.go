@@ -239,6 +239,23 @@ func (s *MailConfigService) Send(companyID *uint, msg mail.Message) (*ResolvedMa
 // renderiza o template e manda pela configuração da empresa do usuário (companyID nil, ou uma empresa que já
 // não existe, vale só o padrão do sistema).
 func (s *MailConfigService) SendPasswordReset(req domain.SendPasswordResetRequest) error {
+	return s.sendLinkTemplate(mail.TemplatePasswordReset, req.To, req.CompanyID,
+		"/reset-password?token="+url.QueryEscape(req.Token),
+		mail.TemplateData{Name: req.Name, ExpiresMinutes: req.ExpiresMinutes})
+}
+
+// SendUserInvite envia o e-mail de convite de um novo usuário. O link cai na mesma tela da recuperação de senha
+// (invite=1 só troca o texto da tela), e o envio segue a mesma regra de servidor de e-mail.
+func (s *MailConfigService) SendUserInvite(req domain.SendUserInviteRequest) error {
+	return s.sendLinkTemplate(mail.TemplateUserInvite, req.To, req.CompanyID,
+		"/reset-password?token="+url.QueryEscape(req.Token)+"&invite=1",
+		mail.TemplateData{Name: req.Name, Username: req.Username, InvitedBy: req.InvitedBy, ExpiresDays: req.ExpiresDays})
+}
+
+// sendLinkTemplate renderiza um template cujo e-mail traz um link para o sistema (linkPath é o caminho e a query,
+// que recebem na frente o endereço do sistema) e o envia pela configuração da empresa. data traz os campos próprios
+// do template; o nome da empresa e o link são preenchidos aqui.
+func (s *MailConfigService) sendLinkTemplate(templateName, to string, companyID *uint, linkPath string, data mail.TemplateData) error {
 	settings, err := s.uow.SystemSettings().Get()
 	if err != nil {
 		return err
@@ -247,26 +264,21 @@ func (s *MailConfigService) SendPasswordReset(req domain.SendPasswordResetReques
 		return ErrAppBaseURLNotConfigured
 	}
 
-	companyID := req.CompanyID
-	companyName := "Lumini Hub"
+	data.CompanyName = "Lumini Hub"
 	if companyID != nil {
 		company, err := s.uow.Companies().FindByID(*companyID)
 		if err != nil {
 			return err
 		}
 		if company != nil {
-			companyName = companyDisplayName(company.TradeName, company.LegalName)
+			data.CompanyName = companyDisplayName(company.TradeName, company.LegalName)
 		} else {
 			companyID = nil
 		}
 	}
+	data.Link = settings.AppBaseURL + linkPath
 
-	msg, err := mail.Render(mail.TemplatePasswordReset, req.To, mail.TemplateData{
-		CompanyName:    companyName,
-		Name:           req.Name,
-		Link:           settings.AppBaseURL + "/reset-password?token=" + url.QueryEscape(req.Token),
-		ExpiresMinutes: req.ExpiresMinutes,
-	})
+	msg, err := mail.Render(templateName, to, data)
 	if err != nil {
 		return err
 	}

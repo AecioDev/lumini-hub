@@ -19,6 +19,19 @@ import (
 // Sender pede o envio de e-mails ao api.core. Existe como interface para os testes trocarem a chamada de rede.
 type Sender interface {
 	SendPasswordReset(ctx context.Context, req PasswordResetRequest) error
+	SendUserInvite(ctx context.Context, req UserInviteRequest) error
+}
+
+// UserInviteRequest é o pedido de envio do e-mail de convite de um novo usuário. Token é o valor puro (o link
+// é montado pelo api.core). InvitedBy é o nome de quem cadastrou, para o texto do e-mail.
+type UserInviteRequest struct {
+	To          string `json:"to"`
+	Name        string `json:"name"`
+	Username    string `json:"username"`
+	Token       string `json:"token"`
+	CompanyID   *uint  `json:"company_id"`
+	ExpiresDays int    `json:"expires_days"`
+	InvitedBy   string `json:"invited_by"`
 }
 
 // PasswordResetRequest é o pedido de envio do e-mail de redefinição de senha. Token é o valor puro (o
@@ -53,6 +66,11 @@ func NewClient(caller string, cfg *config.Config) *Client {
 // SendPasswordReset pede ao api.core o envio do e-mail de redefinição de senha.
 func (c *Client) SendPasswordReset(ctx context.Context, req PasswordResetRequest) error {
 	return c.post(ctx, "/api/internal/mail/password-reset", req)
+}
+
+// SendUserInvite pede ao api.core o envio do e-mail de convite de um novo usuário.
+func (c *Client) SendUserInvite(ctx context.Context, req UserInviteRequest) error {
+	return c.post(ctx, "/api/internal/mail/user-invite", req)
 }
 
 func (c *Client) post(ctx context.Context, path string, payload any) error {

@@ -18,8 +18,17 @@ import (
 
 // mailerFalso guarda os pedidos de envio no lugar de chamar o api.core.
 type mailerFalso struct {
-	pedidos []internalmail.PasswordResetRequest
-	err     error
+	pedidos  []internalmail.PasswordResetRequest
+	convites []internalmail.UserInviteRequest
+	err      error
+}
+
+func (m *mailerFalso) SendUserInvite(_ context.Context, req internalmail.UserInviteRequest) error {
+	if m.err != nil {
+		return m.err
+	}
+	m.convites = append(m.convites, req)
+	return nil
 }
 
 func (m *mailerFalso) SendPasswordReset(_ context.Context, req internalmail.PasswordResetRequest) error {

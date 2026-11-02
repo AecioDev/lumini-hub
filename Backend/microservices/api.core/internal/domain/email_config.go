@@ -90,6 +90,18 @@ type SendPasswordResetRequest struct {
 	ExpiresMinutes int    `json:"expires_minutes" binding:"required,min=1,max=1440"`
 }
 
+// SendUserInviteRequest é o pedido interno (api.auth -> api.core) de envio do e-mail de convite de um novo
+// usuário. Token é o valor puro; o link é montado aqui com o AppBaseURL do sistema.
+type SendUserInviteRequest struct {
+	To          string `json:"to" binding:"required,email,max=150"`
+	Name        string `json:"name" binding:"required,max=100"`
+	Username    string `json:"username" binding:"required,max=50"`
+	Token       string `json:"token" binding:"required,max=200"`
+	CompanyID   *uint  `json:"company_id"`
+	ExpiresDays int    `json:"expires_days" binding:"required,min=1,max=90"`
+	InvitedBy   string `json:"invited_by" binding:"omitempty,max=100"`
+}
+
 // SendTestEmailRequest pede um e-mail de teste para o endereço informado.
 type SendTestEmailRequest struct {
 	To string `json:"to" binding:"required,email,max=150"`
