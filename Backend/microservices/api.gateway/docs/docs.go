@@ -298,6 +298,12 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/utils.Response"
                         }
+                    },
+                    "429": {
+                        "description": "Too Many Requests",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Response"
+                        }
                     }
                 }
             }

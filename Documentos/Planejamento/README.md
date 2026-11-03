@@ -13,7 +13,7 @@ Esta pasta guarda o planejamento do **Lumini Hub**: o que foi feito, o que falta
 - **[Historico/](file:///c:/Projetos/lumini-hub/Documentos/Planejamento/Historico/)**: Diário de bordo detalhando as atividades executadas por dia/período de desenvolvimento.
 - **[Arquivo/](file:///c:/Projetos/lumini-hub/Documentos/Planejamento/Arquivo/)**: `tasks_*.md` de trabalhos já fechados (somente consulta).
 - **[releases/](file:///c:/Projetos/lumini-hub/Documentos/Planejamento/releases/)**: um arquivo por versão publicada.
-- **[Modulo_0_Configuracao/](file:///c:/Projetos/lumini-hub/Documentos/Planejamento/Modulo_0_Configuracao/)**: Setup do projeto frontend e backend, e o cadastro base de Empresa (multi-empresa self-referencing, config fiscal e plano de contas) que serve de fundação pros demais módulos.
+- **[Modulo_0_Configuracao/](file:///c:/Projetos/lumini-hub/Documentos/Planejamento/Modulo_0_Configuracao/)**: Setup do projeto frontend e backend, e o cadastro base de Empresa (multi-empresa self-referencing e config fiscal) que serve de fundação pros demais módulos.
 - **[Modulo_1_CRM/](file:///c:/Projetos/lumini-hub/Documentos/Planejamento/Modulo_1_CRM/)**: CRM do Vendedor — Leads, Pipeline (Kanban), Oportunidades, Atividades, Pós-Venda e Churn.
 - **[Modulo_2_Produtos_Estoque/](file:///c:/Projetos/lumini-hub/Documentos/Planejamento/Modulo_2_Produtos_Estoque/)**: Catálogo de Produtos, Imagens e Localização/Saldos de Estoque.
 - **[Modulo_3_Compras/](file:///c:/Projetos/lumini-hub/Documentos/Planejamento/Modulo_3_Compras/)**: Pedidos de Compras e Manifesto Eletrônico da SEFAZ.

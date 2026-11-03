@@ -1443,6 +1443,10 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/utils.Response'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/utils.Response'
       summary: Realiza login de usuário
       tags:
       - Autenticação

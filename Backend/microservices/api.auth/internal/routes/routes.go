@@ -25,7 +25,8 @@ func SetupRoutes(router *gin.RouterGroup, db *gorm.DB, cfg *config.Config) {
 	// Rotas de Autenticação
 	auth := router.Group("/auth")
 	{
-		auth.POST("/login", authHandler.Login)
+		// Freio por IP contra adivinhação de senha; folgado para vários usuários atrás do mesmo IP (escritório).
+		auth.POST("/login", middlewares.RateLimitByIP(20, 15*time.Minute), authHandler.Login)
 		auth.POST("/refresh-token", authHandler.RefreshToken)
 
 		// Recuperação de senha por e-mail (públicas): freio por IP aqui, e o limite por usuário fica no service.

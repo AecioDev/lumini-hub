@@ -3,9 +3,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { Button, Input, Typography } from "antd";
 import { Link, useNavigate } from "react-router-dom";
+import { isAxiosError } from "axios";
 import { useAuth } from "@/contexts/AuthContext";
 import { FormField } from "@/components/common/FormField";
 import { useFeedback } from "@/hooks/useFeedback";
+import { getApiErrorMessage } from "@/utils/api-error";
 import { loginSchema, type LoginFormValues } from "@/schemas/login-schema";
 
 const { Title, Paragraph } = Typography;
@@ -34,8 +36,16 @@ export function LoginPage() {
     try {
       await login({ username: values.username, password: values.password });
       navigate("/dashboard", { replace: true });
-    } catch {
-      feedback.error("Usuário ou senha inválidos.");
+    } catch (error) {
+      // 429 = limite de tentativas por IP (o texto do servidor diz quanto esperar); "inativo" só vem
+      // para quem acertou a senha. O resto é sempre a mesma mensagem, para não revelar quais usuários existem.
+      if (isAxiosError(error) && error.response?.status === 429) {
+        feedback.error(getApiErrorMessage(error, "Muitas tentativas. Aguarde alguns minutos."));
+      } else if (isAxiosError(error) && /inativo/i.test(String(error.response?.data?.error ?? ""))) {
+        feedback.error("Usuário inativo. Procure o administrador do sistema.");
+      } else {
+        feedback.error("Usuário ou senha inválidos.");
+      }
     } finally {
       setSubmitting(false);
     }

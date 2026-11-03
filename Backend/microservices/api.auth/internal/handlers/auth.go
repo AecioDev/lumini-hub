@@ -44,6 +44,7 @@ type LoginRequest struct {
 // @Success      200          {object}  utils.Response{data=domain.LoginSuccessResponse}
 // @Failure      400          {object}  utils.Response
 // @Failure      401          {object}  utils.Response
+// @Failure      429          {object}  utils.Response
 // @Router       /auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req LoginRequest

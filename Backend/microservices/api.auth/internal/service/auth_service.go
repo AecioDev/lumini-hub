@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"strings"
+	"sync"
 	"time"
 
 	"lumini-hub/api.auth/internal/domain"
@@ -26,6 +27,22 @@ func NewAuthService(db *gorm.DB, cfg *config.Config) *AuthService {
 		db:  db,
 		cfg: cfg,
 	}
+}
+
+// ErrInvalidCredentials é a única resposta do login para usuário inexistente e senha errada: quem erra não
+// descobre quais nomes de usuário existem.
+var ErrInvalidCredentials = errors.New("usuário ou senha inválidos")
+
+var (
+	dummyHashOnce sync.Once
+	dummyHash     string
+)
+
+// dummyPasswordHash é um hash bcrypt de custo normal, usado quando o usuário não existe para que o login gaste
+// o mesmo tempo de uma senha errada de verdade (sem isso, a demora denuncia se o usuário existe).
+func dummyPasswordHash() string {
+	dummyHashOnce.Do(func() { dummyHash, _ = utils.HashPassword("senha-que-ninguem-usa") })
+	return dummyHash
 }
 
 // LoginResponse representa a resposta do login
@@ -84,20 +101,21 @@ func (s *AuthService) Login(username, password string) (*LoginResponse, error) {
 	found, err := s.findUserForLogin(username)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("usuário não encontrado")
+			utils.CheckPasswordHash(password, dummyPasswordHash())
+			return nil, ErrInvalidCredentials
 		}
 		return nil, err
 	}
 	user := *found
 
-	// Verificar se o usuário está ativo
-	if !user.IsActive {
-		return nil, errors.New("usuário inativo")
-	}
-
 	// Verifica se a senha informada corresponde ao hash armazenado
 	if !utils.CheckPasswordHash(password, user.PasswordHash) {
-		return nil, errors.New("senha incorreta")
+		return nil, ErrInvalidCredentials
+	}
+
+	// Só quem acertou a senha fica sabendo que a conta está inativa: para os outros, é só "inválidos"
+	if !user.IsActive {
+		return nil, errors.New("usuário inativo")
 	}
 
 	// Gerar tokens

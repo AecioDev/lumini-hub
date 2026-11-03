@@ -128,7 +128,7 @@ O `BACKLOG.md` **não tem nenhum item aberto de CFG**: tudo o que existia está 
 | Política de senha, bloqueio por tentativas, sessões ativas, 2FA | `api.auth` | **sugestão minha**, nada nos planos |
 | Parâmetros gerais do sistema (chave/valor por empresa) | `api.core` | **sugestão minha**; hoje só o `api.integrations` tem `integration_configs` |
 
-O README do planejamento descreve o Módulo 0 como incluindo "plano de contas", enquanto o `BACKLOG.md` o coloca em `CTB-001` (Contabilidade, bloqueado por decisão). Vale acertar uma das duas fontes.
+O README do planejamento descreve o Módulo 0 como incluindo "plano de contas", enquanto o `BACKLOG.md` o coloca em `CTB-001` (Contabilidade, bloqueado por decisão). Resolvido (CFG-046): a modelagem foi movida para o Módulo 7 em 2026-09-13, então o `BACKLOG.md` estava certo e o README foi corrigido.
 
 ## 9. Recomendação de estrutura
 
