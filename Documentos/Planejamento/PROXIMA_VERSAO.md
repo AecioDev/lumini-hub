@@ -21,6 +21,8 @@ Alterações feitas desde o último envio ao servidor. O Claude acrescenta uma l
 
 ## Correções
 
+- **CFG-057 (segurança):** desativar ou excluir um usuário agora derruba o acesso dele na hora, em todos os serviços (o `AuthMiddleware` confere no banco se a conta continua existente e ativa; antes o acesso durava até o token de 15 minutos expirar). Sem mudança de banco; uma consulta por chave primária a mais por requisição autenticada.
+- **CFG-047 (segurança do login):** o login deixou de revelar se o usuário existe (antes respondia "usuário não encontrado" ou "senha incorreta"): agora é sempre "usuário ou senha inválidos", com o mesmo tempo de resposta nos dois casos, e "usuário inativo" só aparece para quem acertou a senha. O `/auth/login` também tem limite de 20 tentativas por IP a cada 15 minutos (depois disso, resposta 429 com o aviso de aguardar, mostrado na tela de login). Sem mudança de banco.
 - Tela de login: removida a caixa "Lembrar-me", que não fazia nada (a sessão já dura até 7 dias pelo cookie de renovação, com ou sem ela).
 - Cadastro e edição de usuário: erro de um campo (como "e-mail já está em uso") agora marca o campo certo, em vez de só um aviso genérico. As respostas 400 de validação da API passaram a trazer `fieldErrors` (campo e mensagem), e o formulário usa isso.
 - Cadastro de usuário: "Nome completo" vem antes de "Usuário", e ao sair do nome o sistema sugere o usuário (primeiro e último nome separados por ponto, sem acento: Mônica Corvalan Machado vira monica.machado), sem sobrescrever o que a pessoa já digitou. Os rótulos longos das chaves de convite e de troca obrigatória deixaram de ficar cortados.

@@ -9,7 +9,29 @@ import (
 	"lumini-hub/common/utils"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
+
+// userStillActive confere no banco se a conta do token continua existindo e ativa. É o que faz desativar
+// ou excluir um usuário valer na hora: o token de acesso (JWT) é válido por minutos e, sozinho, não sabe
+// que a conta mudou. É uma busca pela chave primária, a mesma ordem de custo da consulta de permissões que
+// o RequirePermission já faz a cada requisição. Sem banco configurado (permissionDB nulo, só em testes que
+// não chamam InitPermissionChecker), não há o que conferir.
+func userStillActive(userID uint) (bool, error) {
+	if permissionDB == nil {
+		return true, nil
+	}
+	var row struct{ IsActive bool }
+	err := permissionDB.Table("users").Select("is_active").
+		Where("id = ? AND deleted_at IS NULL", userID).Take(&row).Error
+	if err == gorm.ErrRecordNotFound {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return row.IsActive, nil
+}
 
 // AuthMiddleware verifica se o usuário está autenticado
 func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
@@ -46,6 +68,19 @@ func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 		if err != nil {
 			log.Printf("Middleware: Erro ao validar token: %v", err)
 			utils.ErrorResponse(c, http.StatusUnauthorized, "Não autorizado", err.Error())
+			c.Abort()
+			return
+		}
+
+		active, err := userStillActive(claims.UserID)
+		if err != nil {
+			log.Printf("Middleware: erro ao conferir a conta do usuário %d: %v", claims.UserID, err)
+			utils.ErrorResponse(c, http.StatusInternalServerError, "Erro interno", "Erro ao verificar a sessão")
+			c.Abort()
+			return
+		}
+		if !active {
+			utils.ErrorResponse(c, http.StatusUnauthorized, "Não autorizado", "Sessão encerrada")
 			c.Abort()
 			return
 		}
